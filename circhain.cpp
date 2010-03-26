@@ -144,13 +144,7 @@ double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
 	//cout<<" ROTATE 1>"<<oldA1<<"\t"<<C[m].bangle;
 	oldA2 = C[n].bangle;
 	//cout<<"2>"<<oldA2<<"\t"<<C[n].bangle<<endl;
-	/*if (fabs(newA1)>22*PI/180.0 || fabs(newA2)>22*PI/180.0) {
-	cout <<endl<<"trykink!"
-	<<endl<<oldA1*180.0/PI
-	<<"->"<<newA1*180.0/PI<<'\t'
-	<<oldA2*180.0/PI<<"->"
-	<<newA2*180.0/PI<<endl;
-	}*/
+
 	int new_kink_num = stats.kink_num + 
         (-(oldA1 > KINKLOWERBOUND ? 1 : 0) 
          -(oldA2 > KINKLOWERBOUND ? 1 : 0) 
@@ -158,12 +152,14 @@ double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
          + (newA2 > KINKLOWERBOUND ? 1 : 0));
 	double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
 	//C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength
-	dE = (+G_b(newA1) + G_b(newA2) - G_b(oldA1) - G_b(oldA2)) 
+	dE = (+G_b(newA1) + G_b(newA2) - G_b(oldA1) - G_b(oldA2));/* 
         + 2 * PI * PI * C / (totsegnum * bpperseg) * 
         (+(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
         *(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
         -(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num) 
-        * (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num));
+        * (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num));*/
+//Torsional stress removed for now.
+
 	/*
 	C_=2*pi*pi*C;
 	bt_angle=bt_angle/360;bpo_angle=bpo_angle/360;

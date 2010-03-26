@@ -161,7 +161,5 @@ void unittestP_t_over_2t(){
 }
 
 void main(){
-   main_do();
-    //unittestP_t_over_2t();
-    //unittestEndToEnd();
+   
 }

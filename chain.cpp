@@ -2,13 +2,6 @@
 using namespace std;
 
 double G_b(double ang){
-//	const double g[7]={0,2.515,9.094,428.1,-957.3,533.9,0};//Energy with p(kink)=1e-4
-	const double a=250.0;
-	/* double delta,L;
-	delta=4*a*a*theta_k*theta_k-4*(a-g)*(a*theta_k*theta_k+h);
-	L=(2*a*theta_k-sqrt(delta))/(2*(a-g));
-	if (ang<L) return g*ang*ang;
-	else return a*(ang-theta_k)*(ang-theta_k)+h; */
 	return g*ang*ang;//energy with quadratic energy term.
 }
 
