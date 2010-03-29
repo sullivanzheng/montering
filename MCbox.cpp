@@ -194,9 +194,9 @@ double MCbox_circular::calcGyration(void){
 
 	double G=0;
 	for (i=0;i<=maxnum;i++){
-		G=G+(dnaChain.C[i].x-meanx)*(dnaChain.C[i].x-meanx)*(dnaChain.C[i].x-meanx)
-			+(dnaChain.C[i].y-meany)*(dnaChain.C[i].y-meany)*(dnaChain.C[i].y-meany)
-			+(dnaChain.C[i].z-meanz)*(dnaChain.C[i].z-meanz)*(dnaChain.C[i].z-meanz);
+		G=G+(dnaChain.C[i].x-meanx)*(dnaChain.C[i].x-meanx)
+			+(dnaChain.C[i].y-meany)*(dnaChain.C[i].y-meany)
+			+(dnaChain.C[i].z-meanz)*(dnaChain.C[i].z-meanz);
 	}
 	G=G/(maxnum+1);
 	return G;
