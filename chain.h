@@ -17,28 +17,33 @@ double P_t_over_2t(double L_bp,int kinkNum);
 
 class Chain {
 public:
-	struct
+	struct stct_stat
     {
-		counter accepts;
-		counter moves;
+		//Statistical variable for the Chain.
+		/*Variable names starting with auto_ is 
+		  automatically updated after each move.
+
+		  Variable names starting with auto_prd 
+		  is automatically AND periodically updated
+		  after certain number of moves.
+		  This number can be decided by defaultSampleCycle and
+		  passed to endToEndSampleCycle. */
+		counter auto_accepts;
+		counter auto_moves;
 		signed int kink_num;
-        statqueue <double> endToEndDistance2;
-        statqueue <double> endToEndAngle;
-        //For Chain of Conditional Probabilities ONLY
-        long ligateAccepts;
-        long halfChainSuccess;
-        long crankSuccess;
+        statqueue <double> auto_prd_endToEndDistance2;
+        statqueue <double> auto_prd_endToEndAngle;
+		statqueue <double> gyration_ratio;
+		statqueue <double> anglelist[maxa];
 
         void resetStat(){
-            this->accepts.reset();
-            this->moves.reset();
-            this->endToEndDistance2.clear();
-            this->endToEndAngle.clear();
-            this->ligateAccepts=0;
-            this->halfChainSuccess=0;
-            this->crankSuccess=0;
-        }
-        /////////
+            auto_accepts.lap();
+            auto_moves.lap();
+            auto_prd_endToEndDistance2.clear();
+            auto_prd_endToEndAngle.clear();
+			gyration_ratio.clear();
+			for (int i=0;i<maxa;i++) anglelist[i].clear();
+		}        
 	}stats;
 
 	struct segment{
@@ -50,10 +55,10 @@ public:
 protected:
     int length;
     static const long defaultSampleCycle=100;
-    long endToEndDistanceSampleCycle;
+    long endToEndSampleCycle;
 	static const int NORMALIZE_PERIOD=100000;
 	int readIniFile(char const *filename);
-    void readIniFile(int num);
+    void initializeCircle(int num);
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],int m, int n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
@@ -64,22 +69,24 @@ protected:
     void normalize();
 
 public:
-    void countmove(){
-        stats.moves++;
-        if (stats.moves() % endToEndDistanceSampleCycle==0) {
+    void auto_updt_stats(){
+        stats.auto_moves++;
+		if (stats.auto_moves() % endToEndSampleCycle==0) {
             double temp=this->getEndToEndDistance();
-            stats.endToEndDistance2.push(temp*temp);
-            stats.endToEndAngle.push(this->getEndToEndAngle());
+            stats.auto_prd_endToEndDistance2.push(temp*temp);
+            stats.auto_prd_endToEndAngle.push(this->getEndToEndAngle());
         }
-        if (stats.moves() % NORMALIZE_PERIOD == 0){
+        if (stats.auto_moves() % NORMALIZE_PERIOD == 0){
             this->normalize();
         }
     }
-	explicit Chain(void){}
-    explicit Chain(bool circular, int r_length);
+private:
+	explicit Chain(void) {};
+
+public:
+	Chain::Chain(bool circular,int r_length);
 	explicit Chain(char const *filename, bool circular, int r_length);
 	int dispChainCord();
-	void clearAccepts();
 	virtual double calG_bSum() = 0;
 	virtual int crankshaft(int m, int n, double a, bool trialMoveFlag=false) = 0;
     inline double getEndToEndAngle(void){
@@ -103,7 +110,7 @@ public:
                     C[maxnum].z+C[maxnum].dz-C[0].z);
     }
 	virtual double deltaE_TrialCrankshaft(int m, int n, double a) = 0;
-	void snapshot(char *filename);
+	virtual void snapshot(char *filename);
 };
 
 class CircularChain: public Chain{
@@ -113,12 +120,15 @@ protected:
 	virtual int updateAllBangleKinkNum();
 	virtual int updateBangleKinkNum(int i);
 	void driftProof();
+private:
+	CircularChain();
 public:
-	CircularChain(){}
+	CircularChain(int length);
 	CircularChain(char const *filename,int length);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a,bool trialMoveFlag=false);
 	virtual double deltaE_TrialCrankshaft(int m, int n, double a);
+	virtual void snapshot(char *filename);
 };
 
 

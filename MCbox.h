@@ -30,17 +30,20 @@ public:
     CircularChain dnaChain;
     MCbox_circular(
         char const *r_filePrefix, 
-        int const length, 
-		double const r_g,
+        int const length,
         unsigned long r_seeding = 23UL);
-    virtual ~MCbox_circular(){
+	MCbox_circular(
+		int const length, 
+		unsigned long r_seeding = 23UL);
+	virtual ~MCbox_circular(){
         fp_log.close();
     }
     void logParameters(void);
     void logAngleDist(char *suffix = "");
     void clearAngleStats(void);
-    void appendAngleStats(void);
+    void pushAngleStats(void);
     void logAccepts(void);
+	double calcGyration(void);
     void performMetropolisCircularCrankOnly(long monte_step);
 };
 

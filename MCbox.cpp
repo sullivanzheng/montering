@@ -2,14 +2,33 @@
 MCbox_circular::MCbox_circular(
     char const *r_filePrefix, 
     int const length, 
-	double const r_g,
     unsigned long r_seeding)
     :fp_log(strcat_noOW(buf, strBufSize,const_cast<char*>(r_filePrefix), "_log.txt")), 
     dnaChain(strcat_noOW(buf, strBufSize, const_cast<char*>(r_filePrefix), ".vmc"),length), 
     seeding(r_seeding)
 {
-
 	strcpy(filePrefix, r_filePrefix);
+    //Initialize the global variables related to 
+    //the properties of chain.
+    totsegnum = length;
+    crank_max_length = length / 2;
+    //Initialize statistical variables.
+    for (int i = 0; i < 180; i++)
+        anglenums[i] = 0;
+    for (int i = 0; i < MAXKINKNUM + 1; i++)
+        N_kink[i] = 0;
+    //Log file handle.
+    //dnaChain.snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
+    logParameters();
+	dnaChain.snapshot("000.txt");
+}
+
+MCbox_circular::MCbox_circular(
+    int const length, 
+    unsigned long r_seeding)
+    :fp_log("noIniFile_log.txt"), dnaChain(length), seeding(r_seeding)
+{
+	strcpy(filePrefix, "noIniFile");
     //Initialize the global variables related to 
     //the properties of chain.
     totsegnum = length;
@@ -24,6 +43,7 @@ MCbox_circular::MCbox_circular(
     logParameters();
 	dnaChain.snapshot("inisnapshot.txt");
 }
+
 void MCbox_circular::logAngleDist(char *suffix)
 {
     strcat_noOW(buf, strBufSize, filePrefix, "_angleDist.txt");
@@ -45,7 +65,7 @@ void MCbox_circular::clearAngleStats(void)
     for (int i = 0; i < MAXKINKNUM + 1; i++)
         N_kink[i] = 0;
 }
-void MCbox_circular::appendAngleStats(void)
+void MCbox_circular::pushAngleStats(void)
 {
     unsigned short int kink_counter = 0;
     for (int i = 0; i < maxnum; i++)
@@ -57,7 +77,7 @@ void MCbox_circular::appendAngleStats(void)
     }
     if (kink_counter > MAXKINKNUM)
     {
-        cout << endl << "In step: " << dnaChain.stats.moves() << "Number of kink is larger than " << MAXKINKNUM << endl;
+        cout << endl << "In step: " << dnaChain.stats.auto_moves() << "Number of kink is larger than " << MAXKINKNUM << endl;
         cout << endl << "Simulation is terminated" << endl;
         getchar();
         exit(EXIT_FAILURE);
@@ -68,8 +88,8 @@ void MCbox_circular::appendAngleStats(void)
 void MCbox_circular::logAccepts(void)
 {
     sprintf(buf, "%12d %12d ", 
-        dnaChain.stats.moves.getTotCounts(), 
-        dnaChain.stats.accepts.getNumber());
+        dnaChain.stats.auto_moves.getTotCounts(), 
+        dnaChain.stats.auto_accepts.getNumber());
     fp_log << buf;
 }
 void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
@@ -77,7 +97,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
     MTRand53 mt(seeding);
     for (int moves = 1; moves <= monte_step; moves++)
     {
-        //MAKE MOVES
+		//MAKE MOVES
         double rotAng;
         double selection;
         selection = drand(1.0);
@@ -107,11 +127,37 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
             if (r < exp_E)
                 dnaChain.crankshaft(m, n, rotAng);
         }
-		if (moves%1000==0){
+
+		if (moves%100000==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			dnaChain.snapshot(buf);
 		}
-    }
+		if (moves%500==0){
+			double gyration_ratio=this->calcGyration();
+			dnaChain.stats.gyration_ratio.push(gyration_ratio);
+			for (int i=0;i<=maxnum;i++){
+				dnaChain.stats.anglelist[i].push(dnaChain.C[i].bangle);
+				//fp_log<<dnaChain.C[i].bangle<<" ";
+			}
+			//fp_log<<endl;
+	//		this->fp_log<<dnaChain.stats.gyration_ratio.getsquareSum()<<endl;
+	/*		this->fp_log <<"#"<<moves
+				<<"Gyration_ratio"<<gyration_ratio<<endl; */
+		}
+	}
+/*	this->fp_log<<"Gyration_ratio:"
+		<<dnaChain.stats.gyration_ratio.getMean()/25/25<<"+/-"
+		<<dnaChain.stats.gyration_ratio.getStdev()/25/25<<endl; */
+	for (int i=0;i<=maxnum;i++){
+		fp_log<<dnaChain.stats.anglelist[i].getMean()<<" ";
+	}
+	fp_log<<endl;
+
+	for (int i=0;i<=maxnum;i++){
+		fp_log<<dnaChain.stats.anglelist[i].getStdev()<<"";
+	}
+	fp_log<<endl;
+
 }
 void MCbox_circular::logParameters(void){
 		fp_log 
@@ -131,8 +177,29 @@ void MCbox_circular::logParameters(void){
 			<<"================ENERGY CURVE PARAS===================="<<endl
 			<<" g "<<g<<endl
 			<<endl;
+}
+
+double MCbox_circular::calcGyration(void){
+	int i;
+	double meanx,meany,meanz;
+	meanx=meany=meanz=0;
+	for(i=0;i<=maxnum;i++){
+		meanx+=dnaChain.C[i].x;
+		meany+=dnaChain.C[i].y;
+		meanz+=dnaChain.C[i].z;
 	}
+    meanx/=(maxnum+1);
+	meany/=(maxnum+1);
+	meanz/=(maxnum+1);
 
-
+	double G=0;
+	for (i=0;i<=maxnum;i++){
+		G=G+(dnaChain.C[i].x-meanx)*(dnaChain.C[i].x-meanx)*(dnaChain.C[i].x-meanx)
+			+(dnaChain.C[i].y-meany)*(dnaChain.C[i].y-meany)*(dnaChain.C[i].y-meany)
+			+(dnaChain.C[i].z-meanz)*(dnaChain.C[i].z-meanz)*(dnaChain.C[i].z-meanz);
+	}
+	G=G/(maxnum+1);
+	return G;
+}
 
 

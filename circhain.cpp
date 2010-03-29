@@ -51,9 +51,13 @@ void CircularChain::driftProof()
 	C[0].x = C[0].y = C[0].z = 0.0;
 }
 
-CircularChain::CircularChain(char const *filename,int length)
+CircularChain::CircularChain(char const *filename,const int length)
 :Chain(filename,true,length)
 {
+	Lk = (int)(bpperseg * totsegnum / 10.5 + 0.5);
+}
+
+CircularChain::CircularChain(int length):Chain(true,length){
 	Lk = (int)(bpperseg * totsegnum / 10.5 + 0.5);
 }
 
@@ -70,7 +74,7 @@ int CircularChain::crankshaft(int m, int n, double a,
 	//Crankshaft for an angle
 	//The segment is from X(m) to X(n).
 	//M is the rotation matrix.
-	stats.accepts++;
+	stats.auto_accepts++;
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
 		cout<<"Illegal values of m and n ("<<m<<','<<n<<')';
@@ -79,7 +83,7 @@ int CircularChain::crankshaft(int m, int n, double a,
 	//how many moves are accepted.
 	if (fabs(C[0].x) > (totsegnum) / 2 || fabs(C[0].y) > (totsegnum) / 2 || fabs(C[0].z) > (totsegnum) / 2)
 	{
-		cout << "Step #" << stats.moves() << " Drift proof." << endl;
+		cout << "Step #" << stats.auto_moves() << " Drift proof." << endl;
 		driftProof();
 	}
 	double M[3][3];
@@ -111,7 +115,7 @@ int CircularChain::crankshaft(int m, int n, double a,
 
 double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
 {
-	countmove();
+	this->auto_updt_stats();
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
 		cout<<"Illegal values of m and n ("<<m<<','<<n<<')';
@@ -166,4 +170,51 @@ double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
 	temp=4.0*pi*pi*140/2/N+C_/N*(d_Lk+bt_angle*0+bpo_angle)^2;
 	*/
 	return dE;
+}
+
+void CircularChain::snapshot(char *filename)
+{
+	//A not-working well version
+	ofstream fh (filename);
+	char buf[300];
+	int i;
+	if (!fh.good())
+	{
+		cout << "file not writable" << endl;
+		getchar();
+		exit(EXIT_FAILURE);
+	}
+	sprintf(buf, "%6d %20s", maxnum + 1, "[Snapshot of a circle]");
+	fh << buf << endl;
+	i=0;
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+        i + 1, "F", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
+	fh << buf << endl;
+	for ( i = 1; i <= maxnum; i++)
+	{
+		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+            i + 1, "C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
+		fh << buf << endl;
+	}
+
+    fh << endl << "Detailed Info" << endl;
+	for ( i = 0; i <= maxnum-1; i++)
+	{
+		sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15.10f %15.10f", 
+            i+1, C[i].dx,C[i].dy,C[i].dz,
+            modu(C[i].dx, C[i].dy, C[i].dz), 
+            modu(C[i + 1].x - C[i].x, 
+                 C[i + 1].y - C[i].y, 
+                 C[i + 1].z - C[i].z), 
+            C[i].bangle);
+		fh << buf << endl;
+	}
+	i=maxnum;
+    sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15s %15.10f", 
+            i+1, C[i].dx,C[i].dy,C[i].dz,
+            modu(C[i].dx, C[i].dy, C[i].dz), 
+            "--------",
+            C[i].bangle);
+	fh << buf << endl;
+	fh.close();
 }

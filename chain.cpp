@@ -25,11 +25,8 @@ double P_t_over_2t(double L_bp, int kinkNum){
 return P/denominator; 
 }
 
-void Chain::clearAccepts(){
-	stats.accepts=stats.moves=0;
-}
 
-void Chain::readIniFile(int numofseg)
+void Chain::initializeCircle(int numofseg)
 {   
     cout << endl << "Chain::readIniFile::No file input, start building circular chain." << endl;
     cout << "Segment number: " <<numofseg <<endl;
@@ -172,7 +169,7 @@ double Chain::calAngle(segment &C1, segment &C2)
         /modu(C2.dx,C2.dy,C2.dz);
 	if (temp > 1 || temp < -1)
 	{
-		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.moves, temp);
+		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.auto_moves, temp);
 		angle = 0.0;
 	}
 	else
@@ -181,7 +178,7 @@ double Chain::calAngle(segment &C1, segment &C2)
 }
 Chain::Chain(char const *filename, bool circular,int r_length)
 {   
-    this->endToEndDistanceSampleCycle=this->defaultSampleCycle;
+    this->endToEndSampleCycle=this->defaultSampleCycle;
     if (r_length>maxa||r_length<5){
          cout<<"The chain is too long or too short. Simulation aborted."<<endl
              <<"Chain with 5~910 segments are allowed."<<endl;
@@ -197,7 +194,7 @@ Chain::Chain(char const *filename, bool circular,int r_length)
 
 Chain::Chain(bool circular,int r_length)
 {   
-    this->endToEndDistanceSampleCycle=this->defaultSampleCycle;
+    this->endToEndSampleCycle=this->defaultSampleCycle;
     if (r_length>maxa||r_length<5){
          cout<<"The chain is too long or too short. Simulation aborted."<<endl
              <<"Chain with 5~910 segments are allowed."<<endl;
@@ -205,11 +202,12 @@ Chain::Chain(bool circular,int r_length)
          exit(EXIT_FAILURE);
     }
     maxnum=(this->length=r_length)-1;
-	readIniFile(r_length);
+	this->initializeCircle(length);
 	//updateAllBangleKinkNum(); Calling virtual function is dangerous.
 	updateAllBangleKinkNum_Ini(circular);
     stats.resetStat();
 }
+
 //updateAllBangleKinkNum_Ini is supposed to be used in constructor.
 //Therefore it contains a "curcular" parameter that make it not virtual.
 void Chain::updateAllBangleKinkNum_Ini(bool circular = false)
@@ -254,6 +252,7 @@ int Chain::dispChainCord()
 }
 void Chain::snapshot(char *filename)
 {
+	//A not-working well version
 	ofstream fh (filename);
 	char buf[300];
 	if (!fh.good())
@@ -262,9 +261,13 @@ void Chain::snapshot(char *filename)
 		getchar();
 		exit(EXIT_FAILURE);
 	}
-	sprintf(buf, "%6d%20s", maxnum + 1, "In the main body");
+	sprintf(buf, "%6d %20s", maxnum + 1, "[General Chain Snapshot, treat as Linear]");
 	fh << buf << endl;
-	for (int i = 0; i <= maxnum; i++)
+    int	i=0;
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
+        i + 1, "F", C[i].x, C[i].y, C[i].z, 1, 1);
+	fh << buf << endl;
+	for (i = 1; i <= maxnum-1; i++)
 	{
 		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
             i + 1, "C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
@@ -278,7 +281,7 @@ void Chain::snapshot(char *filename)
 	fh << buf << endl;
 
     fh << endl << "Detailed Info" << endl;
-	for (int i = 0; i < maxnum; i++)
+	for (i = 0; i < maxnum; i++)
 	{
 		sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15.10f %15.10f", 
             i, C[i].dx,C[i].dy,C[i].dz,
@@ -289,8 +292,11 @@ void Chain::snapshot(char *filename)
             C[i].bangle);
 		fh << buf << endl;
 	}
+	i=maxnum;
+    sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15s %15.10f", 
+            i+1, C[i].dx,C[i].dy,C[i].dz,
+            modu(C[i].dx, C[i].dy, C[i].dz), 
+            "----------", C[i].bangle);
+	fh << buf << endl;
 	fh.close();
 }
-
-
-
