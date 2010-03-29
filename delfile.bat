@@ -1,0 +1,1 @@
+del noinifile0*.txt
