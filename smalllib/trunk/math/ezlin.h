@@ -18,6 +18,11 @@ inline double dot_product(double a[3],double b[3]){
 inline double modu(double a,double b,double c){
 	return sqrt(a*a+b*b+c*c);
 }
+
+inline double modu2(double a,double b,double c){
+	return a*a+b*b+c*c;
+}
+
 inline int mat33addOW(double M1[3][3],double M2[3][3]){
 	//add M2 to M1, OW stands for overwrite.
     for(int j=0;j<3;j++) M1[0][j]+=M2[0][j];
