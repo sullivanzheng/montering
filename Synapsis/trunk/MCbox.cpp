@@ -95,6 +95,11 @@ void MCbox_circular::logAccepts(void)
 void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 {
     MTRand53 mt(seeding);
+	int protect[]={8,9,10,108,109,110,-1};
+	double old_biasE,biasE;
+	old_biasE=modu2(dnaChain.C[104].x-dnaChain.C[8].x,
+				  dnaChain.C[104].y-dnaChain.C[8].y,
+				  dnaChain.C[104].z-dnaChain.C[8].z);
     for (int moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -112,42 +117,58 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
         else
             rotAng = drand(-maxRotAng, maxRotAng);
         int m,n;
-        m = irand(maxnum + 1);
-        n = (m + (irand(crank_max_length - crank_min_length) + crank_min_length))%totsegnum;
-        double dE;
-        dE = dnaChain.deltaE_TrialCrankshaft(m, n, rotAng);
-        if (dE < 0)
+		int flag=0;
+		while(flag==0){
+			m = irand(maxnum + 1);
+			n = (m + (irand(crank_max_length - crank_min_length) + crank_min_length))%totsegnum;
+
+			flag=1;int i;
+			for(i=0;protect[i]>0;i++){
+				if (m==protect[i] || n==protect[i]) {
+					flag=0;
+					break;
+				}
+			}
+		}
+        double dE;		
+        dE=dnaChain.deltaE_TrialCrankshaft(m, n, rotAng);
+		dnaChain.crankshaft(m,n,rotAng);
+		biasE=modu2(dnaChain.C[109].x-dnaChain.C[9].x,
+				  dnaChain.C[109].y-dnaChain.C[9].y,
+				  dnaChain.C[109].z-dnaChain.C[9].z);
+		dnaChain.crankshaft(m,n,-rotAng);
+		//this->fp_log<<dE<<" "<<biasE-old_biasE<<endl;
+		dE+=biasE-old_biasE;
+
+		if (dE < 0){
             dnaChain.crankshaft(m, n, rotAng);
+			old_biasE=biasE;
+		}
         else
         {
             double exp_E;
             double r;
             exp_E = exp(-dE);
             r = mt();
-            if (r < exp_E)
+			if (r < exp_E){
                 dnaChain.crankshaft(m, n, rotAng);
+				old_biasE=biasE;
+			}
         }
 
 		if (moves%100000==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			dnaChain.snapshot(buf);
 		}
+
 		if (moves%500==0){
 			double gyration_ratio=this->calcGyration();
 			dnaChain.stats.gyration_ratio.push(gyration_ratio);
 			for (int i=0;i<=maxnum;i++){
 				dnaChain.stats.anglelist[i].push(dnaChain.C[i].bangle);
-				//fp_log<<dnaChain.C[i].bangle<<" ";
 			}
-			//fp_log<<endl;
-	//		this->fp_log<<dnaChain.stats.gyration_ratio.getsquareSum()<<endl;
-	/*		this->fp_log <<"#"<<moves
-				<<"Gyration_ratio"<<gyration_ratio<<endl; */
 		}
 	}
-/*	this->fp_log<<"Gyration_ratio:"
-		<<dnaChain.stats.gyration_ratio.getMean()/25/25<<"+/-"
-		<<dnaChain.stats.gyration_ratio.getStdev()/25/25<<endl; */
 	for (int i=0;i<=maxnum;i++){
 		fp_log<<dnaChain.stats.anglelist[i].getMean()<<" ";
 	}

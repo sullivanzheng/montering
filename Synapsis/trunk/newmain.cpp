@@ -3,9 +3,9 @@
 
 int maindo(){
 	crank_max_length=0;
-    g=6.161278446; //100 seg, 25seg/Kuhn*4kuhn.
-	MCbox_circular sim(100,24);
-	sim.performMetropolisCircularCrankOnly(10000000);	
+    g=7.054815521; //100 seg, 28.571429	seg/Kuhn*4kuhn. 200seg.10.5bp/seg
+	MCbox_circular sim("200seg7-10,103-106",200,24);
+	sim.performMetropolisCircularCrankOnly(1e7);	
 	return 0;
 }
 
