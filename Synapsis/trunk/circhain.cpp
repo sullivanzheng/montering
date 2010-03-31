@@ -227,8 +227,9 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 	
 	vector<int> r_protect;
 	vector<vector<double>>r_ref_v;
+	int hard_eof=0;
 
-	while (!f.eof()){
+	while (!f.eof() && !hard_eof){
 		string tempbuf;
 		getline(f,tempbuf);
 		stringstream sline(tempbuf);
@@ -258,6 +259,9 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			cls_rigid temp_rigid(target, r_protect, r_ref_v);
 			this->R.push_back(temp_rigid);
 		}
+		else if (token==string("[endoffile]")){
+			hard_eof=1;
+		}
 
 	}
 	for (int i=0;i<this->R.size();i++)
@@ -269,12 +273,31 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 double allrigid::update_allrigid_and_E(){
 	//This section can be customized for different rigid body set.
 	for (int i=0;i<this->R.size();i++){
-		R[i].update_ref_v();
+		R[i].update_ref_v_xyz();
 	}
-	this->E=modu2(R[0].target->C[R[0].protect[1]].x - R[1].target->C[R[1].protect[1]].x,
-		R[0].target->C[R[0].protect[1]].y - R[1].target->C[R[1].protect[1]].y,
-		R[0].target->C[R[0].protect[1]].z - R[1].target->C[R[1].protect[1]].z);
-	return this->E;
+
+	this->E = 0;
+
+	//Axis Orientation. ref_v_xyz[0]
+	this->E += betaVec1Vec2(this->R[0].ref_v_xyz[0],this->R[1].ref_v_xyz[0])*(-10);
+
+	//Curvature radius direction orientation. ref_v_xyz[1]
+	this->E += betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1])*(-10);
+
+	//Center point of each rigid body. ref_v_xyz[2]
+	double t0[3],t1[3];
+	t0[0]=R[0].ref_v_xyz[2][0] + R[0].target->C[R[0].protect[0]].x;
+	t0[1]=R[0].ref_v_xyz[2][1] + R[0].target->C[R[0].protect[0]].y;
+	t0[2]=R[0].ref_v_xyz[2][2] + R[0].target->C[R[0].protect[0]].z;
+
+	t1[0]=R[1].ref_v_xyz[2][0] + R[1].target->C[R[1].protect[0]].x;
+	t1[1]=R[1].ref_v_xyz[2][1] + R[1].target->C[R[1].protect[0]].y;
+	t1[2]=R[1].ref_v_xyz[2][2] + R[1].target->C[R[1].protect[0]].z;
+	
+	this->E += modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]) * 50;
+
+    return this->E;
+
 }
 
 
@@ -315,7 +338,7 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 	}
 }
 
-void cls_rigid::update_ref_v(){
+void cls_rigid::update_ref_v_xyz(){
 	double Mv[3][3];
 	Mv[0][0]=target->C[protect[0]].dx;
 	Mv[1][0]=target->C[protect[0]].dy;
@@ -343,7 +366,7 @@ void cls_rigid::update_ref_v(){
 		ref_v_xyz[i]=a;
 	}
 
-	/* test printouts. */
+	/* test printouts. 
 	
 	for (int i=0;i<this->ref_v_xyz.size();i++){
 		std::cout<<">"<<this->target->stats.auto_moves()<<std::endl;

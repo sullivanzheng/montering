@@ -139,9 +139,9 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 		//old rigid body energy.
 		cacheRE=RG.E;
 		dnaChain.crankshaft(m,n,rotAng);
-
+		RG.update_allrigid_and_E();
 		//total energy change.
-		dE+=(RG.update_allrigid_and_E()-cacheRE);
+		dE+=(RG.E - cacheRE);
 
 		
 		if (dE < 0){
@@ -158,6 +158,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 			}
 			else{
 				dnaChain.crankshaft(m,n,-rotAng);
+				RG.update_allrigid_and_E();
 			}
         }
 
@@ -175,16 +176,12 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 		}
 	}
 	for (int i=0;i<=maxnum;i++){
-		fp_log<<dnaChain.stats.anglelist[i].getMean()<<" ";
+		fp_log<<i<<" "<<dnaChain.stats.anglelist[i].getMean()<<" "
+			<<dnaChain.stats.anglelist[i].getStdev()<<" "<<endl;
 	}
 	fp_log<<endl;
-
-	for (int i=0;i<=maxnum;i++){
-		fp_log<<dnaChain.stats.anglelist[i].getStdev()<<"";
-	}
-	fp_log<<endl;
-
 }
+
 void MCbox_circular::logParameters(void){
 		fp_log 
 			<<"========================PARAMETERS========================"<<endl

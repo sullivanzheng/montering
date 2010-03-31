@@ -1,12 +1,46 @@
 #rigid body 1
+# seg 7 8 9 10. index from 0
+# Or point 8 9 10 11 12 indexed from 1.
 rigidstart
 $ 8 9 10
-vec 0,1,0
+vec  2.7001   -3.0002    2.7001
+vec  -1.1250    1.1250   -0.0000
+vec -0.1250    1.1250   -0.0000
 rigidend
 
 
 #rigid body 2
+# seg 107 108 109 110. index from 0
+# Or point 108 109 110 111 112 indexed from 1.
 rigidstart
 $ 108 109 110
-vec 0,1,0
+vec  2.7001   -3.0002    2.7001
+vec  -1.1250    1.1250   -0.0000
+vec  -0.1250    1.1250   -0.0000
 rigidend
+
+[endoffile]
+
+Sample:
+
+rigidstart
+$ 8 9 10
+vec 1 1 1  //axis
+vec -1 0 1 //bendto
+vec  1 -1 1  //bend
+rigidend
+
+axis =
+
+    2.7001   -3.0002    2.7001
+
+
+bendto =
+
+   -1.1250    1.1250   -0.0000
+
+
+origin =
+
+   -0.1250    1.1250   -0.0000
+ origin is C[R[i]protect[0]].X+M*origin

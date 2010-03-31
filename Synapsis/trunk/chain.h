@@ -30,7 +30,7 @@ public:
 	std::vector<std::vector<double> > ref_v_xyz;
 	cls_rigid(CircularChain * r_target, std::vector<int>r_protect,
 		std::vector<std::vector<double> > r_ref_v);
-	void update_ref_v();
+	void update_ref_v_xyz();
 };
 
 class allrigid{
