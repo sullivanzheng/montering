@@ -1,1 +1,1 @@
-del noinifile0*.txt
+del 200seg7*.txt

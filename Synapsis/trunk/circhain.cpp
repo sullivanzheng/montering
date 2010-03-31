@@ -68,13 +68,11 @@ double CircularChain::calG_bSum()
 		temp += G_b(C[i].bangle);
 	return temp;
 }
-int CircularChain::crankshaft(int m, int n, double a, 
-                              bool trialMoveFlag)
+int CircularChain::crankshaft(int m, int n, double a)
 {
 	//Crankshaft for an angle
 	//The segment is from X(m) to X(n).
 	//M is the rotation matrix.
-	stats.auto_accepts++;
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
 		cout<<"Illegal values of m and n ("<<m<<','<<n<<')';
@@ -113,7 +111,7 @@ int CircularChain::crankshaft(int m, int n, double a,
 	return 0;
 }
 
-double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
+double CircularChain::deltaE_TrialCrankshaft_countMove(int m, int n, double a)
 {
 	this->auto_updt_stats();
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
@@ -174,7 +172,6 @@ double CircularChain::deltaE_TrialCrankshaft(int m, int n, double a)
 
 void CircularChain::snapshot(char *filename)
 {
-	//A not-working well version
 	ofstream fh (filename);
 	char buf[300];
 	int i;
@@ -217,4 +214,138 @@ void CircularChain::snapshot(char *filename)
             C[i].bangle);
 	fh << buf << endl;
 	fh.close();
+}
+
+
+allrigid::allrigid(char *configfile,CircularChain * target){
+	using namespace std;
+	ifstream f(configfile);
+	if (!f.good()){
+		cout<<"Rigidbody configfile does not exist!"<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	vector<int> r_protect;
+	vector<vector<double>>r_ref_v;
+
+	while (!f.eof()){
+		string tempbuf;
+		getline(f,tempbuf);
+		stringstream sline(tempbuf);
+		string initial;
+		sline>>initial;
+		if (initial[0]=='#') continue;
+
+		string token(initial);
+				//lock points (vertices), indices from 0.
+		if (token=="rigidstart"){
+			r_protect.clear();
+			r_ref_v.clear();
+		}
+		else if (token==string("vec")){
+			vector<double> a(3,0);
+		    sline>>a[0]>>a[1]>>a[2];
+			r_ref_v.push_back(a);
+		}
+		else if (token==string("$")){ //protect
+			while (!sline.eof()){
+				int temp;
+				sline>>temp;
+				r_protect.push_back(temp);
+			}
+		}
+		else if (token==string("rigidend")){
+			cls_rigid temp_rigid(target, r_protect, r_ref_v);
+			this->R.push_back(temp_rigid);
+		}
+
+	}
+	for (int i=0;i<this->R.size();i++)
+		for (int j=0;j<this->R[i].protect.size();j++)
+			this->protect.push_back(R[i].protect[j]);
+	this->update_allrigid_and_E();
+}
+
+double allrigid::update_allrigid_and_E(){
+	//This section can be customized for different rigid body set.
+	for (int i=0;i<this->R.size();i++){
+		R[i].update_ref_v();
+	}
+	this->E=modu2(R[0].target->C[R[0].protect[1]].x - R[1].target->C[R[1].protect[1]].x,
+		R[0].target->C[R[0].protect[1]].y - R[1].target->C[R[1].protect[1]].y,
+		R[0].target->C[R[0].protect[1]].z - R[1].target->C[R[1].protect[1]].z);
+	return this->E;
+}
+
+
+cls_rigid::cls_rigid(CircularChain* r_target, std::vector<int> r_protect,
+	std::vector < vector<double> > r_ref_v):
+target(r_target),protect(r_protect),ref_v(r_ref_v){
+	double Mv[3][3];
+	Mv[0][0]=target->C[protect[0]].dx;
+	Mv[1][0]=target->C[protect[0]].dy;
+	Mv[2][0]=target->C[protect[0]].dz;
+
+	Mv[0][1]=target->C[protect[1]].dx;
+	Mv[1][1]=target->C[protect[1]].dy;
+	Mv[2][1]=target->C[protect[1]].dz;
+
+	Mv[0][2]=target->C[protect[2]].dx;
+	Mv[1][2]=target->C[protect[2]].dy;
+	Mv[2][2]=target->C[protect[2]].dz;
+
+	for (int i=0;i<this->ref_v.size();i++){
+		vector<double> a(3,0);
+
+		//input vector
+		double b[3];
+		b[0]=ref_v[i][0];b[1]=ref_v[i][1];b[2]=ref_v[i][2];
+
+		//output vector
+		double o[3];
+		mat33mulvec3(Mv,b,o);
+		for (int j=0;j<3;j++) { a[j]=o[j]; }
+		ref_v_xyz.push_back(a);
+	}
+
+	for (int i=0;i<this->ref_v_xyz.size();i++){
+		std::cout<<ref_v_xyz[i][0]<<" ";
+		std::cout<<ref_v_xyz[i][1]<<" ";
+		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
+	}
+}
+
+void cls_rigid::update_ref_v(){
+	double Mv[3][3];
+	Mv[0][0]=target->C[protect[0]].dx;
+	Mv[1][0]=target->C[protect[0]].dy;
+	Mv[2][0]=target->C[protect[0]].dz;
+
+	Mv[0][1]=target->C[protect[1]].dx;
+	Mv[1][1]=target->C[protect[1]].dy;
+	Mv[2][1]=target->C[protect[1]].dz;
+
+	Mv[0][2]=target->C[protect[2]].dx;
+	Mv[1][2]=target->C[protect[2]].dy;
+	Mv[2][2]=target->C[protect[2]].dz;
+
+	for (int i=0;i<this->ref_v.size();i++){
+		vector<double> a(3,0);
+
+		//input vector
+		double b[3];
+		b[0]=ref_v[i][0];b[1]=ref_v[i][1];b[2]=ref_v[i][2];
+
+		//output vector
+		double o[3];
+		mat33mulvec3(Mv,b,o);
+		for (int j=0;j<3;j++) { a[j]=o[j]; }
+		ref_v_xyz[i]=a;
+	}
+
+	for (int i=0;i<this->ref_v_xyz.size();i++){
+		std::cout<<ref_v_xyz[i][0]<<" ";
+		std::cout<<ref_v_xyz[i][1]<<" ";
+		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
+	}
 }

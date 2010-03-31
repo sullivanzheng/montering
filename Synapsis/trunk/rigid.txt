@@ -1,0 +1,12 @@
+#rigid body 1
+rigidstart
+$ 8 9 10
+vec 1,0,0
+rigidend
+
+
+#rigid body 2
+rigidstart
+$ 108 109 110
+vec 1,0,0
+rigidend

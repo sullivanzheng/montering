@@ -89,18 +89,17 @@ void MCbox_circular::logAccepts(void)
 {
     sprintf(buf, "%12d %12d ", 
         dnaChain.stats.auto_moves.getTotCounts(), 
-        dnaChain.stats.auto_accepts.getNumber());
+        dnaChain.stats.accepts.getNumber());
     fp_log << buf;
 }
 void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 {
     MTRand53 mt(seeding);
-	int protect[]={8,9,10,108,109,110,-1};
-	double old_biasE,biasE;
-	old_biasE=modu2(dnaChain.C[104].x-dnaChain.C[8].x,
-				  dnaChain.C[104].y-dnaChain.C[8].y,
-				  dnaChain.C[104].z-dnaChain.C[8].z);
-    for (int moves = 1; moves <= monte_step; moves++)
+	
+	allrigid RG("rigid.txt",&this->dnaChain);
+
+
+	for (int moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
         double rotAng;
@@ -116,33 +115,37 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
         }
         else
             rotAng = drand(-maxRotAng, maxRotAng);
+
+		//generate rotation axis
         int m,n;
 		int flag=0;
 		while(flag==0){
 			m = irand(maxnum + 1);
 			n = (m + (irand(crank_max_length - crank_min_length) + crank_min_length))%totsegnum;
-
 			flag=1;int i;
-			for(i=0;protect[i]>0;i++){
-				if (m==protect[i] || n==protect[i]) {
+			for(i=0;i<RG.protect.size();i++){
+				if (m==RG.protect[i] || n==RG.protect[i]) {
 					flag=0;
 					break;
 				}
 			}
 		}
-        double dE;		
-        dE=dnaChain.deltaE_TrialCrankshaft(m, n, rotAng);
-		dnaChain.crankshaft(m,n,rotAng);
-		biasE=modu2(dnaChain.C[109].x-dnaChain.C[9].x,
-				  dnaChain.C[109].y-dnaChain.C[9].y,
-				  dnaChain.C[109].z-dnaChain.C[9].z);
-		dnaChain.crankshaft(m,n,-rotAng);
-		//this->fp_log<<dE<<" "<<biasE-old_biasE<<endl;
-		dE+=biasE-old_biasE;
 
+        double dE, cacheRE;
+
+		//bend energy change.
+        dE=dnaChain.deltaE_TrialCrankshaft_countMove(m, n, rotAng);
+
+		//old rigid body energy.
+		cacheRE=RG.E;
+		dnaChain.crankshaft(m,n,rotAng);
+
+		//total energy change.
+		dE+=(RG.update_allrigid_and_E()-cacheRE);
+
+		
 		if (dE < 0){
-            dnaChain.crankshaft(m, n, rotAng);
-			old_biasE=biasE;
+            dnaChain.stats.accepts++;
 		}
         else
         {
@@ -151,8 +154,10 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
             exp_E = exp(-dE);
             r = mt();
 			if (r < exp_E){
-                dnaChain.crankshaft(m, n, rotAng);
-				old_biasE=biasE;
+                 dnaChain.stats.accepts++;
+			}
+			else{
+				dnaChain.crankshaft(m,n,-rotAng);
 			}
         }
 

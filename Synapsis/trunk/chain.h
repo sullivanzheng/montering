@@ -1,19 +1,49 @@
 #ifndef CHAIN_H
 #define CHAIN_H
 
-
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <vector>
+#include <string>
+#include <sstream>
 #include "math\mtrand.h"
 #include "chainconst.h"
 #include "chaingbvar.h"
 #include "math\ezlin.h"
+#include "string\strplus.h"
 #include "SmallTypes.h"
 
 double G_b(double ang);
 double G_t(int Lk,double L_bp,int kink_num);
 double P_t_over_2t(double L_bp,int kinkNum);
+
+class CircularChain; //Finish declaration of Chain for the use of declaration of its nest friend class rigid;
+
+class cls_rigid{
+private: 
+	cls_rigid();
+public:
+	CircularChain* target;
+	std::vector<int> protect;
+	std::vector<std::vector<double> > ref_v;
+	std::vector<std::vector<double> > ref_v_xyz;
+	cls_rigid(CircularChain * r_target, std::vector<int>r_protect,
+		std::vector<std::vector<double> > r_ref_v);
+	void update_ref_v();
+};
+
+class allrigid{
+private:
+	allrigid();
+public:
+	double E;
+	std::vector<cls_rigid> R;
+	allrigid(char *configfile, CircularChain *taget);
+	std::vector<int> protect;
+	double update_allrigid_and_E();
+};
+
 
 class Chain {
 public:
@@ -28,7 +58,7 @@ public:
 		  after certain number of moves.
 		  This number can be decided by defaultSampleCycle and
 		  passed to endToEndSampleCycle. */
-		counter auto_accepts;
+		counter accepts;
 		counter auto_moves;
 		signed int kink_num;
         statqueue <double> auto_prd_endToEndDistance2;
@@ -37,7 +67,7 @@ public:
 		statqueue <double> anglelist[maxa];
 
         void resetStat(){
-            auto_accepts.lap();
+            accepts.lap();
             auto_moves.lap();
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
@@ -88,7 +118,7 @@ public:
 	explicit Chain(char const *filename, bool circular, int r_length);
 	int dispChainCord();
 	virtual double calG_bSum() = 0;
-	virtual int crankshaft(int m, int n, double a, bool trialMoveFlag=false) = 0;
+	virtual int crankshaft(int m, int n, double a) = 0;
     inline double getEndToEndAngle(void){
         static segment Ci={0,0,0,0,0,0,0},Cf={0,0,0,0,0,0,0};
         static double endToEndAngleMemo=0.0;
@@ -109,7 +139,7 @@ public:
                     C[maxnum].y+C[maxnum].dy-C[0].y,
                     C[maxnum].z+C[maxnum].dz-C[0].z);
     }
-	virtual double deltaE_TrialCrankshaft(int m, int n, double a) = 0;
+	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a) = 0;
 	virtual void snapshot(char *filename);
 };
 
@@ -126,11 +156,8 @@ public:
 	CircularChain(int length);
 	CircularChain(char const *filename,int length);
 	virtual double calG_bSum();
-	virtual int crankshaft(int m, int n, double a,bool trialMoveFlag=false);
-	virtual double deltaE_TrialCrankshaft(int m, int n, double a);
+	virtual int crankshaft(int m, int n, double a);
+	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
 };
-
-
-
 #endif /* CHAIN_H */
