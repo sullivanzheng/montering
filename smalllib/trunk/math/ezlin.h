@@ -64,5 +64,4 @@ inline int mat33disp(double M[3][3]){
 	return 0;
 }
 
-
 #endif /* EZLIN_H */
