@@ -343,9 +343,36 @@ void cls_rigid::update_ref_v(){
 		ref_v_xyz[i]=a;
 	}
 
+	/* test printouts. */
+	
 	for (int i=0;i<this->ref_v_xyz.size();i++){
+		std::cout<<">"<<this->target->stats.auto_moves()<<std::endl;
+		
+		std::cout<<this->target->C[protect[1]].dx<<" ";
+		std::cout<<this->target->C[protect[1]].dy<<" ";
+		std::cout<<this->target->C[protect[1]].dz<<" "<<std::endl;
+
 		std::cout<<ref_v_xyz[i][0]<<" ";
 		std::cout<<ref_v_xyz[i][1]<<" ";
 		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
 	}
+/*
+rigid.txt is as follows:
+
+#rigid body 1
+rigidstart
+$ 8 9 10
+vec 0,1,0
+rigidend
+
+
+#rigid body 2
+rigidstart
+$ 108 109 110
+vec 0,1,0
+rigidend
+
+Should see the same vector.
+*/
+
 }
