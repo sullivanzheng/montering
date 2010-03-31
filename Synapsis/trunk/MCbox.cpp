@@ -4,8 +4,8 @@ MCbox_circular::MCbox_circular(
     int const length, 
     unsigned long r_seeding)
     :fp_log(strcat_noOW(buf, strBufSize,const_cast<char*>(r_filePrefix), "_log.txt")), 
-    dnaChain(strcat_noOW(buf, strBufSize, const_cast<char*>(r_filePrefix), ".vmc"),length), 
-    seeding(r_seeding)
+    dnaChain(strcat_noOW(buf, strBufSize, const_cast<char*>(r_filePrefix), ".vmc"),length, this), 
+	seeding(r_seeding),RG("rigid.txt",&this->dnaChain)
 {
 	strcpy(filePrefix, r_filePrefix);
     //Initialize the global variables related to 
@@ -20,13 +20,14 @@ MCbox_circular::MCbox_circular(
     //Log file handle.
     //dnaChain.snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
     logParameters();
-	dnaChain.snapshot("000.txt");
+	dnaChain.snapshot_synapsis("000.txt");
 }
 
 MCbox_circular::MCbox_circular(
     int const length, 
     unsigned long r_seeding)
-    :fp_log("noIniFile_log.txt"), dnaChain(length), seeding(r_seeding)
+    :fp_log("noIniFile_log.txt"), dnaChain(length,this), seeding(r_seeding),
+	RG("rigid.txt",&this->dnaChain)
 {
 	strcpy(filePrefix, "noIniFile");
     //Initialize the global variables related to 
@@ -96,7 +97,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 {
     MTRand53 mt(seeding);
 	
-	allrigid RG("rigid.txt",&this->dnaChain);
+	//allrigid RG("rigid.txt",&this->dnaChain);
 
 
 	for (int moves = 1; moves <= monte_step; moves++)

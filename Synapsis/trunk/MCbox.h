@@ -1,5 +1,6 @@
 #ifndef MCBOX_H
 #define MCBOX_H
+
 #include <string> //used in map<string, string> and config reading.
 #include <sstream>//string to number convertion
 
@@ -15,6 +16,7 @@ using std::ofstream;
 using std::cout;
 using std::endl;
 
+
 class MCbox_circular{
 protected:
 	static const int strBufSize=180;
@@ -28,6 +30,7 @@ protected:
 
 public:
     CircularChain dnaChain;
+	allrigid RG;
     MCbox_circular(
         char const *r_filePrefix, 
         int const length,

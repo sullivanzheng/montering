@@ -13,11 +13,15 @@
 #include "math\ezlin.h"
 #include "string\strplus.h"
 #include "SmallTypes.h"
+#include "MCbox.h"
 
 double G_b(double ang);
 double G_t(int Lk,double L_bp,int kink_num);
 double P_t_over_2t(double L_bp,int kinkNum);
 
+
+
+class MCbox_circular;
 class CircularChain; //Finish declaration of Chain for the use of declaration of its nest friend class rigid;
 
 class cls_rigid{
@@ -146,6 +150,7 @@ public:
 class CircularChain: public Chain{
 public:
 	int Lk;
+	MCbox_circular * parent;
 protected:
 	virtual int updateAllBangleKinkNum();
 	virtual int updateBangleKinkNum(int i);
@@ -153,11 +158,13 @@ protected:
 private:
 	CircularChain();
 public:
-	CircularChain(int length);
-	CircularChain(char const *filename,int length);
+
+	CircularChain(int length, MCbox_circular* r_parent);
+	CircularChain(char const *filename,int length, MCbox_circular* r_parent);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
 	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
+	virtual void snapshot_synapsis(char *filename);
 };
 #endif /* CHAIN_H */
