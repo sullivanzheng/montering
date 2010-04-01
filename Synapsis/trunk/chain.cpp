@@ -5,27 +5,6 @@ double G_b(double ang){
 	return g*ang*ang;//energy with quadratic energy term.
 }
 
-double G_t(int Lk, double L_bp,int kink_num){
-	double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
-    double E;
-	//C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength
-	E = + 2 * PI * PI * C / L_bp * 
-        +(Lk - L_bp / 10.5 + DELTA_TW_K * kink_num)*
-         (Lk - L_bp / 10.5 + DELTA_TW_K * kink_num);
-    return E;
-}
-
-double P_t_over_2t(double L_bp, int kinkNum){
-    double Lk=L_bp/10.5,P=0;
-    double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
-    double denominator=sqrt(L_bp/(2*PI*C));
-    for (int i=int(Lk)-5;i<=int(Lk)+5;i++){
-        P+=exp(-G_t(i,L_bp,kinkNum));
-    }
-return P/denominator; 
-}
-
-
 void Chain::initializeCircle(int numofseg)
 {   
     cout << endl << "Chain::readIniFile::No file input, start building circular chain." << endl;
@@ -187,8 +166,6 @@ Chain::Chain(char const *filename, bool circular,int r_length)
     }
     maxnum=(this->length=r_length)-1;
 	readIniFile(filename);
-	//updateAllBangleKinkNum(); Calling virtual function is dangerous.
-	updateAllBangleKinkNum_Ini(circular);
     stats.resetStat();
 }
 
@@ -203,43 +180,9 @@ Chain::Chain(bool circular,int r_length)
     }
     maxnum=(this->length=r_length)-1;
 	this->initializeCircle(length);
-	//updateAllBangleKinkNum(); Calling virtual function is dangerous.
-	updateAllBangleKinkNum_Ini(circular);
     stats.resetStat();
 }
 
-//updateAllBangleKinkNum_Ini is supposed to be used in constructor.
-//Therefore it contains a "curcular" parameter that make it not virtual.
-void Chain::updateAllBangleKinkNum_Ini(bool circular = false)
-{
-	if (circular){
-		stats.kink_num = 0;
-		C[0].bangle = calAngle(C[maxnum], C[0]);
-		if (C[0].bangle > KINKLOWERBOUND)
-			stats.kink_num++;
-		for (int i = 1; i < maxnum + 1; i++)
-		{
-			C[i].bangle = calAngle(C[i - 1], C[i]);
-			if (C[i].bangle > KINKLOWERBOUND)
-				stats.kink_num++;
-		}
-	}
-	else
-	{
-		stats.kink_num = 0;
-		for (int i = 1; i < maxnum + 1; i++)
-		{
-			C[i].bangle = calAngle(C[i - 1], C[i]);
-			if (C[i].bangle > KINKLOWERBOUND)
-				stats.kink_num++;
-		}
-        C[0].bangle=0.0;
-	}
-    cout <<"============Bangle and KinkNum Initiated=============="<<endl;
-	for (int i = 1; i < maxnum + 1; i++)
-        cout <<i<<": "<< C[i].bangle << "  ";
-    cout<<"[END]"<<endl;
-}
 int Chain::dispChainCord()
 {
     cout <<"============Coordinates=============="<<endl;

@@ -1,0 +1,13 @@
+length 200
+g 7.054815521
+bpperseg 10.5
+
+#maxRogAng is the maximum rotation angle in degree
+#Rotation can go beyound that number by adjusting P_SMALLROTATION.
+maxRotAng 40
+P_SMALLROTATION 0.8
+
+filePrefix 200seg7-10,103-106
+
+#dnaChain member
+VolEx_R 5.0

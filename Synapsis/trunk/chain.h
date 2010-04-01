@@ -13,15 +13,9 @@
 #include "math\ezlin.h"
 #include "string\strplus.h"
 #include "SmallTypes.h"
-#include "MCbox.h"
 
 double G_b(double ang);
-double G_t(int Lk,double L_bp,int kink_num);
-double P_t_over_2t(double L_bp,int kinkNum);
 
-
-
-class MCbox_circular;
 class CircularChain; //Finish declaration of Chain for the use of declaration of its nest friend class rigid;
 
 class cls_rigid{
@@ -64,7 +58,6 @@ public:
 		  passed to endToEndSampleCycle. */
 		counter accepts;
 		counter auto_moves;
-		signed int kink_num;
         statqueue <double> auto_prd_endToEndDistance2;
         statqueue <double> auto_prd_endToEndAngle;
 		statqueue <double> gyration_ratio;
@@ -96,13 +89,11 @@ protected:
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],int m, int n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
-	virtual int updateAllBangleKinkNum() = 0;
-	void updateAllBangleKinkNum_Ini(bool circular);
-	virtual int updateBangleKinkNum(int i) = 0;
 
     void normalize();
 
 public:
+	double VolEx_R;
     void auto_updt_stats(){
         stats.auto_moves++;
 		if (stats.auto_moves() % endToEndSampleCycle==0) {
@@ -148,23 +139,17 @@ public:
 };
 
 class CircularChain: public Chain{
-public:
-	int Lk;
-	MCbox_circular * parent;
-protected:
-	virtual int updateAllBangleKinkNum();
-	virtual int updateBangleKinkNum(int i);
-	void driftProof();
-private:
-	CircularChain();
-public:
 
-	CircularChain(int length, MCbox_circular* r_parent);
-	CircularChain(char const *filename,int length, MCbox_circular* r_parent);
+protected:
+	void driftProof();
+public:
+	CircularChain();
+	CircularChain(int length);
+	CircularChain(char const *filename,int length);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
 	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
-	virtual void snapshot_synapsis(char *filename);
+	int IEV(const int in,const int ik);
 };
 #endif /* CHAIN_H */

@@ -1,6 +1,5 @@
 #ifndef MCBOX_H
 #define MCBOX_H
-
 #include <string> //used in map<string, string> and config reading.
 #include <sstream>//string to number convertion
 
@@ -10,12 +9,14 @@
 #include "math\randplus.h"
 #include "string\strplus.h"
 #include "chain.h"
+#include "file\configldr.h"
+#include <map>
+#include <sstream>
 
 
 using std::ofstream;
 using std::cout;
 using std::endl;
-
 
 class MCbox_circular{
 protected:
@@ -23,23 +24,17 @@ protected:
 	char buf[strBufSize];
 	char filePrefix[80];
 	unsigned long anglenums[180];
-	unsigned long N_kink[MAXKINKNUM+1];
 	unsigned long seeding;
-	ofstream fp_log;
+	ofstream * fp_log;
 
 
 public:
-    CircularChain dnaChain;
-	allrigid RG;
+    CircularChain * dnaChain;
     MCbox_circular(
-        char const *r_filePrefix, 
-        int const length,
+		char const * configFile,
         unsigned long r_seeding = 23UL);
-	MCbox_circular(
-		int const length, 
-		unsigned long r_seeding = 23UL);
 	virtual ~MCbox_circular(){
-        fp_log.close();
+        (*fp_log).close();
     }
     void logParameters(void);
     void logAngleDist(char *suffix = "");

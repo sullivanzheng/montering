@@ -1,45 +1,6 @@
-//////////////////////////////////
+
 #include "chain.h"
 using namespace std;
-int CircularChain::updateAllBangleKinkNum()
-{
-	stats.kink_num = 0;
-	C[0].bangle = calAngle(C[maxnum], C[0]);
-	if (C[0].bangle > KINKLOWERBOUND)
-		stats.kink_num++;
-	for (int i = 1; i < maxnum + 1; i++)
-	{
-		C[i].bangle = calAngle(C[i - 1], C[i]);
-		if (C[i].bangle > KINKLOWERBOUND)
-			stats.kink_num++;
-	}
-    cout <<"============Bangle and KinkNum Updated=============="<<endl;
-	for (int i = 1; i < maxnum + 1; i++)
-        cout <<"| "<< C[i].bangle << endl;
-    cout<<"------------------------------"<<endl;
-    return 0;
-}
-int CircularChain::updateBangleKinkNum(int i)
-{
-	if (i > maxnum || i < 0)
-	{
-		printf("bangle update (num): refered to non-existing segment %d", i);
-		getchar();
-		exit(EXIT_FAILURE);
-	}
-	//double temp=C[i].bangle;
-	if (C[i].bangle > KINKLOWERBOUND)
-		stats.kink_num--;
-	if (i == 0)
-		C[0].bangle = calAngle(C[maxnum], C[0]);
-	else
-		C[i].bangle = calAngle(C[i - 1], C[i]);
-	if (C[i].bangle > KINKLOWERBOUND)
-		stats.kink_num++;
-	//if (C[i].bangle>15.*PI/180.) 
-	//	cout <<"UPDT "<<i<<' '<<temp*180./PI<<"->"<<C[i].bangle*180./PI<<endl;
-	return 0;
-}
 void CircularChain::driftProof()
 {
 	for (int i = 1; i < maxnum + 1; i++)
@@ -51,17 +12,10 @@ void CircularChain::driftProof()
 	C[0].x = C[0].y = C[0].z = 0.0;
 }
 
-CircularChain::CircularChain(char const *filename,const int length, MCbox_circular * r_parent)
-:Chain(filename,true,length),parent(r_parent)
-{
-	Lk = (int)(bpperseg * totsegnum / 10.5 + 0.5);
-}
+CircularChain::CircularChain(char const *filename,const int length)
+:Chain(filename,true,length){}
 
-CircularChain::CircularChain(int length, MCbox_circular* r_parent):
-Chain(true,length),parent(r_parent)
-{
-	Lk = (int)(bpperseg * totsegnum / 10.5 + 0.5);
-}
+CircularChain::CircularChain(int length):Chain(true,length){}
 
 double CircularChain::calG_bSum()
 {
@@ -108,8 +62,7 @@ int CircularChain::crankshaft(int m, int n, double a)
 		C[j].z = C[i].z + C[i].dz;
 		i = j;
 	}
-	updateBangleKinkNum(m);
-	updateBangleKinkNum(n);
+
 	return 0;
 }
 
@@ -149,20 +102,9 @@ double CircularChain::deltaE_TrialCrankshaft_countMove(int m, int n, double a)
 	oldA2 = C[n].bangle;
 	//cout<<"2>"<<oldA2<<"\t"<<C[n].bangle<<endl;
 
-	int new_kink_num = stats.kink_num + 
-        (-(oldA1 > KINKLOWERBOUND ? 1 : 0) 
-         -(oldA2 > KINKLOWERBOUND ? 1 : 0) 
-         + (newA1 > KINKLOWERBOUND ? 1 : 0) 
-         + (newA2 > KINKLOWERBOUND ? 1 : 0));
 	double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
 	//C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength
-	dE = (+G_b(newA1) + G_b(newA2) - G_b(oldA1) - G_b(oldA2));/* 
-        + 2 * PI * PI * C / (totsegnum * bpperseg) * 
-        (+(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
-        *(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
-        -(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num) 
-        * (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num));*/
-//Torsional stress removed for now.
+	dE = (+G_b(newA1) + G_b(newA2) - G_b(oldA1) - G_b(oldA2));
 
 	/*
 	C_=2*pi*pi*C;
@@ -218,68 +160,53 @@ void CircularChain::snapshot(char *filename)
 	fh.close();
 }
 
-void CircularChain::snapshot_synapsis(char *filename){
-	ofstream fh (filename);
-	char buf[300];
-	int i;
-	int pro[100];
-	int promax=0;
 
-//	cout<<(MCbox_circular *)(this->parent)->RG <<endl;
-//	for (promax=0;promax< parent->RG.protect.size();promax++){
-//		pro[promax]= parent->RG.protect[promax];
-//	}
-	pro[promax]=-1;
-	cout<<"protection number"<<promax<<endl;
+int CircularChain::IEV(const int in, const int ik){
+// excluded volume effects
+// iev=0 corresponds to intersection
+// iev=1 corresponds to no intersection
+// This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
 
-	if (!fh.good())
-	{
-		cout << "file not writable" << endl;
-		getchar();
-		exit(EXIT_FAILURE);
-	}
-	sprintf(buf, "%6d %20s", maxnum + 1, "[Snapshot of a circle]");
-	fh << buf << endl;
-	i=0;
-	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
-        i + 1, "F", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
-	fh << buf << endl;
-	for ( i = 1; i <= maxnum; i++)
-	{	
-		int flag=0;
-		for (int j=0;pro[j]!=-1;j++){
-			if (i==pro[j]){
-				flag=1;
-			}
-		}
-		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
-			i + 1, flag?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
-		fh << buf << endl;
-	}
-	
-    fh << endl << "Detailed Info" << endl;
-	for ( i = 0; i <= maxnum-1; i++)
-	{
-		sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15.10f %15.10f", 
-            i+1, C[i].dx,C[i].dy,C[i].dz,
-            modu(C[i].dx, C[i].dy, C[i].dz), 
-            modu(C[i + 1].x - C[i].x, 
-                 C[i + 1].y - C[i].y, 
-                 C[i + 1].z - C[i].z), 
-            C[i].bangle);
-		fh << buf << endl;
-	}
-	i=maxnum;
-    sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15s %15.10f", 
-            i+1, C[i].dx,C[i].dy,C[i].dz,
-            modu(C[i].dx, C[i].dy, C[i].dz), 
-            "--------",
-            C[i].bangle);
-	fh << buf << endl;
-	fh.close();
+	int iev=0,idiam=1;
+	const int VEcutoff=3;
+	const double eps=1e-7;
+	double xij,yij,zij,a2,ddd;
+	double b,b2,rna,rnb,ak,bk,t;
+	double er,er2;
+	er=this->VolEx_R;
+
+	for (int i=in;i<=ik;i++){				// do 2 i=in,ik
+		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
+			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
+			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
+			xij=this->C[j].x-this->C[i].x;//xij=x(j)-x(i)
+			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
+			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
+			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
+			ddd=a2;//ddd=a2
+			if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
+			b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
+			b2=1.0-b*b; //b2=1.-b*b
+			rna=xij*C[i].dx+yij*C[i].dy+zij*C[i].dz;//rna=xij*dx(i)+yij*dy(i)+zij*dz(i)
+			rnb=xij*C[j].dx+yij*C[j].dy+zij*C[j].dz;//rnb=xij*dx(j)+yij*dy(j)+zij*dz(j)
+			if(fabs(b2) < eps) goto g1; // if dXi//dXj   //if(abs(b2).lt.eps) goto 1
+			ak=(rna-rnb*b)/b2;
+			bk=(-rnb+rna*b)/b2;
+			if(( ak<0 || ak>1 ) || (bk<0 || bk >1) ) goto g1;//if((ak.lt.0..or.ak.gt.1.).or.(bk.lt.0..or.bk.gt.1.)) goto 1
+			ddd=a2+bk*bk+ak*ak+2.*bk*rnb-2.*ak*rna-2.*ak*bk*b;
+			goto g4;
+g1:         if(rna<0 || rna>1) goto g5;
+			ddd=a2-rna*rna;
+g5:         if(rnb>0 || rnb<-1.) goto g4;
+			t=a2-rnb*rnb;
+			if(t<ddd) ddd=t;
+g4:         if(ddd<er*er) idiam=0;
+		}//3 continue
+	if(idiam==0) return iev;//iev=0 here;
+	}    //2 continue
+	iev=1;
+	return iev;
 }
-
-
 
 allrigid::allrigid(char *configfile,CircularChain * target){
 	using namespace std;
@@ -395,7 +322,9 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 		ref_v_xyz.push_back(a);
 	}
 
+	std::cout<<"Rigid body constructed"<<std::endl;
 	for (int i=0;i<this->ref_v_xyz.size();i++){
+		
 		std::cout<<ref_v_xyz[i][0]<<" ";
 		std::cout<<ref_v_xyz[i][1]<<" ";
 		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
