@@ -1,4 +1,8 @@
 length 200
+crank_min_length 3
+crank_max_length 30
+VEcutoff 2
+
 g 7.054815521
 bpperseg 10.5
 
@@ -11,3 +15,6 @@ filePrefix 200seg7-10,103-106
 
 #dnaChain member
 VolEx_R 5.0
+
+#Random seed
+seeding 0

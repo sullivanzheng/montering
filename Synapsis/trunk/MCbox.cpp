@@ -1,9 +1,6 @@
 #include "MCbox.h" 
 MCbox_circular::MCbox_circular(
-    char const *configFile,
-	unsigned long r_seeding):
-    seeding(r_seeding)
-{	
+    char const *configFile){	
 	using namespace std;
 	//Read Config File;
 	map <string,string> config;
@@ -11,7 +8,10 @@ MCbox_circular::MCbox_circular(
 
 	stringstream(config[string("length")])>>totsegnum;
 	maxnum= totsegnum -1;
-    crank_max_length = totsegnum / 2;
+
+	stringstream(config[string("crank_min_length")])>>crank_min_length;
+	stringstream(config[string("crank_max_length")])>>crank_max_length;
+	stringstream(config[string("VEcutoff")])>>VEcutoff;
 
 	stringstream(config[string("g")])>>g;
 
@@ -29,9 +29,9 @@ MCbox_circular::MCbox_circular(
     this->dnaChain=
 		new CircularChain(strcat_noOW(buf, strBufSize, const_cast<char*>(filePrefix), ".vmc"),totsegnum);
     
-	double VolEx_R;
-	stringstream(config[string("VolEx_R")])>>VolEx_R;
-	this->dnaChain->VolEx_R = VolEx_R;
+	stringstream(config[string("VolEx_R")])>>this->dnaChain->VolEx_R;
+
+	stringstream(config[string("seeding")])>>this->seeding;
 
     //Initialize statistical variables.
     for (int i = 0; i < 180; i++)
@@ -111,6 +111,12 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 				}
 			}
 		}
+		//NOTE ABOUT M AND N. PAY ATTENTION.
+		//M<N is not necessary here since deltaE_TrialCrankshaft_countMove and crankshaft
+		//support M>N and automatically wraps the iterator when it hits the tail to the 
+		//beginning of the chain.
+		//Therefore, all energy evaluation program should be careful with chain segment 
+		//iteration due to wrapping problem.
 
         double dE, cacheRE;
 
@@ -164,7 +170,14 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 			dnaChain->snapshot(buf);
 		}
 
-		if (moves%500==0){
+		if (moves%10000==0){
+			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
+				<<" in moves "<<dnaChain->stats.auto_moves()
+				<<'['<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()
+				<<']'<<endl;
+			dnaChain->stats.accepts.lap();
+			dnaChain->stats.auto_moves.lap();
+
 			double gyration_ratio=this->calcGyration();
 			dnaChain->stats.gyration_ratio.push(gyration_ratio);
 			for (int i=0;i<=maxnum;i++){

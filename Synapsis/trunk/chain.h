@@ -150,6 +150,6 @@ public:
 	virtual int crankshaft(int m, int n, double a);
 	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
-	int IEV(const int in,const int ik);
+	int IEV( int in, int ik);
 };
 #endif /* CHAIN_H */

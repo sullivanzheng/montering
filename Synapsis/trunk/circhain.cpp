@@ -161,14 +161,23 @@ void CircularChain::snapshot(char *filename)
 }
 
 
-int CircularChain::IEV(const int in, const int ik){
+int CircularChain::IEV( int in,  int ik){
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
 // This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
 
+	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+	{
+		cout<<"Illegal values of in and ik "
+			"at int CircularChain::IEV( int in,  int ik) ("<<in<<','<<ik<<')';
+		exit(EXIT_FAILURE);
+	}
+	
+	int temp;
+	if (in>ik) {temp=in;in=ik;ik=temp;}
+
 	int iev=0,idiam=1;
-	const int VEcutoff=3;
 	const double eps=1e-7;
 	double xij,yij,zij,a2,ddd;
 	double b,b2,rna,rnb,ak,bk,t;
@@ -179,7 +188,7 @@ int CircularChain::IEV(const int in, const int ik){
 		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
 			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
 			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
-			xij=this->C[j].x-this->C[i].x;//xij=x(j)-x(i)
+			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
 			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
 			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
 			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij

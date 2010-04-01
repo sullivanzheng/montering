@@ -27,12 +27,12 @@ protected:
 	unsigned long seeding;
 	ofstream * fp_log;
 
+private:
+	MCbox_circular ();
 
 public:
     CircularChain * dnaChain;
-    MCbox_circular(
-		char const * configFile,
-        unsigned long r_seeding = 23UL);
+    MCbox_circular(char const * configFile);
 	virtual ~MCbox_circular(){
         (*fp_log).close();
     }

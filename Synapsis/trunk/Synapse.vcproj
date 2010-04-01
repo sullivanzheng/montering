@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="Synapse"
 	ProjectGUID="{37E29938-1D1A-4D03-90AA-8E4CBD06D4D6}"
+	RootNamespace="Synapse"
 	>
 	<Platforms>
 		<Platform
