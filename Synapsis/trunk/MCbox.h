@@ -18,6 +18,8 @@ using std::ofstream;
 using std::cout;
 using std::endl;
 
+
+
 class MCbox_circular{
 protected:
 	static const int strBufSize=180;

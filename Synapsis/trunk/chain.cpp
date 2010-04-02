@@ -243,4 +243,3 @@ void Chain::snapshot(char *filename)
 	fh << buf << endl;
 	fh.close();
 }
-

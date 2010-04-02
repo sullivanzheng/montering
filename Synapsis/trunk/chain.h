@@ -42,7 +42,6 @@ public:
 	double update_allrigid_and_E();
 };
 
-
 class Chain {
 public:
 	struct stct_stat
@@ -150,6 +149,7 @@ public:
 	virtual int crankshaft(int m, int n, double a);
 	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
-	int IEV( int in, int ik);
+	int IEV(int in, int ik);
+	int kpoly(int ial[2], int &ierr);
 };
 #endif /* CHAIN_H */

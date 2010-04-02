@@ -42,7 +42,6 @@ MCbox_circular::MCbox_circular(
 	dnaChain->snapshot("000.txt");
 }
 
-
 void MCbox_circular::logAngleDist(char *suffix)
 {
     strcat_noOW(buf, strBufSize, filePrefix, "_angleDist.txt");
@@ -53,19 +52,21 @@ void MCbox_circular::logAngleDist(char *suffix)
     fp << endl;
     fp.close();
 }
+
 void MCbox_circular::clearAngleStats(void)
 {
     for (int i = 0; i < 180; i++)
         anglenums[i] = 0;
 }
+
 void MCbox_circular::pushAngleStats(void)
 {
     for (int i = 0; i < maxnum; i++)
     {
         anglenums[int(floor(dnaChain->C[i].bangle * 180 / PI))]++;
-
     }
 }
+
 void MCbox_circular::logAccepts(void)
 {
     sprintf(buf, "%12d %12d ", 
@@ -73,6 +74,7 @@ void MCbox_circular::logAccepts(void)
         dnaChain->stats.accepts.getNumber());
     (*fp_log) << buf;
 }
+
 void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 {
     MTRand53 mt(seeding);
@@ -132,6 +134,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 		
 		int E_condition=0;
 		int IEV_condition=0;
+		int topo_condition=0;
 
 		if (dE < 0){
 			E_condition=1;
@@ -157,6 +160,19 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 			IEV_condition=0;
 		}
 
+		int ial[2],ierr;
+		this->dnaChain->kpoly(ial, ierr);
+		if (ierr==2){
+			cout<<"The crossing on the chain is too many!"<<endl;
+			exit(EXIT_FAILURE);
+		}
+
+		if (ierr==0 && ial[0]==1 && ial[1]==1){
+			topo_condition=1;
+		}else{
+			topo_condition=0;
+		}
+
 		if (E_condition==1 && IEV_condition==1){
 				this->dnaChain->stats.accepts++;		
 		}
@@ -165,7 +181,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 				RG.update_allrigid_and_E();
 		}
 
-		if (moves%100000==0){
+		if (moves%10000==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			dnaChain->snapshot(buf);
 		}
@@ -178,6 +194,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 			dnaChain->stats.accepts.lap();
 			dnaChain->stats.auto_moves.lap();
 
+			(*fp_log)<<"current topolgy:"<<ial[0]<<','<<ial[1]<<endl;
 			double gyration_ratio=this->calcGyration();
 			dnaChain->stats.gyration_ratio.push(gyration_ratio);
 			for (int i=0;i<=maxnum;i++){
@@ -195,7 +212,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 void MCbox_circular::logParameters(void){
 		(*fp_log) 
 			<<"========================CONSTANTS========================"<<endl
-			<<"PI"<<PI
+			<<" PI"<<PI
 			<<" maxa	= "<<	maxa	<<endl
 			<<" crank_min_length	= "<<	crank_min_length	<<endl
 			<<"===================GLOBAL VARIABLES====================="<<endl

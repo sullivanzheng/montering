@@ -132,9 +132,17 @@ void CircularChain::snapshot(char *filename)
         i + 1, "F", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 	fh << buf << endl;
 	for ( i = 1; i <= maxnum; i++)
-	{
-		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
-            i + 1, "C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
+	{	
+		int mark=0;
+		for (int k=0;k<protect_list.size();k++){
+			if (i==protect_list[k]){
+				mark=1;
+				break;
+			}
+		}
+
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+			i + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
 	}
 
@@ -159,7 +167,6 @@ void CircularChain::snapshot(char *filename)
 	fh << buf << endl;
 	fh.close();
 }
-
 
 int CircularChain::IEV( int in,  int ik){
 // excluded volume effects
@@ -188,6 +195,10 @@ int CircularChain::IEV( int in,  int ik){
 		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
 			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
 			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
+			for (int k=0; k<protect_list.size();k++){
+				int tempi=protect_list[k];
+				if (i==tempi || j==tempi) goto Lcontinue;
+			}
 			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
 			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
 			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
@@ -210,12 +221,495 @@ g5:         if(rnb>0 || rnb<-1.) goto g4;
 			t=a2-rnb*rnb;
 			if(t<ddd) ddd=t;
 g4:         if(ddd<er*er) idiam=0;
+Lcontinue:	;
 		}//3 continue
 	if(idiam==0) return iev;//iev=0 here;
 	}    //2 continue
 	iev=1;
 	return iev;
 }
+
+
+
+#include "f2c.h"
+int  CircularChain::kpoly(int ial[2], int &ierr)
+{
+/* k3.f -- translated by f2c (version 20060506).
+   You must link the resulting object file with libf2c:
+	on Microsoft Windows system, link with libf2c.lib;
+	on Linux or Unix systems, link with .../path/to/libf2c.a -lm
+	or, if you install libf2c.a in a standard place, with -lf2c -lm
+	-- in that order, at the end of the command line, as in
+		cc *.o -lf2c -lm
+	Source for libf2c is in /netlib/f2c/libf2c.zip, e.g.,
+
+		http://www.netlib.org/f2c/libf2c.zip
+*/
+	
+/*  Subroutine KN calculates the values I(t) for t=-1 and t=-2. I(t) is related */
+/*  to the Alexander Polynomial, D(t), by the next equation: */
+/* 				I(t)=abs(D(t)/t**n) */
+/*  The value of n is the largest for which I(t) is the integer. The subroutine */
+/*  puts I(-1) and I(-2) into array ial. */
+/*  The subroutine parameters: */
+/* 	jr1 - the number of straight segments of the closed chain; */
+/* 	ial - the array for I(-1) and I(-2) (output parameters); */
+/* 	ierr = 2 if the number of crossings on the chain */
+/*  projection is too big. Normally its value is equal to 0. */
+/*  The coordinates of the chain vertices are in the arrays x, y, z which have to */
+/*  be in the common block /x/. Note that values of x(jr1+1), y(jr1+1), and */
+/*  z(jr1+1) should be defined and equal x(1), y(1), and z(1) correspondingly. Before */
+/*  the subroutine call one should also define the vectors corresponding to the chain */
+/*  segments: */
+/*  dx(i)=x(i+1)-x(i) */
+/*  dy(i)=y(i+1)-y(i) */
+/*  dz(i)=z(i+1)-z(i). */
+    /* Initialized data */
+
+    static doublereal deps = 1e-7;
+
+    /* System generated locals */
+    integer i__1, i__2, i__3;
+    doublereal d__1, d__2;
+
+    /* Local variables */
+    static doublereal c__, d__;
+    static integer i__, j, k, l;
+    static doublereal t, x[910], y[910], z__[910];
+    static integer i1, i2, n1, n2, m4, n4;
+    static real r1, r2;
+    static doublereal da[72900]	/* was [270][270] */;
+    static integer id[500], n11, n21, n41, jj;
+    static doublereal dr;
+    static integer mj, cx[500];
+    static doublereal dx[910], dy[910], dz[910];
+    static integer ir, ks, ix[500], js, nv;
+    static real rx, xr;
+    static integer ic1[500], ic2[500], n4i, jr1, jr2, jr3, jr4;
+    static real rl1, rl2;
+    static integer nv1;
+    static doublereal px1, py1, px2, py2;
+    static real rz1, rz2;
+    static integer ikn;
+    static doublereal px11, px21;
+    static integer ipr;
+    static doublereal drx, pdx1, pdy1, pdx2, pdy2;
+    static integer jmin;
+    static doublereal pdx12;
+    static integer kmax;
+
+	//Interfacing my program data to this routine//
+	for (int i=0; i<=maxnum; i++){
+		x[i+1]=C[i].x;y[i+1]=C[i].y;z__[i+1]=C[i].z;
+		dx[i+1]=C[i].dx;dy[i+1]=C[i].dy;dz[i+1]=C[i].dz;
+	}
+	x[maxnum+2]=C[0].x;y[maxnum+2]=C[0].y;z__[maxnum+2]=C[0].z;
+	jr1=maxnum; //TODO jr1=maxnum+1!!!!!!!!!!!
+
+	//-------------------------------------------//
+/* Function Parameter */
+/* ParaOver */
+    jr2 = jr1 - 2;
+/*  Search for intersections */
+/*  n4 - total number of intersections */
+/*  cx(i) - x-value of i-th intersection */
+/*  ic1(i) - number of undergoing segment for i-th intersection */
+/*  ic2(i) - number of overgoing segment for i-th intersection */
+    ierr = 0;
+    ipr = 0;
+L491:
+    n4 = 1;
+    t = -1.;
+    i__1 = jr2;
+    for (n1 = 1; n1 <= i__1; ++n1) {
+	n11 = n1 + 1;
+	jr3 = jr1;
+	if (n1 < 2) {
+	    --jr3;
+	}
+	jr4 = n1 + 2;
+	pdx1 = dx[n1 - 1];
+	pdy1 = dy[n1 - 1];
+	px1 = x[n1 - 1];
+	py1 = y[n1 - 1];
+	px11 = x[n11 - 1];
+	i__2 = jr3;
+	for (n2 = jr4; n2 <= i__2; ++n2) {
+	    px2 = x[n2 - 1];
+	    py2 = y[n2 - 1];
+	    if ((d__1 = px2 - px1, abs(d__1)) > 2. || (d__2 = py2 - py1, abs(
+		    d__2)) > 2.) {
+		goto L111;
+	    }
+	    pdx2 = dx[n2 - 1];
+	    pdy2 = dy[n2 - 1];
+	    n21 = n2 + 1;
+	    px21 = x[n21 - 1];
+	    d__ = pdx2 * pdy1 - pdx1 * pdy2;
+	    if (abs(d__) < deps) {
+		goto L111;
+	    }
+	    pdx12 = pdx1 * pdx2;
+	    drx = (py2 * pdx12 - px2 * pdx1 * pdy2 - py1 * pdx12 + px1 * pdx2 
+		    * pdy1) / d__;
+	    if (px1 <= px11) {
+		if (drx < px1 || drx >= px11) {
+		    goto L111;
+		}
+	    } else {
+		if (drx <= px11 || drx > px1) {
+		    goto L111;
+		}
+	    }
+	    if (px2 <= px21) {
+		if (drx < px2 || drx >= px21) {
+		    goto L111;
+		}
+	    } else {
+		if (drx <= px21 || drx > px2) {
+		    goto L111;
+		}
+	    }
+	    rx = drx;
+	    if (n4 > 500) {
+		goto L1002;
+	    }
+	    rz1 = (rx - x[n1 - 1]) / dx[n1 - 1] * dz[n1 - 1] + z__[n1 - 1];
+	    rz2 = (rx - x[n2 - 1]) / dx[n2 - 1] * dz[n2 - 1] + z__[n2 - 1];
+	    cx[n4 - 1] = rx;
+	    if (rz1 - rz2 >= 0.f) {
+		goto L401;
+	    }
+	    ic1[n4 - 1] = n1;
+	    ic2[n4 - 1] = n2;
+	    goto L402;
+L401:
+	    ic1[n4 - 1] = n2;
+	    ic2[n4 - 1] = n1;
+L402:
+	    ++n4;
+L111:
+	    ;
+	}
+/* L110: */
+    }
+    --n4;
+    n4i = n4;
+/* renumeration of intersections in the proper order */
+    if (n4 <= 2) {
+	goto L31;
+    }
+    n41 = n4 - 1;
+    i__1 = n41;
+    for (n1 = 1; n1 <= i__1; ++n1) {
+	i1 = ic1[n1 - 1];
+	nv1 = n1;
+	n11 = n1 + 1;
+	i__2 = n4;
+	for (n2 = n11; n2 <= i__2; ++n2) {
+	    if ((i__3 = ic1[n2 - 1] - i1) < 0) {
+		goto L405;
+	    } else if (i__3 == 0) {
+		goto L406;
+	    } else {
+		goto L404;
+	    }
+L405:
+	    i1 = ic1[n2 - 1];
+	    nv1 = n2;
+	    goto L404;
+L406:
+	    rl1 = (d__1 = x[i1 - 1] - cx[nv1 - 1], abs(d__1));
+	    rl2 = (d__1 = x[i1 - 1] - cx[n2 - 1], abs(d__1));
+	    if (rl1 < rl2) {
+		goto L404;
+	    }
+	    nv1 = n2;
+L404:
+	    ;
+	}
+	if (n1 >= nv1) {
+	    goto L403;
+	}
+	ir = ic1[n1 - 1];
+	ic1[n1 - 1] = ic1[nv1 - 1];
+	ic1[nv1 - 1] = ir;
+	ir = ic2[n1 - 1];
+	ic2[n1 - 1] = ic2[nv1 - 1];
+	ic2[nv1 - 1] = ir;
+	xr = (real) cx[n1 - 1];
+	cx[n1 - 1] = cx[nv1 - 1];
+	cx[nv1 - 1] = xr;
+L403:
+	;
+    }
+/* Determination of the crossing type */
+    i__1 = n4;
+    for (i__ = 1; i__ <= i__1; ++i__) {
+	i1 = ic1[i__ - 1];
+	i2 = ic2[i__ - 1];
+	if (dx[i1 - 1] * dy[i2 - 1] - dx[i2 - 1] * dy[i1 - 1] > 0.f) {
+	    id[i__ - 1] = 1;
+	} else {
+	    id[i__ - 1] = -1;
+	}
+/* L59: */
+    }
+/*   Determination of the number of overpassing generator, ix(i), */
+/*   for i-th intersection */
+    i__1 = n4;
+    for (n1 = 1; n1 <= i__1; ++n1) {
+	nv = ic2[n1 - 1];
+	n2 = 0;
+L72:
+	++n2;
+	if (n2 >= n4 + 1) {
+	    goto L771;
+	}
+	if ((i__2 = ic1[n2 - 1] - nv) < 0) {
+	    goto L72;
+	} else if (i__2 == 0) {
+	    goto L73;
+	} else {
+	    goto L71;
+	}
+L73:
+	r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
+/* L74: */
+	r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
+	if (r1 < r2) {
+	    goto L71;
+	}
+	goto L72;
+L771:
+	ix[n1 - 1] = 1;
+	goto L19;
+L71:
+	ix[n1 - 1] = n2;
+L19:
+	;
+    }
+/*  Attempts of detanglement */
+L230:
+    mj = 0;
+    i__ = 0;
+L235:
+    ++i__;
+    if (i__ >= n4 - 1) {
+	goto L244;
+    }
+    if (ix[i__ - 1] != ix[i__]) {
+	goto L235;
+    }
+    if (id[i__ - 1] * id[i__] == 1) {
+	goto L235;
+    }
+    i1 = i__ + 1;
+    i__1 = n4;
+    for (k = 1; k <= i__1; ++k) {
+	if (ix[k - 1] == i1) {
+	    goto L235;
+	}
+/* L237: */
+    }
+    ++mj;
+    n4 += -2;
+    if (n4 <= 2) {
+	goto L31;
+    }
+    i__1 = n4;
+    for (k = i__; k <= i__1; ++k) {
+	ix[k - 1] = ix[k + 1];
+	id[k - 1] = id[k + 1];
+/* L238: */
+    }
+    i__1 = n4;
+    for (k = 1; k <= i__1; ++k) {
+	if (ix[k - 1] > i__) {
+	    ix[k - 1] += -2;
+	}
+/* L239: */
+    }
+    goto L235;
+L244:
+    if (ix[n4 - 2] != ix[n4 - 1]) {
+	goto L236;
+    }
+    if (id[n4 - 2] * id[n4 - 1] == 1) {
+	goto L236;
+    }
+    i__1 = n4;
+    for (k = 1; k <= i__1; ++k) {
+	if (ix[k - 1] == n4) {
+	    goto L236;
+	}
+/* L246: */
+    }
+    ++mj;
+    n4 += -2;
+    if (n4 <= 2) {
+	goto L31;
+    }
+    i__1 = n4;
+    for (k = 1; k <= i__1; ++k) {
+	if (ix[k - 1] == n4 + 1) {
+	    ix[k - 1] = 1;
+	}
+/* L247: */
+    }
+L236:
+    if (mj > 0) {
+	goto L230;
+    }
+/*  Filling Alexander's matrix */
+    m4 = n4 - 1;
+    if (m4 > 269) {
+	goto L1002;
+    }
+L801:
+    i__1 = m4;
+    for (ks = 1; ks <= i__1; ++ks) {
+	i__2 = m4;
+	for (js = 1; js <= i__2; ++js) {
+	    da[ks + js * 270 - 271] = 0.;
+/* L501: */
+	}
+	js = ix[ks - 1];
+	if (js == ks || js == ks + 1) {
+	    da[ks + ks * 270 - 271] = -1.f;
+	    da[ks + (ks + 1) * 270 - 271] = 1.f;
+	} else {
+	    if (id[ks - 1] > 0) {
+		da[ks + ks * 270 - 271] = 1.f;
+		da[ks + (ks + 1) * 270 - 271] = -t;
+	    } else {
+		da[ks + ks * 270 - 271] = -t;
+		da[ks + (ks + 1) * 270 - 271] = 1.f;
+	    }
+	    da[ks + js * 270 - 271] = t - 1.f;
+	}
+/* L500: */
+    }
+/*  Calculation of the determinant */
+    c__ = 1.f;
+    kmax = m4 - 1;
+    i__1 = kmax;
+    for (k = 1; k <= i__1; ++k) {
+	if ((d__1 = da[k + k * 270 - 271], abs(d__1)) < deps) {
+	    jj = k + 1;
+	    c__ = -c__;
+L50:
+	    if (jj > m4) {
+		c__ = 0.f;
+		goto L90;
+	    }
+	    if ((d__1 = da[jj + k * 270 - 271], abs(d__1)) > deps) {
+		i__2 = m4;
+		for (l = 1; l <= i__2; ++l) {
+		    dr = da[k + l * 270 - 271];
+		    da[k + l * 270 - 271] = da[jj + l * 270 - 271];
+/* L80: */
+		    da[jj + l * 270 - 271] = dr;
+		}
+	    } else {
+		++jj;
+		goto L50;
+	    }
+	}
+	jmin = k + 1;
+	i__2 = m4;
+	for (j = jmin; j <= i__2; ++j) {
+	    if ((d__1 = da[k + j * 270 - 271], abs(d__1)) > deps) {
+		dr = da[k + j * 270 - 271] / da[k + k * 270 - 271];
+		i__3 = m4;
+		for (i__ = k; i__ <= i__3; ++i__) {
+		    da[i__ + j * 270 - 271] -= dr * da[i__ + k * 270 - 271];
+/* L22: */
+		}
+	    }
+/* L21: */
+	}
+/* L20: */
+    }
+    i__1 = m4;
+    for (i__ = 1; i__ <= i__1; ++i__) {
+/* L30: */
+	c__ *= da[i__ + i__ * 270 - 271];
+    }
+L90:
+    c__ = abs(c__);
+L790:
+    if (c__ > 1e7) {
+	c__ /= 2.;
+	goto L790;
+    }
+    ikn = (integer) (c__ + .1);
+    if (t == -2.) {
+L789:
+	if (ikn / 2 << 1 < ikn) {
+	    goto L788;
+	}
+	ikn /= 2;
+	goto L789;
+L788:
+	ial[1] = ikn;
+	return 0;
+    }
+    if (ikn == 1) {
+	ial[0] = 1;
+	ial[1] = 1;
+	return 0;
+    } else if (ikn == 3) {
+	ial[0] = 3;
+	ial[1] = 7;
+	return 0;
+    } else {
+	ial[0] = ikn;
+	if (ikn >= 82) {
+	    ial[1] = 49000;
+	    return 0;
+	} else {
+	    t = -2.f;
+	    goto L801;
+	}
+    }
+L31:
+    ial[0] = 1;
+    ial[1] = 1;
+    return 0;
+L1002:
+    if (ipr == 0) {
+	i__1 = jr1;
+	for (i__ = 1; i__ <= i__1; ++i__) {
+	    dr = x[i__ - 1];
+	    x[i__ - 1] = z__[i__ - 1];
+	    z__[i__ - 1] = dr;
+	    dr = dx[i__ - 1];
+	    dx[i__ - 1] = dz[i__ - 1];
+	    dz[i__ - 1] = dr;
+/* L345: */
+	}
+	ipr = 1;
+	goto L491;
+    } else if (ipr == 1) {
+	i__1 = jr1;
+	for (i__ = 1; i__ <= i__1; ++i__) {
+	    dr = y[i__ - 1];
+	    y[i__ - 1] = z__[i__ - 1];
+	    z__[i__ - 1] = dr;
+	    dr = dy[i__ - 1];
+	    dy[i__ - 1] = dz[i__ - 1];
+	    dz[i__ - 1] = dr;
+/* L346: */
+	}
+	ipr = 2;
+	goto L491;
+    } else {
+	ierr = 2;
+	return 0;
+    }
+    return 0;
+} /* kn_ */
 
 allrigid::allrigid(char *configfile,CircularChain * target){
 	using namespace std;
@@ -331,13 +825,23 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 		ref_v_xyz.push_back(a);
 	}
 
-	std::cout<<"Rigid body constructed"<<std::endl;
+	std::cout<<"Rigid body constructed, ref_v_xyz as follows:"<<std::endl;
 	for (int i=0;i<this->ref_v_xyz.size();i++){
-		
+		std::cout<<'['<<i<<']';
 		std::cout<<ref_v_xyz[i][0]<<" ";
 		std::cout<<ref_v_xyz[i][1]<<" ";
 		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
 	}
+
+	//Initialize or append the global protection list for rigid bodies.
+	protect_list.push_back(this->protect.front-1);
+	for (int i=0;i<this->protect.size();i++)
+		protect_list.push_back(this->protect[i]);
+//	protect_list.push_back(this->protect.back + 1);
+
+	std::cout<<"Constructing rigid body is over. The current status of global protect_list is:"<<endl;
+	for (int i=0;i<protect_list.size();i++)
+		std::cout<<'['<<i<<']'<<protect_list[i]<<std::endl;
 }
 
 void cls_rigid::update_ref_v_xyz(){
@@ -367,37 +871,5 @@ void cls_rigid::update_ref_v_xyz(){
 		for (int j=0;j<3;j++) { a[j]=o[j]; }
 		ref_v_xyz[i]=a;
 	}
-
-	/* test printouts. 
-	
-	for (int i=0;i<this->ref_v_xyz.size();i++){
-		std::cout<<">"<<this->target->stats.auto_moves()<<std::endl;
-		
-		std::cout<<this->target->C[protect[1]].dx<<" ";
-		std::cout<<this->target->C[protect[1]].dy<<" ";
-		std::cout<<this->target->C[protect[1]].dz<<" "<<std::endl;
-
-		std::cout<<ref_v_xyz[i][0]<<" ";
-		std::cout<<ref_v_xyz[i][1]<<" ";
-		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
-	}
-/*
-rigid.txt is as follows:
-
-#rigid body 1
-rigidstart
-$ 8 9 10
-vec 0,1,0
-rigidend
-
-
-#rigid body 2
-rigidstart
-$ 108 109 110
-vec 0,1,0
-rigidend
-
-Should see the same vector.
-*/
-
 }
+

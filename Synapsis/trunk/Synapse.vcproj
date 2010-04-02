@@ -322,6 +322,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\f2c.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MCbox.h"
 				>
 			</File>

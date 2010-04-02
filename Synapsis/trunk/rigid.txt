@@ -1,8 +1,7 @@
 #rigid body 1
-# seg 7 8 9 10. index from 0
-# Or point 8 9 10 11 12 indexed from 1.
+# index from 0
 rigidstart
-$ 8 9 10
+$ 101 102 103 
 vec  2.7001   -3.0002    2.7001
 vec  -1.1250    1.1250   -0.0000
 vec -0.1250    1.1250   -0.0000
@@ -10,10 +9,9 @@ rigidend
 
 
 #rigid body 2
-# seg 107 108 109 110. index from 0
-# Or point 108 109 110 111 112 indexed from 1.
+# index from 0
 rigidstart
-$ 108 109 110
+$ 305 306 307
 vec  2.7001   -3.0002    2.7001
 vec  -1.1250    1.1250   -0.0000
 vec  -0.1250    1.1250   -0.0000

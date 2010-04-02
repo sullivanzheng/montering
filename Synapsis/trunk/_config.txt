@@ -1,7 +1,7 @@
-length 200
+length 400
 crank_min_length 3
 crank_max_length 30
-VEcutoff 2
+VEcutoff 4
 
 g 7.054815521
 bpperseg 10.5
@@ -11,10 +11,12 @@ bpperseg 10.5
 maxRotAng 40
 P_SMALLROTATION 0.8
 
-filePrefix 200seg7-10,103-106
+#filePrefix 200seg7-10,103-106
+filePrefix 
 
-#dnaChain member
-VolEx_R 5.0
+#dnaChain member variable
+#VolEx_R is set to 2.5 nm. (Radius!) in the unit of segment.
+VolEx_R 0.7440
 
 #Random seed
 seeding 0
