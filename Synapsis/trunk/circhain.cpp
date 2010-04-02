@@ -707,7 +707,7 @@ L1002:
     } else {
 	ierr = 2;
 	return 0;
-    }
+	}
     return 0;
 } /* kn_ */
 
@@ -834,7 +834,7 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 	}
 
 	//Initialize or append the global protection list for rigid bodies.
-	protect_list.push_back(this->protect.front-1);
+	protect_list.push_back(this->protect.front()-1);
 	for (int i=0;i<this->protect.size();i++)
 		protect_list.push_back(this->protect[i]);
 //	protect_list.push_back(this->protect.back + 1);

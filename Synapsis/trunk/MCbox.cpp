@@ -181,7 +181,7 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 				RG.update_allrigid_and_E();
 		}
 
-		if (moves%10000==0){
+		if (moves%1000==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			dnaChain->snapshot(buf);
 		}

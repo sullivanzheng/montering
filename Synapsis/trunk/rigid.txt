@@ -1,4 +1,4 @@
-#rigid body 1
+# rigid body 1
 # index from 0
 rigidstart
 $ 101 102 103 

@@ -1,6 +1,6 @@
 length 400
 crank_min_length 3
-crank_max_length 30
+crank_max_length 60
 VEcutoff 4
 
 g 7.054815521
@@ -11,7 +11,7 @@ bpperseg 10.5
 maxRotAng 40
 P_SMALLROTATION 0.8
 
-#filePrefix 200seg7-10,103-106
+#filePrefix main
 filePrefix 
 
 #dnaChain member variable
