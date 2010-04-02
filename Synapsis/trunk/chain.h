@@ -36,6 +36,9 @@ private:
 	allrigid();
 public:
 	double E;
+	double AxisBeta;
+	double RadiusBeta;
+	double r;
 	std::vector<cls_rigid> R;
 	allrigid(char *configfile, CircularChain *taget);
 	std::vector<int> protect;

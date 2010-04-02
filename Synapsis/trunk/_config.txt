@@ -1,4 +1,4 @@
-length 400
+length 200
 crank_min_length 3
 crank_max_length 60
 VEcutoff 4
@@ -12,7 +12,7 @@ maxRotAng 40
 P_SMALLROTATION 0.8
 
 #filePrefix main
-filePrefix 
+filePrefix 200seg7-10,103-106
 
 #dnaChain member variable
 #VolEx_R is set to 2.5 nm. (Radius!) in the unit of segment.
@@ -23,4 +23,4 @@ seeding 0
 
 #void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step) constant
 SNAPSHOT_INTERVAL  10000
-STAT_INTERVAL  10000
+STAT_INTERVAL  100

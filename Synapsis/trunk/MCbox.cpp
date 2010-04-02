@@ -166,18 +166,18 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 
 		int ial[2],ierr;
 		this->dnaChain->kpoly(ial, ierr);
-		if (ierr==2){
+		if (ierr!=0){
 			cout<<"The crossing on the chain is too many!"<<endl;
 			exit(EXIT_FAILURE);
 		}
 
-		if (ierr==0 && ial[0]==1 && ial[1]==1){
+		if (ial[0]==1 && ial[1]==1){
 			topo_condition=1;
 		}else{
 			topo_condition=0;
 		}
 
-		if (E_condition==1 && IEV_condition==1){
+		if (E_condition==1 && IEV_condition==1 && topo_condition==1){
 				this->dnaChain->stats.accepts++;		
 		}
 		else{
@@ -191,22 +191,22 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 		}
 
 		if (moves%STAT_INTERVAL==0){
-			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
+/*			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()
 				<<']'<<endl;
 			dnaChain->stats.accepts.lap();
 			dnaChain->stats.auto_moves.lap();
-
-			(*fp_log)<<"current topolgy:"<<ial[0]<<','<<ial[1]<<endl;
+*/			(*fp_log)<<"["<<moves<<"] ";
+		    (*fp_log)<<"tp("<<ial[0]<<','<<ial[1]<<")";//<<endl;
+			(*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
+				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
 //			double gyration_ratio=this->calcGyration();
 //			dnaChain->stats.gyration_ratio.push(gyration_ratio);
-//			for (int i=0;i<=maxnum;i++){
+//			for (int i=0;i<=maxnum;i++)
 //				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
-
-
-			}
 		}
+		
 	}
 	for (int i=0;i<=maxnum;i++){
 		(*fp_log)<<i<<" "<<dnaChain->stats.anglelist[i].getMean()<<" "

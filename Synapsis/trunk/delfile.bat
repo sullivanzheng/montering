@@ -1,1 +1,1 @@
-del main00*.txt
+del 200seg7*.txt

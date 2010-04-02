@@ -93,7 +93,8 @@ int CircularChain::crankshaft(int m, int n, double a)
 		C[j].z = C[i].z + C[i].dz;
 		i = j;
 	}
-
+	updateBangle(m);	
+	updateBangle(n);
 	return 0;
 }
 
@@ -335,7 +336,7 @@ int  CircularChain::kpoly(int ial[2], int &ierr)
 		dx[i+1]=C[i].dx;dy[i+1]=C[i].dy;dz[i+1]=C[i].dz;
 	}
 	x[maxnum+2]=C[0].x;y[maxnum+2]=C[0].y;z__[maxnum+2]=C[0].z;
-	jr1=maxnum; //TODO jr1=maxnum+1!!!!!!!!!!!
+	jr1=maxnum+1;
 
 	//-------------------------------------------//
 /* Function Parameter */
@@ -800,14 +801,13 @@ double allrigid::update_allrigid_and_E(){
 	for (int i=0;i<this->R.size();i++){
 		R[i].update_ref_v_xyz();
 	}
-
 	this->E = 0;
 
 	//Axis Orientation. ref_v_xyz[0]
-	this->E += betaVec1Vec2(this->R[0].ref_v_xyz[0],this->R[1].ref_v_xyz[0])*(-10);
+	this->AxisBeta=betaVec1Vec2(this->R[0].ref_v_xyz[0],this->R[1].ref_v_xyz[0]);
 
 	//Curvature radius direction orientation. ref_v_xyz[1]
-	this->E += betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1])*(-10);
+	this->RadiusBeta =betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1]);
 
 	//Center point of each rigid body. ref_v_xyz[2]
 	double t0[3],t1[3];
@@ -819,8 +819,26 @@ double allrigid::update_allrigid_and_E(){
 	t1[1]=R[1].ref_v_xyz[2][1] + R[1].target->C[R[1].protect[0]].y;
 	t1[2]=R[1].ref_v_xyz[2][2] + R[1].target->C[R[1].protect[0]].z;
 	
-	this->E += modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]) * 50;
+	this->r=modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]);
+	
+/*	double sigma2=1;
+	double r0=1,q=0.8;
+	double A=17;
 
+	this->E=
+	exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
+	*(pow(r0/r,q*2)-2*pow(r0/r,q));*/
+
+/*	this->E += r * 50;
+	this->E += AxisBeta*(-10);
+	this->E += RadiusBeta *(-10);
+*/
+	static double r0=5,r01=5,a0=2.0/180.*PI,R0=20.0/180.*PI;
+	static double A=8,B=17-A,C=5; //A+B=17
+	this->E=-B*exp(
+		-(AxisBeta-PI)*(AxisBeta-PI)/(a0*a0)/2-r*r/(r0*r0)/2)
+		-C*exp(-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2-r*r/(r0*r0)/2)
+		-A*exp(-r*r/(r01*r01)/2);
     return this->E;
 
 }
