@@ -166,6 +166,8 @@ Chain::Chain(char const *filename, bool circular,int r_length)
     }
     maxnum=(this->length=r_length)-1;
 	readIniFile(filename);
+    //updateAllBangleKinkNum(); Calling virtual function is dangerous.		
+	updateAllBangle_Ini(circular);
     stats.resetStat();
 }
 
@@ -180,18 +182,33 @@ Chain::Chain(bool circular,int r_length)
     }
     maxnum=(this->length=r_length)-1;
 	this->initializeCircle(length);
+	//updateAllBangleKinkNum(); Calling virtual function is dangerous.		
+	updateAllBangle_Ini(circular);
     stats.resetStat();
 }
-
-int Chain::dispChainCord()
-{
-    cout <<"============Coordinates=============="<<endl;
-	for (int i = 0; i < maxnum + 1; i++)
-		cout << "X "<<C[i].dx
-        <<" Y "<< C[i].dy
-        <<" Z "<<C[i].dz<<"     ";
-    cout <<"[END]"<<endl;
-	return 0;
+//updateAllBangle_Ini is supposed to be used in constructor.		
+//Therefore it contains a "curcular" parameter that make it not virtual.		
+void Chain::updateAllBangle_Ini(bool circular = false)		
+{		
+	if (circular){		
+		C[0].bangle = calAngle(C[maxnum], C[0]);		
+		for (int i = 1; i < maxnum + 1; i++)		
+		{		
+			C[i].bangle = calAngle(C[i - 1], C[i]);		
+		}		
+	}		
+	else		
+	{		
+		for (int i = 1; i < maxnum + 1; i++)		
+		{		
+			C[i].bangle = calAngle(C[i - 1], C[i]);		
+		}		
+		C[0].bangle=0.0;		
+	}		
+	cout <<"============BangleInitiated=============="<<endl;		
+	for (int i = 1; i < maxnum + 1; i++)		
+		cout <<'['<<i<<']'<< C[i].bangle;
+	cout<<"[END]"<<endl;
 }
 void Chain::snapshot(char *filename)
 {

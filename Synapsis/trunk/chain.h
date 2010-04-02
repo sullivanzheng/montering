@@ -88,7 +88,9 @@ protected:
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],int m, int n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
-
+	virtual int updateAllBangle() = 0;		
+    void updateAllBangle_Ini(bool circular);		
+	virtual int updateBangle(int i) = 0;
     void normalize();
 
 public:
@@ -141,6 +143,8 @@ class CircularChain: public Chain{
 
 protected:
 	void driftProof();
+	virtual int updateAllBangle();
+	virtual int updateBangle(int i);
 public:
 	CircularChain();
 	CircularChain(int length);

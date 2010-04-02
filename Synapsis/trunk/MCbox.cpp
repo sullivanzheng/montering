@@ -3,7 +3,6 @@ MCbox_circular::MCbox_circular(
     char const *configFile){	
 	using namespace std;
 	//Read Config File;
-	map <string,string> config;
 	config=readconfig(configFile);
 
 	stringstream(config[string("length")])>>totsegnum;
@@ -81,6 +80,11 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 	
 	allrigid RG("rigid.txt", this->dnaChain);
 
+	long SNAPSHOT_INTERVAL;
+	std::stringstream(config["SNAPSHOT_INTERVAL"])>>SNAPSHOT_INTERVAL;
+
+	long STAT_INTERVAL;
+	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
 
 	for (int moves = 1; moves <= monte_step; moves++)
     {
@@ -181,12 +185,12 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 				RG.update_allrigid_and_E();
 		}
 
-		if (moves%1000==0){
+		if (moves%SNAPSHOT_INTERVAL==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			dnaChain->snapshot(buf);
 		}
 
-		if (moves%10000==0){
+		if (moves%STAT_INTERVAL==0){
 			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()
@@ -195,10 +199,12 @@ void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
 			dnaChain->stats.auto_moves.lap();
 
 			(*fp_log)<<"current topolgy:"<<ial[0]<<','<<ial[1]<<endl;
-			double gyration_ratio=this->calcGyration();
-			dnaChain->stats.gyration_ratio.push(gyration_ratio);
-			for (int i=0;i<=maxnum;i++){
-				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
+//			double gyration_ratio=this->calcGyration();
+//			dnaChain->stats.gyration_ratio.push(gyration_ratio);
+//			for (int i=0;i<=maxnum;i++){
+//				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
+
+
 			}
 		}
 	}

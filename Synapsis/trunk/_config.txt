@@ -20,3 +20,7 @@ VolEx_R 0.7440
 
 #Random seed
 seeding 0
+
+#void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step) constant
+SNAPSHOT_INTERVAL  10000
+STAT_INTERVAL  10000

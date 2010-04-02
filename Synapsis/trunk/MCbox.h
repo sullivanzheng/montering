@@ -34,6 +34,7 @@ private:
 
 public:
     CircularChain * dnaChain;
+	std::map <std::string,std::string> config;
     MCbox_circular(char const * configFile);
 	virtual ~MCbox_circular(){
         (*fp_log).close();

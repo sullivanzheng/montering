@@ -1,6 +1,37 @@
 
 #include "chain.h"
 using namespace std;
+
+int CircularChain::updateAllBangle()		
+{		
+	C[0].bangle = calAngle(C[maxnum], C[0]);		
+	for (int i = 1; i < maxnum + 1; i++)		
+	{		
+		C[i].bangle = calAngle(C[i - 1], C[i]);		
+	}		
+    cout <<"============Bangle Updated=============="<<endl;		
+	for (int i = 1; i < maxnum + 1; i++)		
+        cout <<"|"<< C[i].bangle << endl;		
+    cout<<"------------------------------"<<endl;		
+    return 0;	
+}		
+
+int CircularChain::updateBangle(int i)		
+{		
+	if (i > maxnum || i < 0)		
+	{		
+		printf("bangle update (num): refered to non-existing segment %d", i);		
+		getchar();		
+		exit(EXIT_FAILURE);		
+	}		
+
+	if (i == 0)		
+		C[0].bangle = calAngle(C[maxnum], C[0]);		
+	else		
+		C[i].bangle = calAngle(C[i - 1], C[i]);		
+	return 0;		
+}
+
 void CircularChain::driftProof()
 {
 	for (int i = 1; i < maxnum + 1; i++)
