@@ -827,9 +827,11 @@ double allrigid::update_allrigid_and_E(){
 
 	this->E=
 	exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
-	*(pow(r0/r,q*2)-2*pow(r0/r,q));*/
+	*(pow(r0/r,q*2)-2*pow(r0/r,q));
+*/
 
-/*	this->E += r * 50;
+/*
+	this->E += r * 50;
 	this->E += AxisBeta*(-10);
 	this->E += RadiusBeta *(-10);
 */

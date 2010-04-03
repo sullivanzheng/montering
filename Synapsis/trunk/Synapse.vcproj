@@ -42,8 +42,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="D:\_rch\GradProg\smalllib\"
+				StringPooling="true"
 				BasicRuntimeChecks="3"
 				SmallerTypeCheck="true"
+				EnableFunctionLevelLinking="false"
+				GenerateXMLDocumentationFiles="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
