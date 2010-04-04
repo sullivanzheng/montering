@@ -162,10 +162,10 @@ def main_case1():
     dx1,dy1,dz1=readJmol("main.txt",1)
     dx2,dy2,dz2=readJmol("res.txt",1)
     dx1,dy1,dz1=integrateToCircular(dx2,dy2,dz2,
-             dx1,dy1,dz1,1,103)
+             dx1,dy1,dz1,1,300)
     dx1,dy1,dz1=integrateToCircular(dx2,dy2,dz2,
-             dx1,dy1,dz1,1,7)
+             dx1,dy1,dz1,1,100)
     write_Jmol_file_dx("main.txt",dx1,dy1,dz1)
 
-makeCircle_File("main.txt",192)
-main()
+makeCircle_File("main.txt",100)
+#main_case1()

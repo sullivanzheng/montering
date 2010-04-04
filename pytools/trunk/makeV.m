@@ -14,3 +14,11 @@ fprintf('========')
 axis=(dX\axis)'
 bendto=(dX\bendto)'
 origin=(dX\origin)'
+
+
+sigma2=1;
+r0=1;q=0.8;
+A=17;
+E=@(r)A*((r0./r).^(q*2)-2*(r0./r).^q);
+x=0.15:0.01:3;
+plot(x,E(x));
