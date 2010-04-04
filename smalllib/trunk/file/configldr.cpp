@@ -3,6 +3,7 @@ using namespace std;
 
 dict readconfig(char const *filename)
 {
+	std::cout<<"[readconfig] is called"<<std::endl;
 	ifstream fp(filename);
 	if (!fp){
 		cout<<"could not open the config file!"<<endl;
@@ -12,7 +13,7 @@ dict readconfig(char const *filename)
 	map<string,string> config;
 	while (getline(fp,bufK)){
         if (bufK.length()==0) {
-            std::cout<<"-------"<<std::endl;
+            std::cout<<"[readconifg]-------blankline in config file encountered."<<std::endl;
             continue;
         }
         stringstream linebuf(bufK);
@@ -26,5 +27,6 @@ dict readconfig(char const *filename)
         }
 	}
 	fp.close();
+	std::cout<<"[readconfig]configs are loaded successfully."<<std::endl;
 	return config;
 }
