@@ -1,0 +1,26 @@
+length 200
+crank_min_length 3
+crank_max_length 60
+VEcutoff 4
+
+g 7.054815521
+bpperseg 10.5
+
+#maxRogAng is the maximum rotation angle in degree
+#Rotation can go beyound that number by adjusting P_SMALLROTATION.
+maxRotAng 40
+P_SMALLROTATION 0.8
+
+#filePrefix main
+filePrefix 200seg7-10,103-106
+
+#dnaChain member variable
+#VolEx_R is set to 2.5 nm. (Radius!) in the unit of segment.
+VolEx_R 0.2976
+
+#Random seed
+seeding 0
+
+#void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step) constant
+SNAPSHOT_INTERVAL  1000
+STAT_INTERVAL  1

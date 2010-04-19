@@ -1,0 +1,1 @@
+del 200seg7*.txt
