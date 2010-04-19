@@ -45,7 +45,7 @@ public:
     void pushAngleStats(void);
     void logAccepts(void);
 	double calcGyration(void);
-    void performMetropolisCircularCrankOnly(long monte_step);
+    void performMetropolisCircularCrankRept(long monte_step);
 };
 
 #endif /* MCBOX_H */

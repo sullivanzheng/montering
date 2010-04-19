@@ -16,7 +16,7 @@ int CircularChain::updateAllBangle()
     return 0;	
 }		
 
-int CircularChain::updateBangle(int i)		
+double CircularChain::updateBangle(int i)		
 {		
 	if (i > maxnum || i < 0)		
 	{		
@@ -29,7 +29,7 @@ int CircularChain::updateBangle(int i)
 		C[0].bangle = calAngle(C[maxnum], C[0]);		
 	else		
 		C[i].bangle = calAngle(C[i - 1], C[i]);		
-	return 0;		
+	return C[i].bangle;		
 }
 
 void CircularChain::driftProof()
@@ -96,6 +96,86 @@ int CircularChain::crankshaft(int m, int n, double a)
 	updateBangle(m);	
 	updateBangle(n);
 	return 0;
+}
+
+double CircularChain::dE_reptation(int m, int n, int move){
+	//this operation will make the reptation movement between node m  to n-1
+	//in the clockwise fashion, ie, the arc: m m+1 m+2 ...[maxnum 0 1]...n-2
+	//n-1. Therefore, n is not included.
+
+	//Mind that the program will wrap back to head when tail of the chain is hit
+	//(i.e. m>n).
+
+	//Test if m and n are illegal.
+	if (m==n || m<0 || n<0 || m>maxnum || n>maxnum){
+		cout<<"[In CircularChain::reptation]"
+			"Illegal values of m and n for reptation movement"<<endl;
+		exit(EXIT_FAILURE);
+	}
+
+	//Test if the segnum is within range.
+	int rep_segnum=(n-m) % totsegnum;
+	if (rep_segnum<reptation_minlen || rep_segnum>reptation_maxlen){
+		cout<<"[In CircularChain::reptation]"
+			"segment involved is either larger than repation_maxlen"
+			"or smaller than reptation_minlen: rep_segnum="<<rep_segnum<<endl;
+		exit(EXIT_FAILURE);
+	}
+
+	//Test if move is within range. move>0 means the reptation is forward, otherwise backward.
+	if (move==0 || abs(move)>=int(rep_segnum/2)+1){
+		cout<<"[In CircularChain::reptation]"
+			"move is not in range, its absolute value should be within (-rep_segnum/2,rep_segnum/2)"
+			"and !=0: move="<<rep_segnum<<endl;
+		exit(EXIT_FAILURE);
+	}
+	//rigid protection detect
+	int nend=((n-1) % totsegnum);//exclude the last vertex. ie. n is now the last vector now.
+	static segment temp[maxa];
+	int i,j;
+
+	//Lazy method: moving move(move < 0) is equivalent to moving rep_segnum+move;
+	move=move%rep_segnum;
+
+	//copy n-move ~ n-1 vector to temp;
+	i=(n-move)%totsegnum;j=0;
+	do{
+		temp[j]=this->C[i];
+		--i;--j;
+		i=i%totsegnum; //wrapping around;
+	}while (i!=nend);
+
+	//move m~n-move-1 to m+move ~ n - 1
+	i=(n-move-1)%totsegnum;j=(n-1)%totsegnum;
+	do{
+		this->C[j]=this->C[i];
+		--i;--j;
+		i=i%totsegnum;j=j%totsegnum;
+	}while (i!=m);
+	
+	//move temp back to m~m+move-1
+	i=0;j=m;
+	do{
+		this->C[j]=temp[i];
+		++i;++j;
+		j=j%totsegnum;
+	}while (i!=move-1);
+	
+	//Return the delta E: the change of energy.
+	//The bandangles have only been altered at three locations. m,n and m+move
+	double _a[3];
+	_a[0]=this->C[m].bangle;
+	_a[1]=this->C[(m+move)%totsegnum].bangle;
+	_a[2]=this->C[n].bangle;
+	double a[3];
+	a[0]=this->updateBangle(m);
+	a[1]=this->updateBangle((m+move)%totsegnum);
+	a[2]=this->updateBangle(n);
+	double dE=0;
+	for (i=0;i<3;i++){
+		dE+=g*(a[0]*a[0]-_a[0]*_a[0]);
+	}
+	return dE;
 }
 
 double CircularChain::deltaE_TrialCrankshaft_countMove(int m, int n, double a)
@@ -165,14 +245,7 @@ void CircularChain::snapshot(char *filename)
 	fh << buf << endl;
 	for ( i = 1; i <= maxnum; i++)
 	{	
-		int mark=0;
-		for (int k=0;k<protect_list.size();k++){
-			if (i==protect_list[k]){
-				mark=1;
-				break;
-			}
-		}
-
+		int mark=protect_list[i];
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
 			i + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
@@ -205,6 +278,7 @@ int CircularChain::IEV( int in,  int ik){
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
 // This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
+// ER AND ER2 are volume exclusion DIAMETER.
 
 	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
@@ -220,17 +294,14 @@ int CircularChain::IEV( int in,  int ik){
 	const double eps=1e-7;
 	double xij,yij,zij,a2,ddd;
 	double b,b2,rna,rnb,ak,bk,t;
-	double er,er2;
-	er=this->VolEx_R;
+	double er,er2;				//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+	er=this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
 	for (int i=in;i<=ik;i++){				// do 2 i=in,ik
 		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
 			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
 			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
-			for (int k=0; k<protect_list.size();k++){
-				int tempi=protect_list[k];
-				if (i==tempi || j==tempi) goto Lcontinue;
-			}
+			if (protect_list[i]==1 || protect_list[j]==1) continue;
 			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
 			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
 			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
@@ -253,7 +324,6 @@ g5:         if(rnb>0 || rnb<-1.) goto g4;
 			t=a2-rnb*rnb;
 			if(t<ddd) ddd=t;
 g4:         if(ddd<er*er) idiam=0;
-Lcontinue:	;
 		}//3 continue
 	if(idiam==0) return iev;//iev=0 here;
 	}    //2 continue
@@ -798,6 +868,10 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 
 double allrigid::update_allrigid_and_E(){
 	//This section can be customized for different rigid body set.
+	if (R.size()==0) {
+		this->E = 0;
+		return 0.;
+	}
 	for (int i=0;i<this->R.size();i++){
 		R[i].update_ref_v_xyz();
 	}
@@ -821,12 +895,13 @@ double allrigid::update_allrigid_and_E(){
 	
 	this->r=modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]);
 	
+//	A potential from Quan Du and A. Vologodskii.
 /*	double sigma2=1;
-	double r0=1,q=0.8;
+	double r0=0.1,q=0.8;
 	double A=17;
 
 	this->E=
-	exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
+	A*exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
 	*(pow(r0/r,q*2)-2*pow(r0/r,q));
 */
 
@@ -835,20 +910,32 @@ double allrigid::update_allrigid_and_E(){
 	this->E += AxisBeta*(-10);
 	this->E += RadiusBeta *(-10);
 */
-	static double r0=5,r01=5,a0=2.0/180.*PI,R0=20.0/180.*PI;
-	static double A=8,B=17-A,C=5; //A+B=17
-	this->E=-B*exp(
-		-(AxisBeta-PI)*(AxisBeta-PI)/(a0*a0)/2-r*r/(r0*r0)/2)
-		-C*exp(-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2-r*r/(r0*r0)/2)
-		-A*exp(-r*r/(r01*r01)/2);
-    return this->E;
 
+// My latest design.
+	static double r0=1.5,r01=2.,a0=20.0/180.*PI,R0=20.0/180.*PI;
+	static double A=12,B=10,C=5; //A+B=17
+	static double re=2.0,ree=0.05,Ar=1;
+	this->E=-B*exp(
+		-(AxisBeta-PI)*(AxisBeta-PI)/(a0*a0)/2-r*r/(r0*r0)/2
+		-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2)
+//		-C*exp(-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2-r*r/(r0*r0)/2)
+		-A*exp(-r*r/(r01*r01)/2);
+//		-A*(r>re?exp(-r*r/(r01*r01)/2):exp(-re*re/(r01*r01)/2))
+/*		+Ar*(r>re?
+				log(2*PI*re*re):
+				r>=ree?log(2*PI*r*r):
+					log(2*PI*ree*ree)); */
+    return this->E;
 }
 
 
 cls_rigid::cls_rigid(CircularChain* r_target, std::vector<int> r_protect,
 	std::vector < vector<double> > r_ref_v):
 target(r_target),protect(r_protect),ref_v(r_ref_v){
+	//When cls_rigid is constructed, it will automatically update the global
+	//variable "protect_list", which is the copy of .protect member (vector)
+	// of cls_rigid's container class "all_rigid".
+	//This copy is made for better global access of protect list.
 	double Mv[3][3];
 	Mv[0][0]=target->C[protect[0]].dx;
 	Mv[1][0]=target->C[protect[0]].dy;
@@ -885,14 +972,15 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 	}
 
 	//Initialize or append the global protection list for rigid bodies.
-	protect_list.push_back(this->protect.front()-1);
-	for (int i=0;i<this->protect.size();i++)
-		protect_list.push_back(this->protect[i]);
+	for (int i=0;i<this->protect.size();i++){
+		protect_list[this->protect[i]]=1;
+	}
 //	protect_list.push_back(this->protect.back + 1);
 
 	std::cout<<"Constructing rigid body is over. The current status of global protect_list is:"<<endl;
-	for (int i=0;i<protect_list.size();i++)
-		std::cout<<'['<<i<<']'<<protect_list[i]<<std::endl;
+	for (int i=0;i<maxa;i++)
+		if (protect_list[i])
+			std::cout<<'['<<i<<']'<<protect_list[i]<<std::endl;
 }
 
 void cls_rigid::update_ref_v_xyz(){

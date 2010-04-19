@@ -2,8 +2,8 @@
 #include "MCbox.h"
 
 int maindo(){
-	MCbox_circular sim("_config.txt");
-	sim.performMetropolisCircularCrankOnly(1e7);	
+	MCbox_circular sim("_config.cfg");
+	sim.performMetropolisCircularCrankRept(1e8);	
 	return 0;
 }
 

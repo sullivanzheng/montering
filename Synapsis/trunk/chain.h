@@ -93,7 +93,7 @@ protected:
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
 	virtual int updateAllBangle() = 0;		
     void updateAllBangle_Ini(bool circular);		
-	virtual int updateBangle(int i) = 0;
+	virtual double updateBangle(int i) = 0;
     void normalize();
 
 public:
@@ -147,13 +147,14 @@ class CircularChain: public Chain{
 protected:
 	void driftProof();
 	virtual int updateAllBangle();
-	virtual int updateBangle(int i);
+	virtual double updateBangle(int i);
 public:
 	CircularChain();
 	CircularChain(int length);
 	CircularChain(char const *filename,int length);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
+	virtual double dE_reptation(int m, int n, int move);
 	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);

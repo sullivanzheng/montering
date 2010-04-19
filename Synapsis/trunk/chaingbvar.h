@@ -12,6 +12,8 @@ extern double bpperseg;
 extern double maxRotAng;//crankshaft
 extern double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 						//supposed to create local fluctuation.
-
-extern  std::vector<int> protect_list;
+extern double P_REPT; //Probability to make a reptation move.
+extern int protect_list[maxa];
+extern int reptation_maxlen;
+extern int reptation_minlen;
 #endif /* CHAINGBVARH */
