@@ -96,7 +96,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//MAKE MOVES
 
 		//NOTES ON M AND N. PAY ATTENTION.
-		//M<N is not required here since deltaE_TrialCrankshaft_countMove and crankshaft
+		//M<N is not required here since dE_TrialCrankshaft_countMove and crankshaft
 		//support M>N and automatically wraps the iterator to the 
 		//beginning of the chain when it hits the tail.
 		//Therefore, all energy evaluation program should be careful with chain segment 
@@ -107,7 +107,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
 
-		if (1){//TODO (drand(1.0)>P_REPT){
+		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
 			do{
@@ -130,8 +130,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			else
 				rotAng = drand(-maxRotAng, maxRotAng);
 
+			//Stats.
+			this->dnaChain->auto_updt_stats();
 			//bend energy change.
-			dE=dnaChain->deltaE_TrialCrankshaft_countMove(m, n, rotAng);
+			dE=dnaChain->dE_TrialCrankshaft_countMove(m, n, rotAng);
 
 			//old rigid body energy.
 			cacheRE=RG.E;
@@ -197,22 +199,25 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			int testp;int testflag;
 			do{
 				m=irand(maxnum+1);
-				n=(m+irand(reptation_minlen,reptation_maxlen+1))%totsegnum;
+				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
 				//Check if containting any rigid body segments.
 				testp=m;testflag=0;
-				while (testp!=n){
+				while (testp!=wrap(n+1,totsegnum)){
 					if (protect_list[testp]==1){
 						testflag=1;
 						break;
-						testp++;
-						testp=testp % totsegnum;
 					}
+					testp=wrap(testp+1,totsegnum);
 				}
 			}while(testflag==1);
 			
 			int rept_move;
-			rept_move=irand(1,4); //1~3;
-	
+			rept_move=0;
+			while(rept_move==0)
+				rept_move=irand(-3,4); //-3~3, no 0;
+			
+			//Stats:
+			this->dnaChain->auto_updt_stats();
      		//old rigid body energy.
 			cacheRE=RG.E;
 			//bend energy change.
@@ -263,7 +268,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
-					this->dnaChain->stats.accepts++;		
+					this->dnaChain->stats.rpt_accepts++;		
 			}
 			else{
 					dnaChain->dE_reptation(m,n,-rept_move);
@@ -277,13 +282,17 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		}
 
 		if (moves%STAT_INTERVAL==0){
-/*			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
+			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
+				<<"rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
-				<<'['<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()
+				<<'['
+				<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()<<","
+				<<float(dnaChain->stats.rpt_accepts())/dnaChain->stats.auto_moves()
 				<<']'<<endl;
 			dnaChain->stats.accepts.lap();
+			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
-*/			
+		
 //			Log acceptance and rigid body statistics.
 			(*fp_log)<<"["<<moves<<"] ";
 			(*fp_log)<<"move_trial["<<m<<","<<n<<"] ";

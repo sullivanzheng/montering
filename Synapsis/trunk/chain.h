@@ -16,6 +16,21 @@
 
 double G_b(double ang);
 
+inline int wrap(int i, int roundnum){
+	if (i<-roundnum || i>2*roundnum-1){
+		std::cout<<"[In global function 'warp']"
+			"Wrapping error, wrapping more than one round:"<<i<<std::endl;
+		getchar();
+		exit(EXIT_FAILURE);
+	}
+	if (i<0)
+		return i+roundnum;
+	if (i>roundnum-1)
+		return i-roundnum;
+	else
+		return i;
+}
+
 class CircularChain; //Finish declaration of Chain for the use of declaration of its nest friend class rigid;
 
 class cls_rigid{
@@ -51,7 +66,9 @@ public:
     {
 		//Statistical variable for the Chain.
 		/*Variable names starting with auto_ is 
-		  automatically updated after each move.
+		  automatically updated after each move
+		  by calling 
+  			this->dnaChain->auto_updt_stats();
 
 		  Variable names starting with auto_prd 
 		  is automatically AND periodically updated
@@ -59,6 +76,7 @@ public:
 		  This number can be decided by defaultSampleCycle and
 		  passed to endToEndSampleCycle. */
 		counter accepts;
+		counter rpt_accepts;
 		counter auto_moves;
         statqueue <double> auto_prd_endToEndDistance2;
         statqueue <double> auto_prd_endToEndAngle;
@@ -67,6 +85,7 @@ public:
 
         void resetStat(){
             accepts.lap();
+			rpt_accepts.lap();
             auto_moves.lap();
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
@@ -138,7 +157,7 @@ public:
                     C[maxnum].y+C[maxnum].dy-C[0].y,
                     C[maxnum].z+C[maxnum].dz-C[0].z);
     }
-	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a) = 0;
+	virtual double dE_TrialCrankshaft_countMove(int m, int n, double a) = 0;
 	virtual void snapshot(char *filename);
 };
 
@@ -155,7 +174,7 @@ public:
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
 	virtual double dE_reptation(int m, int n, int move);
-	virtual double deltaE_TrialCrankshaft_countMove(int m, int n, double a);
+	virtual double dE_TrialCrankshaft_countMove(int m, int n, double a);
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);
 	int kpoly(int ial[2], int &ierr);

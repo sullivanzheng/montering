@@ -114,7 +114,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	}
 
 	//Test if the segnum is within range.
-	int rep_segnum=(n-m) % totsegnum;
+	int rep_segnum=wrap(n-m,totsegnum);
 	if (rep_segnum<reptation_minlen || rep_segnum>reptation_maxlen){
 		cout<<"[In CircularChain::reptation]"
 			"segment involved is either larger than repation_maxlen"
@@ -123,64 +123,75 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	}
 
 	//Test if move is within range. move>0 means the reptation is forward, otherwise backward.
-	if (move==0 || abs(move)>=int(rep_segnum/2)+1){
+	if (move==0 || abs(move)>int(rep_segnum/2)+1){
 		cout<<"[In CircularChain::reptation]"
 			"move is not in range, its absolute value should be within (-rep_segnum/2,rep_segnum/2)"
 			"and !=0: move="<<rep_segnum<<endl;
+		getchar();
 		exit(EXIT_FAILURE);
 	}
 	//rigid protection detect
-	int nend=((n-1) % totsegnum);//exclude the last vertex. ie. n is now the last vector now.
+	int nend=wrap(n-1,totsegnum);//exclude the last vertex. ie. n is now the last vector now.
 	static segment temp[maxa];
 	int i,j;
 
 	//Lazy method: moving move(move < 0) is equivalent to moving rep_segnum+move;
-	move=move%rep_segnum;
+	move=wrap(move,rep_segnum);
 
 	//copy n-move ~ n-1 vector to temp;
-	i=(n-move)%totsegnum;j=0;
-	do{
+	i=wrap(n-move,totsegnum);j=0;
+	while (i!=n){
 		temp[j]=this->C[i];
-		--i;--j;
-		i=i%totsegnum; //wrapping around;
-	}while (i!=nend);
+		++i;++j;
+		i=wrap(i,totsegnum); //wrapping around;
+	}
 
 	//move m~n-move-1 to m+move ~ n - 1
-	i=(n-move-1)%totsegnum;j=(n-1)%totsegnum;
-	do{
+	i=wrap(n-move-1,totsegnum);
+	j=wrap(n-1,totsegnum);
+	while (i!=wrap(m-1,totsegnum)){
 		this->C[j]=this->C[i];
 		--i;--j;
-		i=i%totsegnum;j=j%totsegnum;
-	}while (i!=m);
+		i=wrap(i,totsegnum);j=wrap(j,totsegnum);
+	}
 	
 	//move temp back to m~m+move-1
 	i=0;j=m;
-	do{
+	while(i<=move-1){
 		this->C[j]=temp[i];
 		++i;++j;
-		j=j%totsegnum;
-	}while (i!=move-1);
+		j=wrap(j,totsegnum);
+	}
+
+	//Update X.
+	i=m;
+	while(i!=n){
+		int pre=wrap(i-1,totsegnum);
+		C[i].x=C[pre].x+C[pre].dx;
+		C[i].y=C[pre].y+C[pre].dy;
+		C[i].z=C[pre].z+C[pre].dz;
+		i=wrap(i+1,totsegnum);
+	}
 	
 	//Return the delta E: the change of energy.
 	//The bandangles have only been altered at three locations. m,n and m+move
 	double _a[3];
 	_a[0]=this->C[m].bangle;
-	_a[1]=this->C[(m+move)%totsegnum].bangle;
+	_a[1]=this->C[wrap(m+move,totsegnum)].bangle;
 	_a[2]=this->C[n].bangle;
 	double a[3];
 	a[0]=this->updateBangle(m);
-	a[1]=this->updateBangle((m+move)%totsegnum);
+	a[1]=this->updateBangle(wrap(m+move,totsegnum));
 	a[2]=this->updateBangle(n);
 	double dE=0;
 	for (i=0;i<3;i++){
-		dE+=g*(a[0]*a[0]-_a[0]*_a[0]);
+		dE+=G_b(a[i])-G_b(_a[i]);
 	}
 	return dE;
 }
 
-double CircularChain::deltaE_TrialCrankshaft_countMove(int m, int n, double a)
+double CircularChain::dE_TrialCrankshaft_countMove(int m, int n, double a)
 {
-	this->auto_updt_stats();
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
 		cout<<"Illegal values of m and n ("<<m<<','<<n<<')';
