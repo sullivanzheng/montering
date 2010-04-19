@@ -3,7 +3,7 @@
 
 int maindo(){
 	MCbox_circular sim("_config.cfg");
-	sim.performMetropolisCircularCrankRept(1e8);	
+	sim.performMetropolisCircularCrankRept(1e8);
 	return 0;
 }
 

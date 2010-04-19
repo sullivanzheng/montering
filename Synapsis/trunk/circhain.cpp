@@ -301,7 +301,7 @@ int CircularChain::IEV( int in,  int ik){
 		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
 			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
 			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
-			if (protect_list[i]==1 || protect_list[j]==1) continue;
+/*			if (protect_list[i]==1 || protect_list[j]==1) continue; */
 			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
 			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
 			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)

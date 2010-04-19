@@ -105,6 +105,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
         double dE, cacheRE;
 		int ial[2],ierr;
 		int m,n;
+		int E_condition=0,IEV_condition=0,topo_condition=0;
 
 		if (1){//TODO (drand(1.0)>P_REPT){
 		//Crankshaft movement.
@@ -139,9 +140,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//total energy change.
 			dE+=(RG.E - cacheRE);
 			
-			int E_condition=0;
-			int IEV_condition=0;
-    		int topo_condition=0;
+			E_condition=0;
+			IEV_condition=0;
+    		topo_condition=0;
 
 			if (dE < 0){
 				E_condition=1;
@@ -220,9 +221,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//total energy change.
 			dE+=(RG.E - cacheRE);
 			
-			int E_condition=0;
-			int IEV_condition=0;
-    		int topo_condition=0;
+			E_condition=0;
+			IEV_condition=0;
+    		topo_condition=0;
 
 			if (dE < 0){
 				E_condition=1;
@@ -286,6 +287,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 //			Log acceptance and rigid body statistics.
 			(*fp_log)<<"["<<moves<<"] ";
 			(*fp_log)<<"move_trial["<<m<<","<<n<<"] ";
+			(*fp_log)<<"Flags(E,IEV,topo)"<<"["<<E_condition<<"(dE="<<dE<<"),"
+				<<IEV_condition<<","<<topo_condition<<"]";
 		    (*fp_log)<<"tp_trial("<<ial[0]<<','<<ial[1]<<")";//<<endl;
 			(*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
