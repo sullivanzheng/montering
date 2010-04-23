@@ -14,7 +14,9 @@
 #include "string\strplus.h"
 #include "SmallTypes.h"
 
-double G_b(double ang);
+inline double G_b(double ang){
+	return g*ang*ang;//energy with quadratic energy term.
+}
 
 inline int wrap(int i, int roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
@@ -46,7 +48,7 @@ public:
 	void update_ref_v_xyz();
 };
 
-class allrigid{
+class allrigid  {
 private:
 	allrigid();
 public:
@@ -117,7 +119,7 @@ protected:
 
 public:
 	double VolEx_R;
-    void auto_updt_stats(){
+	void auto_updt_stats(){
         stats.auto_moves++;
 		if (stats.auto_moves() % endToEndSampleCycle==0) {
             double temp=this->getEndToEndDistance();
@@ -157,7 +159,7 @@ public:
                     C[maxnum].y+C[maxnum].dy-C[0].y,
                     C[maxnum].z+C[maxnum].dz-C[0].z);
     }
-	virtual double dE_TrialCrankshaft_countMove(int m, int n, double a) = 0;
+	virtual double dE_TrialCrankshaft(int m, int n, double a) = 0;
 	virtual void snapshot(char *filename);
 };
 
@@ -168,15 +170,24 @@ protected:
 	virtual int updateAllBangle();
 	virtual double updateBangle(int i);
 public:
+	double writhe;
+	double E_t; //torsional energy.
+	double dLk;
 	CircularChain();
 	CircularChain(int length);
 	CircularChain(char const *filename,int length);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
 	virtual double dE_reptation(int m, int n, int move);
-	virtual double dE_TrialCrankshaft_countMove(int m, int n, double a);
+	virtual double dE_TrialCrankshaft(int m, int n, double a);
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);
 	int kpoly(int ial[2], int &ierr);
+	double E_t_updateWrithe_E_t();
+private:
+	double _bwr(int m, int n);
+	int _kndwr(double & topl, int & ierr);
+public:
+	double fastWr();
 };
 #endif /* CHAIN_H */

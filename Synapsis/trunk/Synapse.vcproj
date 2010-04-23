@@ -152,7 +152,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory=".\$(ConfigurationName)\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			>
@@ -173,7 +173,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="D:\_rch\GradProg\smalllib\"
+				ExceptionHandling="1"
+				FloatingPointModel="2"
+				WarningLevel="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -186,8 +191,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				GenerateDebugInformation="true"
-				GenerateMapFile="true"
+				LinkTimeCodeGeneration="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -288,6 +292,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\b.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\chain.cpp"
 				>
 			</File>
@@ -297,6 +305,14 @@
 			</File>
 			<File
 				RelativePath=".\circhain.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\smalllib\math\ezlin.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\k.cpp"
 				>
 			</File>
 			<File
@@ -326,6 +342,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\smalllib\math\ezlin.h"
+				>
+			</File>
+			<File
 				RelativePath=".\f2c.h"
 				>
 			</File>
@@ -349,14 +369,6 @@
 			</File>
 			<File
 				RelativePath="..\smalllib\file\configldr.h"
-				>
-			</File>
-			<File
-				RelativePath="..\smalllib\math\ezlin.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\smalllib\math\ezlin.h"
 				>
 			</File>
 			<File

@@ -16,4 +16,5 @@ extern double P_REPT; //Probability to make a reptation move.
 extern int protect_list[maxa];
 extern int reptation_maxlen;
 extern int reptation_minlen;
+extern int rept_move_range;
 #endif /* CHAINGBVARH */

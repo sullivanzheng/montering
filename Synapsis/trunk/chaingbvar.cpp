@@ -10,5 +10,6 @@ double P_REPT;
 int protect_list[maxa];
 int reptation_maxlen;
 int reptation_minlen;
+int rept_move_range;
 
 

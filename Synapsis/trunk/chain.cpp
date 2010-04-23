@@ -1,10 +1,6 @@
 #include "chain.h" 
 using namespace std;
 
-double G_b(double ang){
-	return g*ang*ang;//energy with quadratic energy term.
-}
-
 void Chain::initializeCircle(int numofseg)
 {   
     cout << endl << "Chain::readIniFile::No file input, start building circular chain." << endl;
@@ -180,12 +176,14 @@ Chain::Chain(bool circular,int r_length)
          getchar();
          exit(EXIT_FAILURE);
     }
-    maxnum=(this->length=r_length)-1;
+	this->length=r_length;
+	maxnum=(this->length)-1;
 	this->initializeCircle(length);
 	//updateAllBangleKinkNum(); Calling virtual function is dangerous.		
 	updateAllBangle_Ini(circular);
     stats.resetStat();
 }
+
 //updateAllBangle_Ini is supposed to be used in constructor.		
 //Therefore it contains a "curcular" parameter that make it not virtual.		
 void Chain::updateAllBangle_Ini(bool circular = false)		

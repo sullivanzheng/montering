@@ -190,7 +190,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	return dE;
 }
 
-double CircularChain::dE_TrialCrankshaft_countMove(int m, int n, double a)
+double CircularChain::dE_TrialCrankshaft(int m, int n, double a)
 {
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
@@ -342,9 +342,52 @@ g4:         if(ddd<er*er) idiam=0;
 	return iev;
 }
 
+double CircularChain::E_t_updateWrithe_E_t(){
+	double temp[3];double dX[3];double modX;
+	double _writhe=0;
+	for (int s=0;s<=maxnum;s++){
+		for (int t=0;t<=maxnum;t++){
+			if (s==t) continue;
+			Xprod_exp(C[t].dx,C[t].dy,C[t].dz,
+					  C[s].dx,C[s].dy,C[s].dz,temp);
+			dX[0]=C[t].x - C[s].x;
+			dX[1]=C[t].y - C[s].y;
+			dX[2]=C[t].z - C[s].z;
+			_writhe += dot_product(temp,dX)/pow(modu2V(dX),3.0/2.0)
+				/modu(C[t].dx, C[t].dy, C[t].dz)
+				/modu(C[s].dx, C[s].dy, C[s].dz);
+		}
+	}
+	this->writhe = _writhe/4/PI;
+	this->E_t= 2 * PI * PI * C_t / (totsegnum * bpperseg) *
+				(dLk - this->writhe)*(dLk - this->writhe);
+	return this->E_t;
+}
 
+double CircularChain::fastWr(){
+	/* FORTRAN origin:
+	c calculation of knot type and part of Wr
+
+      call KNDWR(jr1,topl,jwr,ierr)
+
+	c calculation of the second part of Wr
+
+      call BWR(jr1,2,jr1,beta)
+      wr=jwr+beta
+	*/	
+
+	int kndwr,ierr;
+	double topl;
+	kndwr=this->_kndwr(topl,ierr);
+
+	double bwr;
+	bwr=this->_bwr(1,maxnum);
+
+	return double(kndwr)+bwr;
+}
 
 #include "f2c.h"
+
 int  CircularChain::kpoly(int ial[2], int &ierr)
 {
 /* k3.f -- translated by f2c (version 20060506).
@@ -388,17 +431,17 @@ int  CircularChain::kpoly(int ial[2], int &ierr)
     /* Local variables */
     static doublereal c__, d__;
     static integer i__, j, k, l;
-    static doublereal t, x[910], y[910], z__[910];
+    static doublereal t, x[maxa], y[maxa], z__[maxa];
     static integer i1, i2, n1, n2, m4, n4;
     static real r1, r2;
     static doublereal da[72900]	/* was [270][270] */;
-    static integer id[500], n11, n21, n41, jj;
+    static integer id[maxcross], n11, n21, n41, jj;
     static doublereal dr;
-    static integer mj, cx[500];
-    static doublereal dx[910], dy[910], dz[910];
-    static integer ir, ks, ix[500], js, nv;
+    static integer mj, cx[maxcross];
+    static doublereal dx[maxa], dy[maxa], dz[maxa];
+    static integer ir, ks, ix[maxcross], js, nv;
     static real rx, xr;
-    static integer ic1[500], ic2[500], n4i, jr1, jr2, jr3, jr4;
+    static integer ic1[maxcross], ic2[maxcross], n4i, jr1, jr2, jr3, jr4;
     static real rl1, rl2;
     static integer nv1;
     static doublereal px1, py1, px2, py2;
@@ -411,7 +454,7 @@ int  CircularChain::kpoly(int ial[2], int &ierr)
     static doublereal pdx12;
     static integer kmax;
 
-	//Interfacing my program data to this routine//
+	//Interfacing my program data to this routine, mind the different indexing convention between Fortran and C//
 	for (int i=0; i<=maxnum; i++){
 		x[i+1]=C[i].x;y[i+1]=C[i].y;z__[i+1]=C[i].z;
 		dx[i+1]=C[i].dx;dy[i+1]=C[i].dy;dz[i+1]=C[i].dz;
@@ -484,7 +527,7 @@ L491:
 		}
 	    }
 	    rx = drx;
-	    if (n4 > 500) {
+	    if (n4 > maxcross) {
 		goto L1002;
 	    }
 	    rz1 = (rx - x[n1 - 1]) / dx[n1 - 1] * dz[n1 - 1] + z__[n1 - 1];
@@ -1022,4 +1065,3 @@ void cls_rigid::update_ref_v_xyz(){
 		ref_v_xyz[i]=a;
 	}
 }
-

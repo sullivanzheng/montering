@@ -4,7 +4,9 @@ MCbox_circular::MCbox_circular(
 	using namespace std;
 	//Read Config File;
 	config=readconfig(configFile);
-	
+	for (int i = 0; i<maxa; i++){
+		protect_list[i]=0;
+	}
 	//#############################GLOBAL##############################
 	stringstream(config[string("length")])>>totsegnum;
 	maxnum= totsegnum -1;
@@ -24,6 +26,7 @@ MCbox_circular::MCbox_circular(
 	stringstream(config[string("P_REPT")])>>P_REPT;
 	stringstream(config[string("reptation_maxlen")])>>reptation_maxlen;
 	stringstream(config[string("reptation_minlen")])>>reptation_minlen;
+	stringstream(config[string("rept_move_range")])>>rept_move_range;
 
 	//#############################MCBox Variables#####################
 	strcpy(filePrefix,config[string("filePrefix")].c_str());
@@ -33,9 +36,11 @@ MCbox_circular::MCbox_circular(
     this->dnaChain=
 		new CircularChain(strcat_noOW(buf, strBufSize, const_cast<char*>(filePrefix), ".vmc"),totsegnum);
     
-	stringstream(config[string("VolEx_R")])>>this->dnaChain->VolEx_R;
-
 	stringstream(config[string("seeding")])>>this->seeding;
+
+	//#######################CircularChain Variables##################
+	stringstream(config[string("VolEx_R")])>>this->dnaChain->VolEx_R;
+	stringstream(config[string("dLk")])>>this->dnaChain->dLk;
 
     //Initialize statistical variables.
     for (int i = 0; i < 180; i++)
@@ -44,6 +49,13 @@ MCbox_circular::MCbox_circular(
     //dnaChain->snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
     logParameters();
 	dnaChain->snapshot("000.txt");
+
+	//initialize the writhe;
+	dnaChain->E_t_updateWrithe_E_t();
+
+	cout<<dnaChain->fastWr()<<endl;
+	cout<<dnaChain->writhe<<endl;
+
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -83,7 +95,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 {
     MTRand53 mt(seeding);
 	
-	allrigid RG("rigid.cfg", this->dnaChain);
+	allrigid RG("_rigid.cfg", this->dnaChain);
 
 	long SNAPSHOT_INTERVAL;
 	std::stringstream(config["SNAPSHOT_INTERVAL"])>>SNAPSHOT_INTERVAL;
@@ -96,13 +108,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//MAKE MOVES
 
 		//NOTES ON M AND N. PAY ATTENTION.
-		//M<N is not required here since dE_TrialCrankshaft_countMove and crankshaft
+		//M<N is not required here since dE_TrialCrankshaft and crankshaft
 		//support M>N and automatically wraps the iterator to the 
 		//beginning of the chain when it hits the tail.
 		//Therefore, all energy evaluation program should be careful with chain segment 
 		//iteration due to wrapping problem.
 
-        double dE, cacheRE;
+        double dE, cacheRE, cacheE_t;
 		int ial[2],ierr;
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
@@ -132,15 +144,21 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 			//Stats.
 			this->dnaChain->auto_updt_stats();
-			//bend energy change.
-			dE=dnaChain->dE_TrialCrankshaft_countMove(m, n, rotAng);
 
 			//old rigid body energy.
 			cacheRE=RG.E;
+			//old writhe energy;
+			cacheE_t=dnaChain->E_t;
+
+			//bend energy change and movement.
+			dE=dnaChain->dE_TrialCrankshaft(m, n, rotAng);
 			dnaChain->crankshaft(m,n,rotAng);
+
+			//update energies.
 			RG.update_allrigid_and_E();
+			dnaChain->E_t_updateWrithe_E_t();
 			//total energy change.
-			dE+=(RG.E - cacheRE);
+			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
 			E_condition=0;
 			IEV_condition=0;
@@ -189,6 +207,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			else{
 					dnaChain->crankshaft(m,n,-rotAng);
 					RG.update_allrigid_and_E();
+					dnaChain->E_t_updateWrithe_E_t();
 			}
 		}//End Crankshaft movement.
 		else{
@@ -214,17 +233,27 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			int rept_move;
 			rept_move=0;
 			while(rept_move==0)
-				rept_move=irand(-3,4); //-3~3, no 0;
+				//[-rept_move_range,rept_move_range] excluding 0
+				rept_move=irand(-rept_move_range,rept_move_range+1); 
 			
 			//Stats:
 			this->dnaChain->auto_updt_stats();
+
      		//old rigid body energy.
 			cacheRE=RG.E;
-			//bend energy change.
+
+			//old writhe energy;
+			cacheE_t=dnaChain->E_t;
+
+			//bend energy change and movement.
 			dE=dnaChain->dE_reptation(m,n,rept_move);
+
+			//update energies.
 			RG.update_allrigid_and_E();
+			dnaChain->E_t_updateWrithe_E_t();
+
 			//total energy change.
-			dE+=(RG.E - cacheRE);
+			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
 			E_condition=0;
 			IEV_condition=0;
@@ -273,6 +302,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			else{
 					dnaChain->dE_reptation(m,n,-rept_move);
 					RG.update_allrigid_and_E();
+					dnaChain->E_t_updateWrithe_E_t();
 			}
 		}//End reptation movement.
 
@@ -283,7 +313,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 		if (moves%STAT_INTERVAL==0){
 			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
-				<<"rpt_accepted:"<<dnaChain->stats.rpt_accepts()
+				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['
 				<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()<<","
@@ -296,6 +326,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 //			Log acceptance and rigid body statistics.
 			(*fp_log)<<"["<<moves<<"] ";
 			(*fp_log)<<"move_trial["<<m<<","<<n<<"] ";
+			(*fp_log)<<"[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 			(*fp_log)<<"Flags(E,IEV,topo)"<<"["<<E_condition<<"(dE="<<dE<<"),"
 				<<IEV_condition<<","<<topo_condition<<"]";
 		    (*fp_log)<<"tp_trial("<<ial[0]<<','<<ial[1]<<")";//<<endl;
