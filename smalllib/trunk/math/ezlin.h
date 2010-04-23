@@ -20,6 +20,10 @@ inline double modu2(double a,double b,double c){
 	return a*a+b*b+c*c;
 }
 
+inline double modu2V(double a[3]){
+	return a[0]*a[0]+a[1]*a[1]+a[2]*a[2];
+}
+
 inline double dot_product(double a[3],double b[3]){
 	return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 }
@@ -61,6 +65,22 @@ inline int mat33disp(double M[3][3]){
 		}
 		std::cout <<std::endl;
 	}
+	return 0;
+}
+
+inline int Xprod(double a[3], double b[3], double o[3]){
+	o[0]= a[1]*b[2]-b[1]*a[2];
+	o[1]=-a[0]*b[2]+b[0]*a[2];
+	o[2]= a[0]*b[1]+b[0]*a[1];
+	return 0;
+}
+
+inline int Xprod_exp(double a0, double a1, double a2,
+						 double b0, double b1, double b2,
+						 double o[3]){
+	o[0]= a1*b2-b1*a2;
+	o[1]=-a0*b2+b0*a2;
+	o[2]= a0*b1+b0*a1;
 	return 0;
 }
 
