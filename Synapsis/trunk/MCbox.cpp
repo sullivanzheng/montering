@@ -111,11 +111,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
 		
+		/*
 		//TODO: remove this after debug.
 		dnaChain->checkConsistancy();
 		if (dnaChain->AlexPoly[0]!=1 || dnaChain->AlexPoly [1]!=1)
 			cout<<"["<<moves<<"]"<<dnaChain->AlexPoly[0]<<","<<dnaChain->AlexPoly[1]<<endl;
-		
+		*/
+
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.

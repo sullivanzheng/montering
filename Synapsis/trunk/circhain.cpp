@@ -898,8 +898,9 @@ L1002:
 
 
 int CircularChain::updateKPoly(){
+	return 0; //TODO temporarily disabled.
 	int ierr=0,ial[2];
-	this->kpoly (ial,ierr);
+	this->kpoly(ial,ierr);
 	if (ierr!=0){
 		cout<<"[kpoly error]"<<endl;
 		exit(EXIT_FAILURE);
