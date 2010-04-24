@@ -331,7 +331,7 @@ int CircularChain::IEV( int in,  int ik){
 			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
 			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
 			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
-			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
+			a2=xij*xij+yij*yij+zij*zij;
 			ddd=a2;//ddd=a2
 			if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
 			b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
