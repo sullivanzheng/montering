@@ -1,0 +1,74 @@
+========================CONSTANTS========================
+ PI3.14159 maxa	= 910
+ crank_min_length	= 3
+===================GLOBAL VARIABLES=====================
+ maxnum	= 399
+ crank_max_length (auto_generated)= 60
+ g 7
+>totsegnum * bpperseg = total bp 	400*10.5=4200
+>maxRotAng	= 0.698132
+ P_SMALLROTATION	=0.8
+>FilePrefix = main
+
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[1000] move_trial[323,361] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=3.42073),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[2000] move_trial[361,56] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=117.551),1,1 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[3000] move_trial[108,166] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=50.0138),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[4000] move_trial[3,25] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=13.7499),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[5000] move_trial[142,229] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=63.4444),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[6000] move_trial[181,211] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[1(dE=0.0717513),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[7000] move_trial[15,45] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=66.059),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[8000] move_trial[225,241] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=37.4193),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[9000] move_trial[138,176] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=25.0113),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[10000] move_trial[310,352] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[1(dE=2.66898),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[11000] move_trial[106,199] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=152.203),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[12000] move_trial[338,375] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[1(dE=-0.0282231),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[13000] move_trial[103,137] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=15.8251),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[14000] move_trial[349,386] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=38.3676),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[15000] move_trial[250,294] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[1(dE=0.0300511),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[16000] move_trial[55,90] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=98.7401),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[17000] move_trial[34,77] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=47.9101),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[18000] move_trial[230,324] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=11.3631),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[19000] move_trial[328,349] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=17.3096),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[20000] move_trial[388,391] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=1.37927),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[21000] move_trial[254,350] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=156.616),1,1 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[22000] move_trial[368,19] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=57.017),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[23000] move_trial[221,241] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=38.1389),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[24000] move_trial[237,281] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=3.53479),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[25000] move_trial[151,209] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=60.2478),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[26000] move_trial[367,7] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=17.2361),1,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[27000] move_trial[61,93] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=64.5146),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[28000] move_trial[99,183] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=32.7422),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[29000] move_trial[231,260] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[-1(dE=15.7027),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[30000] move_trial[43,94] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=93.6766),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
+accepted:0 rpt_accepted:0 in moves 1000[0,0]
+[31000] move_trial[100,169] [Wr,E_t]-16.3931,10.4201Flags(E,IEV,topo)[0(dE=48.6366),0,0 Kpoly(1,1)] r 6.36927e-314 Ax 180 Ra -1.03651e+161 E 0
