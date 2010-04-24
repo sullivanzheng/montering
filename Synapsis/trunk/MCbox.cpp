@@ -80,7 +80,7 @@ void MCbox_circular::logAccepts(void)
 {
     sprintf(buf, "%12d %12d ", 
         dnaChain->stats.auto_moves.getTotCounts(), 
-        dnaChain->stats.accepts.getNumber());
+        dnaChain->stats.crk_accepts.getNumber());
     (*fp_log) << buf;
 }
 
@@ -95,16 +95,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
-/*	for (int i=0;i<40;i++){
-		dnaChain->C[i].x=i*(i-1)/2;dnaChain->C[i].y=0;dnaChain->C[i].z=0;
-		dnaChain->C[i].dx=i;dnaChain->C[i].dy=0;dnaChain->C[i].dz=0;
-	}
-	dnaChain->snapshot("1.txt");
-	dnaChain->dE_reptation(1,32,-1);
-	dnaChain->snapshot("2.txt");
-	dnaChain->dE_reptation(1,32,1);
-	dnaChain->snapshot("3.txt");
-	exit(0);*/
+
 	for (int moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -122,6 +113,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		
 		//TODO: remove this after debug.
 		dnaChain->checkConsistancy();
+		if (dnaChain->AlexPoly[0]!=1 || dnaChain->AlexPoly [1]!=1)
+			cout<<"["<<moves<<"]"<<dnaChain->AlexPoly[0]<<","<<dnaChain->AlexPoly[1]<<endl;
 		
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
@@ -195,8 +188,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			
-			if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
+			if (this->dnaChain->topl<1.5){ //TODO test this one. They should be consistent
+			//if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
 				topo_condition=1;
 			}
 			else{
@@ -204,7 +197,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
-					this->dnaChain->stats.rpt_accepts++;		
+					this->dnaChain->stats.crk_accepts++;		
 			}
 			else{
 					dnaChain->crankshaft(m,n,-rotAng);
@@ -287,7 +280,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
+			if (this->dnaChain->topl<1.5){ //TODO test this one. They should be consistent
+			//if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
 				topo_condition=1;
 			}
 			else{
@@ -295,7 +289,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
-				dnaChain->stats.accepts++;
+				dnaChain->stats.rpt_accepts++;
 			}
 			else{
 					dnaChain->dE_reptation(m,n,-rept_move);
@@ -312,14 +306,14 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		}
 
 		if (moves%STAT_INTERVAL==0){
-			(*fp_log)<<"accepted:"<<dnaChain->stats.accepts()
+			(*fp_log)<<"accepted:"<<dnaChain->stats.crk_accepts()
 				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['
-				<<float(dnaChain->stats.accepts())/dnaChain->stats.auto_moves()<<","
+				<<float(dnaChain->stats.crk_accepts())/dnaChain->stats.auto_moves()<<","
 				<<float(dnaChain->stats.rpt_accepts())/dnaChain->stats.auto_moves()
 				<<']'<<endl;
-			dnaChain->stats.accepts.lap();
+			dnaChain->stats.crk_accepts.lap();
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
 		

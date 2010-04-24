@@ -77,7 +77,7 @@ public:
 		  after certain number of moves.
 		  This number can be decided by defaultSampleCycle and
 		  passed to endToEndSampleCycle. */
-		counter accepts;
+		counter crk_accepts;
 		counter rpt_accepts;
 		counter auto_moves;
         statqueue <double> auto_prd_endToEndDistance2;
@@ -86,7 +86,7 @@ public:
 		statqueue <double> anglelist[maxa];
 
         void resetStat(){
-            accepts.lap();
+            crk_accepts.lap();
 			rpt_accepts.lap();
             auto_moves.lap();
             auto_prd_endToEndDistance2.clear();
@@ -171,9 +171,12 @@ protected:
 	virtual double updateBangle(int i);
 public:
 	double writhe;
+	double topl;
+
 	double E_t; //torsional energy.
 	double dLk;
 	int AlexPoly[2];
+
 
 	CircularChain();
 	CircularChain(int length);

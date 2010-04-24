@@ -255,7 +255,7 @@ void CircularChain::snapshot(char *filename)
 		getchar();
 		exit(EXIT_FAILURE);
 	}
-	sprintf(buf, "%6d %20s", maxnum + 1, "[Snapshot of a circle]");
+	sprintf(buf, "%6d %20s", maxnum + 2, "[Snapshot of a circle]");
 	fh << buf << endl;
 	i=0;
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
@@ -264,10 +264,18 @@ void CircularChain::snapshot(char *filename)
 	for ( i = 1; i <= maxnum; i++)
 	{	
 		int mark=protect_list[i];
-	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
 			i + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
 	}
+
+	//The first bead is repeated for convenient processing of convertJmol2For.py.
+	i=0;
+	int mark=protect_list[i];
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+			totsegnum + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
+		fh << buf << endl;
+
 
     fh << endl << "Detailed Info" << endl;
 	for ( i = 0; i <= maxnum-1; i++)
@@ -390,9 +398,12 @@ double CircularChain::_fastWr(){
       wr=jwr+beta
 	*/	
 
-	int kndwr,ierr;
-	double topl;
-	kndwr=this->_kndwr(topl,ierr);
+	int kndwr,ierr=0;
+	kndwr=this->_kndwr(this->topl,ierr);
+	if (ierr!=0){
+		cout<<"[In CircularChain::_fastWr()] ierr!=0"<<endl;
+		exit(EXIT_FAILURE);
+	}
 
 	double bwr;
 	bwr=this->_bwr(1,maxnum);
@@ -402,7 +413,7 @@ double CircularChain::_fastWr(){
 
 #include "f2c.h"
 
-int  CircularChain::kpoly(int ial[2], int &ierr)
+int  CircularChain::kpoly(int ial[2], int &ierr)//TODO problematic. Knot formation still.
 {
 /* k3.f -- translated by f2c (version 20060506).
    You must link the resulting object file with libf2c:
