@@ -183,11 +183,11 @@ public:
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);
 	int kpoly(int ial[2], int &ierr);
-	double E_t_updateWrithe_E_t();
+	double Slow_E_t_updateWrithe_E_t();
+	double E_t_updateWrithe_E_t(); //Based on _fastWr();
 private:
 	double _bwr(int m, int n);
 	int _kndwr(double & topl, int & ierr);
-public:
-	double fastWr();
+	double _fastWr();
 };
 #endif /* CHAIN_H */

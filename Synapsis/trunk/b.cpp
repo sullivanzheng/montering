@@ -53,10 +53,10 @@ double CircularChain::_bwr(int m,int n){
 
 /* import C[i].dX to dX*///--------------------------------
 	for (int tempi=0;tempi<=maxnum;tempi++){
-		dx[tempi+1]=C[tempi].dx; dy[tempi+1]=C[tempi].dy; dz[tempi+1]=C[tempi].dz;		
+		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
 	}
 	for (int tempi=0;tempi<=maxnum;tempi++){
-		w[tempi+1]=0;//TODO w or as we can see from the program, it is not necessary.
+		w[tempi]=0;//TODO w or as we can see from the program, it is not necessary.
 	}
 	jr1=maxnum+1;
 	in=m+1;ik=n+1;

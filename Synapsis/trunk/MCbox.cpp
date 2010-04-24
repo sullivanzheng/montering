@@ -52,10 +52,6 @@ MCbox_circular::MCbox_circular(
 
 	//initialize the writhe;
 	dnaChain->E_t_updateWrithe_E_t();
-
-	cout<<dnaChain->fastWr()<<endl;
-	cout<<dnaChain->writhe<<endl;
-
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -160,6 +156,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
+			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
 			E_condition=0;
 			IEV_condition=0;
     		topo_condition=0;
@@ -177,9 +174,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					 E_condition=1;
 				}
 				else{
-					 E_condition=0;
+					 E_condition=-1;
 				}
 			}
+			
 
 			if (this->dnaChain->IEV(m,n)==1){
 				IEV_condition=1;

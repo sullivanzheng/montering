@@ -342,7 +342,7 @@ g4:         if(ddd<er*er) idiam=0;
 	return iev;
 }
 
-double CircularChain::E_t_updateWrithe_E_t(){
+double CircularChain::Slow_E_t_updateWrithe_E_t(){
 	double temp[3];double dX[3];double modX;
 	double _writhe=0;
 	for (int s=0;s<=maxnum;s++){
@@ -364,7 +364,14 @@ double CircularChain::E_t_updateWrithe_E_t(){
 	return this->E_t;
 }
 
-double CircularChain::fastWr(){
+double CircularChain::E_t_updateWrithe_E_t(){
+	this->writhe = this->_fastWr();
+	this->E_t= 2 * PI * PI * C_t / (totsegnum * bpperseg) *
+				(dLk - this->writhe)*(dLk - this->writhe);
+	return this->E_t;
+}
+
+double CircularChain::_fastWr(){
 	/* FORTRAN origin:
 	c calculation of knot type and part of Wr
 
@@ -427,14 +434,14 @@ int  CircularChain::kpoly(int ial[2], int &ierr)
     /* System generated locals */
     integer i__1, i__2, i__3;
     doublereal d__1, d__2;
-
+	const int isi=270;
     /* Local variables */
     static doublereal c__, d__;
     static integer i__, j, k, l;
     static doublereal t, x[maxa], y[maxa], z__[maxa];
     static integer i1, i2, n1, n2, m4, n4;
     static real r1, r2;
-    static doublereal da[72900]	/* was [270][270] */;
+    static doublereal da[isi*isi];	
     static integer id[maxcross], n11, n21, n41, jj;
     static doublereal dr;
     static integer mj, cx[maxcross];
@@ -454,12 +461,16 @@ int  CircularChain::kpoly(int ial[2], int &ierr)
     static doublereal pdx12;
     static integer kmax;
 
-	//Interfacing my program data to this routine, mind the different indexing convention between Fortran and C//
+	//Interfacing my program data to this routine.
+	//F2C automatically converted the indexing difference.
+	//However mind that indexing variables such as jr1 etc still needs to +1 since the
+	//program now index like x[index-1]. Therefore indexing variables still need to convert
+	//from C convention to Fortran.
 	for (int i=0; i<=maxnum; i++){
-		x[i+1]=C[i].x;y[i+1]=C[i].y;z__[i+1]=C[i].z;
-		dx[i+1]=C[i].dx;dy[i+1]=C[i].dy;dz[i+1]=C[i].dz;
+		x[i]=C[i].x;y[i]=C[i].y;z__[i]=C[i].z;
+		dx[i]=C[i].dx;dy[i]=C[i].dy;dz[i]=C[i].dz;
 	}
-	x[maxnum+2]=C[0].x;y[maxnum+2]=C[0].y;z__[maxnum+2]=C[0].z;
+	x[maxnum+1]=C[0].x;y[maxnum+1]=C[0].y;z__[maxnum+1]=C[0].z;
 	jr1=maxnum+1;
 
 	//-------------------------------------------//
@@ -727,22 +738,22 @@ L801:
     for (ks = 1; ks <= i__1; ++ks) {
 	i__2 = m4;
 	for (js = 1; js <= i__2; ++js) {
-	    da[ks + js * 270 - 271] = 0.;
+	    da[ks + js * isi - (isi+1)] = 0.;
 /* L501: */
 	}
 	js = ix[ks - 1];
 	if (js == ks || js == ks + 1) {
-	    da[ks + ks * 270 - 271] = -1.f;
-	    da[ks + (ks + 1) * 270 - 271] = 1.f;
+	    da[ks + ks * isi - (isi+1)] = -1.f;
+	    da[ks + (ks + 1) * isi - (isi+1)] = 1.f;
 	} else {
 	    if (id[ks - 1] > 0) {
-		da[ks + ks * 270 - 271] = 1.f;
-		da[ks + (ks + 1) * 270 - 271] = -t;
+		da[ks + ks * isi - (isi+1)] = 1.f;
+		da[ks + (ks + 1) * isi - (isi+1)] = -t;
 	    } else {
-		da[ks + ks * 270 - 271] = -t;
-		da[ks + (ks + 1) * 270 - 271] = 1.f;
+		da[ks + ks * isi - (isi+1)] = -t;
+		da[ks + (ks + 1) * isi - (isi+1)] = 1.f;
 	    }
-	    da[ks + js * 270 - 271] = t - 1.f;
+	    da[ks + js * isi - (isi+1)] = t - 1.f;
 	}
 /* L500: */
     }
@@ -751,7 +762,7 @@ L801:
     kmax = m4 - 1;
     i__1 = kmax;
     for (k = 1; k <= i__1; ++k) {
-	if ((d__1 = da[k + k * 270 - 271], abs(d__1)) < deps) {
+	if ((d__1 = da[k + k * isi - (isi+1)], abs(d__1)) < deps) {
 	    jj = k + 1;
 	    c__ = -c__;
 L50:
@@ -759,13 +770,13 @@ L50:
 		c__ = 0.f;
 		goto L90;
 	    }
-	    if ((d__1 = da[jj + k * 270 - 271], abs(d__1)) > deps) {
+	    if ((d__1 = da[jj + k * isi - (isi+1)], abs(d__1)) > deps) {
 		i__2 = m4;
 		for (l = 1; l <= i__2; ++l) {
-		    dr = da[k + l * 270 - 271];
-		    da[k + l * 270 - 271] = da[jj + l * 270 - 271];
+		    dr = da[k + l * isi - (isi+1)];
+		    da[k + l * isi - (isi+1)] = da[jj + l * isi - (isi+1)];
 /* L80: */
-		    da[jj + l * 270 - 271] = dr;
+		    da[jj + l * isi - (isi+1)] = dr;
 		}
 	    } else {
 		++jj;
@@ -775,11 +786,11 @@ L50:
 	jmin = k + 1;
 	i__2 = m4;
 	for (j = jmin; j <= i__2; ++j) {
-	    if ((d__1 = da[k + j * 270 - 271], abs(d__1)) > deps) {
-		dr = da[k + j * 270 - 271] / da[k + k * 270 - 271];
+	    if ((d__1 = da[k + j * isi - (isi+1)], abs(d__1)) > deps) {
+		dr = da[k + j * isi - (isi+1)] / da[k + k * isi - (isi+1)];
 		i__3 = m4;
 		for (i__ = k; i__ <= i__3; ++i__) {
-		    da[i__ + j * 270 - 271] -= dr * da[i__ + k * 270 - 271];
+		    da[i__ + j * isi - (isi+1)] -= dr * da[i__ + k * isi - (isi+1)];
 /* L22: */
 		}
 	    }
@@ -790,7 +801,7 @@ L50:
     i__1 = m4;
     for (i__ = 1; i__ <= i__1; ++i__) {
 /* L30: */
-	c__ *= da[i__ + i__ * 270 - 271];
+	c__ *= da[i__ + i__ * isi - (isi+1)];
     }
 L90:
     c__ = abs(c__);

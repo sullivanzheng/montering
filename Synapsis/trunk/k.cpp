@@ -1,11 +1,13 @@
 #include "chain.h"
 #include "f2c.h"
 int CircularChain::_kndwr(double &topl,int &ierr){
+	const int isi=801;
+	const int range1=4001;
+
     /* System generated locals */
     int i__1, i__2, i__3;
     double r__1;
     double d__1, d__2;
-	const int range1=4001;
     /* Local variables */
     static double c__;
     static double d__;
@@ -13,8 +15,7 @@ int CircularChain::_kndwr(double &topl,int &ierr){
     static double x[maxa], y[maxa], z[maxa];
     static int i1, n1, n2, m4, n4;
 	
-	/* was [801][801] this cannot be changed....sigh f2c is too weak in converting 2d array*/
-    static double r1, r2, da[641601];
+    static double r1, r2, da[isi*isi];
     static int n11, n21, n41, jj;
     static double dr;
     static int mj;
@@ -40,11 +41,11 @@ int CircularChain::_kndwr(double &topl,int &ierr){
 
 /* import C[i].dX to dX*///--------------------------------
 	for (int tempi=0;tempi<=maxnum;tempi++){
-		x[tempi+1]=C[tempi].x; y[tempi+1]=C[tempi].y; z[tempi+1]=C[tempi].z;		
-		dx[tempi+1]=C[tempi].dx; dy[tempi+1]=C[tempi].dy; dz[tempi+1]=C[tempi].dz;		
+		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;		
+		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
 	}
 	jr1=maxnum+1;
-	x[maxnum+2]=C[0].x;y[maxnum+2]=C[0].y;z[maxnum+2]=C[0].z;
+	x[maxnum+1]=C[0].x;y[maxnum+1]=C[0].y;z[maxnum+1]=C[0].z;
 	ierr=0;
 //_________________________________________________________
 
@@ -340,20 +341,20 @@ L236:
     }
 /* array assignments */
     m4 = n4 - 1;
-    if (m4 > 801) {
+    if (m4 > isi) {
 	goto L1001;
     }
     i__1 = m4;
     for (ks = 1; ks <= i__1; ++ks) {
 	i__2 = m4;
 	for (js = 1; js <= i__2; ++js) {
-	    da[ks + js * 801 - 802] = 0.0;
+	    da[ks + js * isi - (isi+1)] = 0.0;
 /* L501: */
 	}
-	da[ks + ks * 801 - 802] = 1.0;
-	da[ks + (ks + 1) * 801 - 802] = 1.0;
+	da[ks + ks * isi - (isi+1)] = 1.0;
+	da[ks + (ks + 1) * isi - (isi+1)] = 1.0;
 	js = ix[ks - 1];
-	da[ks + js * 801 - 802] = -2.0;
+	da[ks + js * isi - (isi+1)] = -2.0;
 /* L500: */
     }
 /* calculation of determinant */
@@ -361,7 +362,7 @@ L236:
     kmax = m4 - 1;
     i__1 = kmax;
     for (k = 1; k <= i__1; ++k) {
-	if ((r__1 = da[k + k * 801 - 802], dabs(r__1)) < eps) {
+	if ((r__1 = da[k + k * isi - (isi+1)], dabs(r__1)) < eps) {
 	    jj = k + 1;
 	    c__ = -c__;
 L50:
@@ -369,13 +370,13 @@ L50:
 		c__ = 0.0;
 		goto L90;
 	    }
-	    if ((r__1 = da[jj + k * 801 - 802], dabs(r__1)) > eps) {
+	    if ((r__1 = da[jj + k * isi - (isi+1)], dabs(r__1)) > eps) {
 		i__2 = m4;
 		for (l = 1; l <= i__2; ++l) {
-		    dr = da[k + l * 801 - 802];
-		    da[k + l * 801 - 802] = da[jj + l * 801 - 802];
+		    dr = da[k + l * isi - (isi+1)];
+		    da[k + l * isi - (isi+1)] = da[jj + l * isi - (isi+1)];
 /* L80: */
-		    da[jj + l * 801 - 802] = dr;
+		    da[jj + l * isi - (isi+1)] = dr;
 		}
 	    } else {
 		++jj;
@@ -385,11 +386,11 @@ L50:
 	jmin = k + 1;
 	i__2 = m4;
 	for (j = jmin; j <= i__2; ++j) {
-	    if ((r__1 = da[k + j * 801 - 802], dabs(r__1)) > eps) {
-		dr = da[k + j * 801 - 802] / da[k + k * 801 - 802];
+	    if ((r__1 = da[k + j * isi - (isi+1)], dabs(r__1)) > eps) {
+		dr = da[k + j * isi - (isi+1)] / da[k + k * isi - (isi+1)];
 		i__3 = m4;
 		for (i__ = k; i__ <= i__3; ++i__) {
-		    da[i__ + j * 801 - 802] -= dr * da[i__ + k * 801 - 802];
+		    da[i__ + j * isi - (isi+1)] -= dr * da[i__ + k * isi - (isi+1)];
 /* L22: */
 		}
 	    }
@@ -400,7 +401,7 @@ L50:
     i__1 = m4;
     for (i__ = 1; i__ <= i__1; ++i__) {
 /* L30: */
-	c__ *= da[i__ + i__ * 801 - 802];
+	c__ *= da[i__ + i__ * isi - (isi+1)];
     }
 L90:
     c__ = dabs(c__);
