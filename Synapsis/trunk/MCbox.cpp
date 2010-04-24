@@ -48,10 +48,7 @@ MCbox_circular::MCbox_circular(
     //Log file handle.
     //dnaChain->snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
     logParameters();
-	dnaChain->snapshot("000.txt");
 
-	//initialize the writhe;
-	dnaChain->E_t_updateWrithe_E_t();
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -98,7 +95,16 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
-
+/*	for (int i=0;i<40;i++){
+		dnaChain->C[i].x=i*(i-1)/2;dnaChain->C[i].y=0;dnaChain->C[i].z=0;
+		dnaChain->C[i].dx=i;dnaChain->C[i].dy=0;dnaChain->C[i].dz=0;
+	}
+	dnaChain->snapshot("1.txt");
+	dnaChain->dE_reptation(1,32,-1);
+	dnaChain->snapshot("2.txt");
+	dnaChain->dE_reptation(1,32,1);
+	dnaChain->snapshot("3.txt");
+	exit(0);*/
 	for (int moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -111,10 +117,12 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//iteration due to wrapping problem.
 
         double dE, cacheRE, cacheE_t;
-		int ial[2],ierr;
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
-
+		
+		//TODO: remove this after debug.
+		dnaChain->checkConsistancy();
+		
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
@@ -152,7 +160,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 			//update energies.
 			RG.update_allrigid_and_E();
-			dnaChain->E_t_updateWrithe_E_t();
+			this->dnaChain->E_t_updateWrithe_E_t();
+			this->dnaChain->updateKPoly();
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
@@ -186,13 +195,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			this->dnaChain->kpoly(ial, ierr);
-			if (ierr!=0){
-				cout<<"The crossing on the chain is too many!"<<endl;
-				exit(EXIT_FAILURE);
-			}
-
-			if (ial[0]==1 && ial[1]==1){
+			
+			if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
 				topo_condition=1;
 			}
 			else{
@@ -200,12 +204,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
-					this->dnaChain->stats.accepts++;		
+					this->dnaChain->stats.rpt_accepts++;		
 			}
 			else{
 					dnaChain->crankshaft(m,n,-rotAng);
 					RG.update_allrigid_and_E();
 					dnaChain->E_t_updateWrithe_E_t();
+					dnaChain->updateKPoly();
 			}
 		}//End Crankshaft movement.
 		else{
@@ -248,7 +253,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 			//update energies.
 			RG.update_allrigid_and_E();
-			dnaChain->E_t_updateWrithe_E_t();
+			this->dnaChain->E_t_updateWrithe_E_t();
+			this->dnaChain->updateKPoly();
 
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
@@ -281,13 +287,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			this->dnaChain->kpoly(ial, ierr);
-			if (ierr!=0){
-				cout<<"The crossing on the chain is too many!"<<endl;
-				exit(EXIT_FAILURE);
-			}
-
-			if (ial[0]==1 && ial[1]==1){
+			if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
 				topo_condition=1;
 			}
 			else{
@@ -295,13 +295,15 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
-					this->dnaChain->stats.rpt_accepts++;		
+				dnaChain->stats.accepts++;
 			}
 			else{
 					dnaChain->dE_reptation(m,n,-rept_move);
 					RG.update_allrigid_and_E();
 					dnaChain->E_t_updateWrithe_E_t();
+					dnaChain->updateKPoly();
 			}
+
 		}//End reptation movement.
 
 		if (moves%SNAPSHOT_INTERVAL==0){
@@ -326,11 +328,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			(*fp_log)<<"move_trial["<<m<<","<<n<<"] ";
 			(*fp_log)<<"[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 			(*fp_log)<<"Flags(E,IEV,topo)"<<"["<<E_condition<<"(dE="<<dE<<"),"
-				<<IEV_condition<<","<<topo_condition<<"]";
-		    (*fp_log)<<"tp_trial("<<ial[0]<<','<<ial[1]<<")";//<<endl;
+				<<IEV_condition<<","<<topo_condition<<" Kpoly("<<dnaChain->AlexPoly[0]<<","<<dnaChain->AlexPoly[1]<<")]";
 			(*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
-
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();
@@ -338,12 +338,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			(*fp_log)<<"["<<moves<<"] ";
 			(*fp_log)<<"Rg "<<gyration_ratio<<endl;
 */
-
 //			Log Chain angle statistics
 /*			for (int i=0;i<=maxnum;i++)
 				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
-*/
-		}
+*/		}
 	}
 	for (int i=0;i<=maxnum;i++){
 		(*fp_log)<<i<<" "<<dnaChain->stats.anglelist[i].getMean()<<" "

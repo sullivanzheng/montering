@@ -173,6 +173,8 @@ public:
 	double writhe;
 	double E_t; //torsional energy.
 	double dLk;
+	int AlexPoly[2];
+
 	CircularChain();
 	CircularChain(int length);
 	CircularChain(char const *filename,int length);
@@ -183,8 +185,10 @@ public:
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);
 	int kpoly(int ial[2], int &ierr);
+	int updateKPoly();
 	double Slow_E_t_updateWrithe_E_t();
 	double E_t_updateWrithe_E_t(); //Based on _fastWr();
+	int checkConsistancy();
 private:
 	double _bwr(int m, int n);
 	int _kndwr(double & topl, int & ierr);

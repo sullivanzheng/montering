@@ -1,4 +1,3 @@
-
 #include "chain.h"
 using namespace std;
 
@@ -44,9 +43,17 @@ void CircularChain::driftProof()
 }
 
 CircularChain::CircularChain(char const *filename,const int length)
-:Chain(filename,true,length){}
+:Chain(filename,true,length){
+	this->E_t_updateWrithe_E_t();
+	this->updateKPoly();
+	this->snapshot("ini.txt");
+}
 
-CircularChain::CircularChain(int length):Chain(true,length){}
+CircularChain::CircularChain(int length):Chain(true,length){
+	this->E_t_updateWrithe_E_t();
+	this->updateKPoly();
+	this->snapshot("ini.txt");
+}
 
 double CircularChain::calG_bSum()
 {
@@ -793,7 +800,7 @@ L50:
 		    da[i__ + j * isi - (isi+1)] -= dr * da[i__ + k * isi - (isi+1)];
 /* L22: */
 		}
-	    }
+		}
 /* L21: */
 	}
 /* L20: */
@@ -878,6 +885,35 @@ L1002:
     return 0;
 } /* kn_ */
 
+
+int CircularChain::updateKPoly(){
+	int ierr=0,ial[2];
+	this->kpoly (ial,ierr);
+	if (ierr!=0){
+		cout<<"[kpoly error]"<<endl;
+		exit(EXIT_FAILURE);
+	}
+	this->AlexPoly[0]=ial[0];
+	this->AlexPoly[1]=ial[1];
+	return 0;
+}
+
+int CircularChain::checkConsistancy(){
+	static const double eps=1e-5;
+	for (int i=0;i<=maxnum;i++){
+		if (dabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
+			dabs(C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy) > eps ||
+			dabs(C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz) > eps ){
+				cout<<"[Inconsistant]"<<i
+					<<"("
+					<<C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx<<","
+					<<C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy<<","
+					<<C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz<<")"<<endl;
+		}
+	}
+	return 0;
+}
+
 allrigid::allrigid(char *configfile,CircularChain * target){
 	using namespace std;
 	ifstream f(configfile);
@@ -885,6 +921,10 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		cout<<"Rigidbody configfile does not exist!"<<std::endl;
 		exit(EXIT_FAILURE);
 	}
+
+	//Clear global protect list to 0;
+	for (int i=0;i<=maxnum;i++)
+		protect_list[i]=0;
 	
 	vector<int> r_protect;
 	vector<vector<double>>r_ref_v;
