@@ -14,29 +14,29 @@ double CircularChain::_bwr(int m,int n){
 	}
 
 	/* System generated locals */
-    integer i__1;
+    int i__1;
 
     /* Local variables */
-    static integer i__, m__;
-    static real w[maxa];
-    static doublereal a1, a2;
-    static integer m1;
-    static doublereal t1, t2;
-    static integer ii, ik, in;
-    static integer mm;
-    static doublereal dx[maxa], dy[maxa], dz[maxa];
-    static real si;
-    static doublereal sm, rp;
-    static integer jr1;
-    static doublereal sm1;
-    static real pi12;
-    static doublereal rxy;
-    static integer ibad[maxa];
-    static real cchi;
-    static doublereal beta, cphi[maxa];
-    static real schi;
-    static doublereal seta, sphi[maxa], rxyp, rxyp2, perpx, perpy, perpz;
-    static real perpzr;
+    static int i__, m__;
+    static double w[maxa];
+    static double a1, a2;
+    static int m1;
+    static double t1, t2;
+    static int ii, ik, in;
+    static int mm;
+    static double dx[maxa], dy[maxa], dz[maxa];
+    static double si;
+    static double sm, rp;
+    static int jr1;
+    static double sm1;
+    static double pi12;
+    static double rxy;
+    static int ibad[maxa];
+    static double cchi;
+    static double beta, cphi[maxa];
+    static double schi;
+    static double seta, sphi[maxa], rxyp, rxyp2, perpx, perpy, perpz;
+    static double perpzr;
 
 
 

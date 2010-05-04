@@ -323,6 +323,10 @@
 				RelativePath=".\newmain.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\wnfun.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

@@ -1,6 +1,6 @@
 #include "chain.h"
 #include "f2c.h"
-int CircularChain::_kndwr(double &topl,int &ierr){
+int CircularChain::_kndwr_topl_update(double &topl,int &ierr){
 	const int isi=801;
 	const int range1=4001;
 
@@ -49,7 +49,7 @@ int CircularChain::_kndwr(double &topl,int &ierr){
 	ierr=0;
 //_________________________________________________________
 
-/* inventarization of intersections */
+/* inventorization of intersections */
 /* n4 - number of intersections */
 /* cx(i) - x-value of i-th intersection */
 /* ic1(i) - number of undergoing segment for i-th intersection */
@@ -420,5 +420,156 @@ L1002:
     ierr = 2;
     topl = 2;
     return 0;
-} /* _kndwr */
+} /* _kndwr_topl_update */
 
+int CircularChain::_kndwr(int &ierr){
+	const int isi=801;
+	const int range1=4001;
+
+    /* System generated locals */
+    int i__1, i__2, i__3;
+    double r__1;
+    double d__1, d__2;
+    /* Local variables */
+    static double c__;
+    static double d__;
+    static int i__, j, k, l;
+    static double x[maxa], y[maxa], z[maxa];
+    static int i1, n1, n2, m4, n4;
+	
+    static double r1, r2, da[isi*isi];
+    static int n11, n21, n41, jj;
+    static double dr;
+    static int mj;
+    static double cx[range1];
+    static double dx[maxa], dy[maxa], dz[maxa];
+    static int ir, ks, ix[range1], js, nv;
+    static double rx, xr;
+    static int ic1[range1], ic2[range1], jr1, jr2, jr3, jr4;
+    static double rl1, rl2;
+    static int nv1;
+    static double px1, py1, px2, py2;
+    static double rz1, rz2;
+    static double  px11, px21, drx;
+    static int jwr;
+    static double zet;
+    static double pdx1, pdy1, pdx2, pdy2;
+    static int jmin;
+    static double pdx12;
+    static int kmax, iint, iiwr;
+
+    const double deps = 1e-10;
+    const double eps = 1e-4f;
+
+	ierr=0;
+/* import C[i].dX to dX*///--------------------------------
+	for (int tempi=0;tempi<=maxnum;tempi++){
+		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;		
+		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
+	}
+	jr1=maxnum+1;
+	x[maxnum+1]=C[0].x;y[maxnum+1]=C[0].y;z[maxnum+1]=C[0].z;
+
+//_________________________________________________________
+
+/* inventorization of intersections */
+/* n4 - number of intersections */
+/* cx(i) - x-value of i-th intersection */
+/* ic1(i) - number of undergoing segment for i-th intersection */
+/* ic2(i) - number of overgoing segment for i-th intersection */
+    jr2 = jr1 - 2;
+    n4 = 1;
+    i__1 = jr2;
+    for (n1 = 1; n1 <= i__1; ++n1) {
+	n11 = n1 + 1;
+	jr3 = jr1;
+	if (n1 < 2) {
+	    --jr3;
+	}
+	jr4 = n1 + 2;
+	pdx1 = dx[n1 - 1];
+	pdy1 = dy[n1 - 1];
+	px1 = x[n1 - 1];
+	py1 = y[n1 - 1];
+	px11 = x[n11 - 1];
+	i__2 = jr3;
+	for (n2 = jr4; n2 <= i__2; ++n2) {
+	    px2 = x[n2 - 1];
+	    py2 = y[n2 - 1];
+	    if ((d__1 = px1 - px2, abs(d__1)) > 2.1 || (d__2 = py1 - py2, abs(
+		    d__2)) > 2.1) {
+		goto L111;
+	    }
+	    pdx2 = dx[n2 - 1];
+	    pdy2 = dy[n2 - 1];
+	    n21 = n2 + 1;
+	    px21 = x[n21 - 1];
+	    d__ = pdx2 * pdy1 - pdx1 * pdy2;
+	    if (abs(d__) < deps) {
+		goto L111;
+	    }
+	    pdx12 = pdx1 * pdx2;
+	    drx = (py2 * pdx12 - px2 * pdx1 * pdy2 - py1 * pdx12 + px1 * pdx2 
+		    * pdy1) / d__;
+	    if (px1 <= px11) {
+		if (drx < px1 || drx >= px11) {
+		    goto L111;
+		}
+	    } else {
+		if (drx <= px11 || drx > px1) {
+		    goto L111;
+		}
+	    }
+	    if (px2 <= px21) {
+		if (drx < px2 || drx >= px21) {
+		    goto L111;
+		}
+	    } else {
+		if (drx <= px21 || drx > px2) {
+		    goto L111;
+		}
+	    }
+	    rx = drx;
+	    if ((double) n4 > range1) {
+		goto L1002;
+	    }
+	    rz1 = (rx - x[n1 - 1]) / dx[n1 - 1] * dz[n1 - 1] + z[n1 - 1];
+	    rz2 = (rx - x[n2 - 1]) / dx[n2 - 1] * dz[n2 - 1] + z[n2 - 1];
+	    cx[n4 - 1] = rx;
+	    if (rz1 - rz2 >= 0.) {
+		goto L401;
+	    }
+	    ic1[n4 - 1] = n1;
+	    ic2[n4 - 1] = n2;
+	    goto L402;
+L401:
+	    ic1[n4 - 1] = n2;
+	    ic2[n4 - 1] = n1;
+L402:
+	    ++n4;
+L111:
+	    ;
+	}
+/* L110: */
+    }
+    --n4;
+/* calculation of the directional writhing number */
+    jwr = 0;
+    i__1 = n4;
+    for (iint = 1; iint <= i__1; ++iint) {
+		zet = dx[ic1[iint - 1] - 1] * dy[ic2[iint - 1] - 1] - dx[ic2[iint - 1]
+			 - 1] * dy[ic1[iint - 1] - 1];
+		if (zet < 0.0) {
+			iiwr = 1;
+		} else {
+			iiwr = -1;
+		}
+		jwr += iiwr;
+	}
+	ierr = 0;
+	return jwr;
+
+L1002:
+    ierr = 2;
+    return -9999;
+} /* _kndwr */

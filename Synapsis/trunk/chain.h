@@ -190,11 +190,14 @@ public:
 	int kpoly(int ial[2], int &ierr);
 	int updateKPoly();
 	double Slow_E_t_updateWrithe_E_t();
-	double E_t_updateWrithe_E_t(); //Based on _fastWr();
+	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	int checkConsistancy();
+	int getBranchNumber();
 private:
 	double _bwr(int m, int n);
-	int _kndwr(double & topl, int & ierr);
-	double _fastWr();
+	int _kndwr_topl_update(double & topl, int & ierr);
+	int _kndwr(int &ierr);
+	double _fastWr_topl_update();
+	double _wrfun(int m, int n);
 };
 #endif /* CHAIN_H */

@@ -49,6 +49,13 @@ MCbox_circular::MCbox_circular(
     //dnaChain->snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
     logParameters();
 
+	if (dnaChain->checkConsistancy()==1){
+		cout<<"Chain inconsistency occurs. In most cases this is caused by inconsistency"
+			"between alleged number of segment in _config file and the actual number of"
+			" segments."<<endl;
+		exit(EXIT_FAILURE);
+	}
+
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -111,13 +118,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
 		
-		/*
-		//TODO: remove this after debug.
-		dnaChain->checkConsistancy();
-		if (dnaChain->AlexPoly[0]!=1 || dnaChain->AlexPoly [1]!=1)
-			cout<<"["<<moves<<"]"<<dnaChain->AlexPoly[0]<<","<<dnaChain->AlexPoly[1]<<endl;
-		*/
-
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
@@ -190,15 +190,14 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			if (this->dnaChain->topl<1.5){ //TODO test this one. They should be consistent
-			//if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
+			if (this->dnaChain->topl<1.5){ 
 				topo_condition=1;
 			}
 			else{
 				topo_condition=0;
 			}
 
-			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
+			if (E_condition==1 && IEV_condition==1  && topo_condition==1){
 					this->dnaChain->stats.crk_accepts++;		
 			}
 			else{
@@ -282,15 +281,14 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				IEV_condition=0;
 			}
 
-			if (this->dnaChain->topl<1.5){ //TODO test this one. They should be consistent
-			//if (this->dnaChain->AlexPoly[0]==1 && this->dnaChain->AlexPoly[1]==1){
+			if (this->dnaChain->topl<1.5){
 				topo_condition=1;
 			}
 			else{
 				topo_condition=0;
 			}
 
-			if (E_condition==1 && IEV_condition==1 && topo_condition==1){
+			if (E_condition==1 && IEV_condition==1  && topo_condition==1){
 				dnaChain->stats.rpt_accepts++;
 			}
 			else{
@@ -319,14 +317,20 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
 		
-//			Log acceptance and rigid body statistics.
-			(*fp_log)<<"["<<moves<<"] ";
-			(*fp_log)<<"move_trial["<<m<<","<<n<<"] ";
-			(*fp_log)<<"[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
-			(*fp_log)<<"Flags(E,IEV,topo)"<<"["<<E_condition<<"(dE="<<dE<<"),"
-				<<IEV_condition<<","<<topo_condition<<" Kpoly("<<dnaChain->AlexPoly[0]<<","<<dnaChain->AlexPoly[1]<<")]";
-			(*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
+//----------Log acceptance and rigid body statistics.------------
+
+			(*fp_log)<<"["<<moves<<"]";
+			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
+			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
+			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
+			(*fp_log)<<" Flags(E,IEV,topo)"<<"["
+				<<E_condition<<"(dE="<<dE<<"),"
+				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
+
+//			Log Rigidbody status
+/*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
+*/
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();
@@ -334,10 +338,12 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			(*fp_log)<<"["<<moves<<"] ";
 			(*fp_log)<<"Rg "<<gyration_ratio<<endl;
 */
+
 //			Log Chain angle statistics
 /*			for (int i=0;i<=maxnum;i++)
 				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
-*/		}
+*/
+		}
 	}
 	for (int i=0;i<=maxnum;i++){
 		(*fp_log)<<i<<" "<<dnaChain->stats.anglelist[i].getMean()<<" "

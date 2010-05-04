@@ -380,13 +380,13 @@ double CircularChain::Slow_E_t_updateWrithe_E_t(){
 }
 
 double CircularChain::E_t_updateWrithe_E_t(){
-	this->writhe = this->_fastWr();
+	this->writhe = this->_fastWr_topl_update();
 	this->E_t= 2 * PI * PI * C_t / (totsegnum * bpperseg) *
 				(dLk - this->writhe)*(dLk - this->writhe);
 	return this->E_t;
 }
 
-double CircularChain::_fastWr(){
+double CircularChain::_fastWr_topl_update(){
 	/* FORTRAN origin:
 	c calculation of knot type and part of Wr
 
@@ -399,7 +399,7 @@ double CircularChain::_fastWr(){
 	*/	
 
 	int kndwr,ierr=0;
-	kndwr=this->_kndwr(this->topl,ierr);
+	kndwr=this->_kndwr_topl_update(this->topl,ierr);
 	if (ierr!=0){
 		cout<<"[In CircularChain::_fastWr()] ierr!=0"<<endl;
 		exit(EXIT_FAILURE);
@@ -899,7 +899,7 @@ L1002:
 
 int CircularChain::updateKPoly(){
 	return 0; //TODO temporarily disabled.
-	int ierr=0,ial[2];
+/*	int ierr=0,ial[2];
 	this->kpoly(ial,ierr);
 	if (ierr!=0){
 		cout<<"[kpoly error]"<<endl;
@@ -907,11 +907,13 @@ int CircularChain::updateKPoly(){
 	}
 	this->AlexPoly[0]=ial[0];
 	this->AlexPoly[1]=ial[1];
-	return 0;
+	return 0;*/
 }
 
 int CircularChain::checkConsistancy(){
+	//return 1 if inconsistent.
 	static const double eps=1e-5;
+	int flag=0;
 	for (int i=0;i<=maxnum;i++){
 		if (dabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
 			dabs(C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy) > eps ||
@@ -921,9 +923,10 @@ int CircularChain::checkConsistancy(){
 					<<C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx<<","
 					<<C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy<<","
 					<<C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz<<")"<<endl;
+				flag=1;
 		}
 	}
-	return 0;
+	return flag;
 }
 
 allrigid::allrigid(char *configfile,CircularChain * target){
