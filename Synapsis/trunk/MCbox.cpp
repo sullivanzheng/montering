@@ -302,7 +302,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 		if (moves%SNAPSHOT_INTERVAL==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
+			char buf2[200];
+			sprintf(buf2,"%s%09d_b.txt",filePrefix,moves);
 			dnaChain->snapshot(buf);
+			dnaChain->scanBranch(buf2);
 		}
 
 		if (moves%STAT_INTERVAL==0){

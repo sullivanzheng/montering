@@ -10,8 +10,8 @@ int CircularChain::getBranchNumber(){
 	//enkuhn is number of kuhn length in the circle.
 	double sigma=dLk/(bpperseg*totsegnum/10.5);
 
-	//ek=jr1/enkuhn  which is bpperseg in my program.
-	int	ek=bpperseg;
+	//ek=jr1/enkuhn  which is num of seg per kuhn in my program.
+	double ek=282.686/bpperseg;
 
 	//The constant. If curve local writhe is larger than wrc,
 	//this part of curve will be considered as a branch.
@@ -19,12 +19,12 @@ int CircularChain::getBranchNumber(){
 	double s100=100*sigma;
 
 	//Length of the local curve examined.
-    int loop=int((8.*s100+90)*ek/10.0);
+    static const int loop=int((8.*s100+90)*ek/10.0);
 
 	//Once a peak is detected, the program will jump forward a distance
 	//of loopd to get away from this peak, which eliminate multiple counting
 	//of the same peak.
-	int loopd=int(0.667*loop)+1;
+	static const int loopd=int(0.667*loop)+1;
 	
 	double wrt;
 
@@ -48,6 +48,45 @@ L871:
 	return nl;
 }
 
+int CircularChain::scanBranch(char* filename){
+	using namespace std;
+	
+	//Max subcript in Fortran convention.
+	int jr1=maxnum+1;
+
+	//dLk=enkuhn*282./10.5*sigma 
+	//enkuhn is number of kuhn length in the circle.
+	double sigma=dLk/(bpperseg*totsegnum/10.5);
+
+	//ek=jr1/enkuhn  which is num of seg per kuhn in my program.
+	double ek=282.686/bpperseg;
+
+	//The constant. If curve local writhe is larger than wrc,
+	//this part of curve will be considered as a branch.
+	static const double wrc=-1.15; //TODO this number will change if large circle is used?
+	double s100=100*sigma;
+
+	//Length of the local curve examined.
+    static const int loop=int((8.*s100+90)*ek/10.0);
+
+	//Once a peak is detected, the program will jump forward a distance
+	//of loopd to get away from this peak, which eliminate multiple counting
+	//of the same peak.
+	static const int loopd=int(0.667*loop)+1;
+
+	ofstream fp(filename);
+	
+	double wrt;
+
+	int m, n;
+	for (m=0;m<=maxnum;m++){
+		n=m+loop;
+		wrt=this->_wrfun(m,n);
+		fp<<m<<" "<<n<<" "<<wrt<<endl;
+	}
+	fp.close();
+	return 0;
+}
 double CircularChain::_wrfun(int m, int n)
 {	
     /* is,it,jr1 input parameter */

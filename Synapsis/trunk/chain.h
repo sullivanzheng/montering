@@ -193,6 +193,7 @@ public:
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	int checkConsistancy();
 	int getBranchNumber();
+	int scanBranch(char* filename);
 private:
 	double _bwr(int m, int n);
 	int _kndwr_topl_update(double & topl, int & ierr);
