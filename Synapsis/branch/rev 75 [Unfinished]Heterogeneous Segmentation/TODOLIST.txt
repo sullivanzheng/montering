@@ -1,0 +1,2 @@
+bpperseg->bpperunit. Chain length need to be redefined. totsegnum*bpperseg will be Chain.length.
+movement 1. cranksharft including res site. 2. crankshaft excluding res site.
