@@ -1,25 +1,7 @@
 #include "chain.h" 
 using namespace std;
 
-void Chain::initializeCircle(int numofseg)
-{   
-    cout << endl << "Chain::readIniFile::No file input, start building circular chain." << endl;
-    cout << "Segment number: " <<numofseg <<endl;
-    double M[3][3],rv[3]={0.,0.,1.0};
-    double angle=2*PI/double(numofseg);
-    this->SetRotM_halfchain(M,rv,angle);
-    C[0].x=C[0].y=C[0].z=C[0].dy=C[0].dz=0;
-    C[0].dx=1.0;
-    for (int i=1;i<numofseg;i++){
-        C[i].x=C[i-1].x+C[i-1].dx;
-        C[i].y=C[i-1].y+C[i-1].dy;
-        C[i].z=C[i-1].z+C[i-1].dz;
-        double temp[]={C[i-1].dx,C[i-1].dy,C[i-1].dz};
-        double result[3];
-        mat33mulvec3(M,temp,result);
-        C[i].dx=result[0];C[i].dy=result[1];C[i].dz=result[2];
-    }
-}
+
 int Chain::readIniFile(char const *filename)
 {
 	ifstream file_st (filename);
@@ -55,12 +37,28 @@ int Chain::readIniFile(char const *filename)
 		file_st >> C[i].dz;
 		C[i].z = C[i - 1].z + C[i - 1].dz;
 	}
+
+	gCal ins_gCal;
+
+	for (int i=0; i <=maxnum ; i++){
+		C[i].l=modu(C[i].dx,C[i].dy,C[i].dz);
+		double g1=ins_gCal.FindGbyK(DNA_KUHN/(bpperunit*C[i].l));
+		double g2=ins_gCal.FindGbyK(DNA_KUHN/(bpperunit*C[wrap(i-1,totsegnum)]);
+		C[i].g=1.0/(1.0/g1+1.0/g2);
+		cout<<"[Initializing rigidity] l="<<C[i].l<<" g="<<C[i].g<<endl;
+	}
+
+	this->total_length = 0;
+	for (int i=0; i <= maxnum ; i++){
+		this -> total_length += C[i].l;
+	}
 	file_st.close();
 	return 0;
 }
 
 void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 {
+	//rv 
 	double cosa;
 	double sina;
 	cosa = cos(a);
@@ -83,13 +81,20 @@ void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 	M3[1][0] = -rv[2] /*0*/;
 	M3[1][2] = rv[0];
 	M3[2][0] = rv[1];
-	M3[2][1] = -rv[0];
+	M3[2][1] = -rv[0];//cross product matrix
 	/*0*/
 	/// <>/////////////</>
 	mat33mulscalOW(M3, sina);
 	mat33addOW(M, M2);
 	mat33addOW(M, M3);
+	//See http://en.wikipedia.org/wiki/Euler_Angles for algorithm
+	//See also http://en.wikipedia.org/wiki/Rotation_around_a_fixed_axis
+	//And of course the general idea is to decompose any vector x to x//e (e is rotation vector)
+	//and x_perpendicular to e (x_). x_ Xprd with e you have a x_2 perp. to x_ and e.
+	//Express the rotated x using combination of x// x_ and x_2 and convert this algorithm to 
+	//a matrix.
 }
+
 void Chain::SetRotM_crankshaft(double M[3][3],int m, int n, double a)
 {
 	double rv_norm;
@@ -122,17 +127,17 @@ void Chain::SetRotM_crankshaft(double M[3][3],int m, int n, double a)
 void Chain::normalize(){
     for (int i=0;i<=maxnum-1;i++){
         double temp=modu(C[i].dx,C[i].dy,C[i].dz);
-        C[i].dx/=temp;
-        C[i].dy/=temp;
-        C[i].dz/=temp;
+        C[i].dx=C[i].dx/temp*C[i].l;
+        C[i].dy=C[i].dy/temp*C[i].l;
+        C[i].dz=C[i].dz/temp*C[i].l;
         C[i+1].x=C[i].x+C[i].dx;
         C[i+1].y=C[i].y+C[i].dy;
         C[i+1].z=C[i].z+C[i].dz;
     }
     double temp=modu(C[maxnum].dx,C[maxnum].dy,C[maxnum].dz);
-    C[maxnum].dx/=temp;
-    C[maxnum].dy/=temp;
-    C[maxnum].dz/=temp;
+    C[maxnum].dx=C[maxnum].dx/temp*C[maxnum].l;
+    C[maxnum].dy=C[maxnum].dy/temp*C[maxnum].l;
+    C[maxnum].dz=C[maxnum].dz/temp*C[maxnum].l;
 }
 
 double Chain::calAngle(segment &C1, segment &C2)
@@ -140,8 +145,7 @@ double Chain::calAngle(segment &C1, segment &C2)
 	double temp;
 	double angle;
 	temp = C1.dx * C2.dx + C1.dy * C2.dy + C1.dz * C2.dz;
-    temp = temp/modu(C1.dx,C1.dy,C1.dz)
-        /modu(C2.dx,C2.dy,C2.dz);
+    temp = temp/(modu2(C1.dx,C1.dy,C1.dz)*modu(C2.dx,C2.dy,C2.dz));
 	if (temp > 1 || temp < -1)
 	{
 		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.auto_moves, temp);
@@ -151,38 +155,23 @@ double Chain::calAngle(segment &C1, segment &C2)
 		angle = acos(temp);
 	return angle;
 }
-Chain::Chain(char const *filename, bool circular,int r_length)
+
+Chain::Chain(char const *filename, bool circular,int r_numofseg)
 {   
     this->endToEndSampleCycle=this->defaultSampleCycle;
-    if (r_length>maxa||r_length<5){
+    if (r_numofseg>maxa||r_numofseg<5){
          cout<<"The chain is too long or too short. Simulation aborted."<<endl
              <<"Chain with 5~910 segments are allowed."<<endl;
          getchar();
          exit(EXIT_FAILURE);
     }
-    maxnum=(this->length=r_length)-1;
+    maxnum=(this->_numofseg=r_numofseg)-1;
 	readIniFile(filename);
     //updateAllBangleKinkNum(); Calling virtual function is dangerous.		
 	updateAllBangle_Ini(circular);
     stats.resetStat();
 }
 
-Chain::Chain(bool circular,int r_length)
-{   
-    this->endToEndSampleCycle=this->defaultSampleCycle;
-    if (r_length>maxa||r_length<5){
-         cout<<"The chain is too long or too short. Simulation aborted."<<endl
-             <<"Chain with 5~910 segments are allowed."<<endl;
-         getchar();
-         exit(EXIT_FAILURE);
-    }
-	this->length=r_length;
-	maxnum=(this->length)-1;
-	this->initializeCircle(length);
-	//updateAllBangleKinkNum(); Calling virtual function is dangerous.		
-	updateAllBangle_Ini(circular);
-    stats.resetStat();
-}
 
 //updateAllBangle_Ini is supposed to be used in constructor.		
 //Therefore it contains a "curcular" parameter that make it not virtual.		
@@ -238,23 +227,27 @@ void Chain::snapshot(char *filename)
         C[maxnum].z + C[maxnum].dz, 1, maxnum);
 	fh << buf << endl;
 
+	//Detailed information.
     fh << endl << "Detailed Info" << endl;
 	for (i = 0; i < maxnum; i++)
 	{
-		sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15.10f %15.10f", 
+		sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)|=%15.10f X[i+1]-X=%15.10f l=%15.10f b_ang=%15.10f", 
             i, C[i].dx,C[i].dy,C[i].dz,
             modu(C[i].dx, C[i].dy, C[i].dz), 
             modu(C[i + 1].x - C[i].x, 
                  C[i + 1].y - C[i].y, 
-                 C[i + 1].z - C[i].z), 
+                 C[i + 1].z - C[i].z),
+		    C[i].l,
             C[i].bangle);
 		fh << buf << endl;
 	}
 	i=maxnum;
-    sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15s %15.10f", 
+	sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)|=%15.10f X[i+1]-X=%15.10f l=%15.10f b_ang=%15.10f", 
             i+1, C[i].dx,C[i].dy,C[i].dz,
             modu(C[i].dx, C[i].dy, C[i].dz), 
-            "----------", C[i].bangle);
+            "----------",
+			C[i].l,
+			C[i].bangle);
 	fh << buf << endl;
 	fh.close();
 }

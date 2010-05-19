@@ -312,6 +312,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\smalllib\math\ezlin.h"
+				>
+			</File>
+			<File
 				RelativePath=".\k.cpp"
 				>
 			</File>
@@ -346,11 +350,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\smalllib\math\ezlin.h"
+				RelativePath=".\f2c.h"
 				>
 			</File>
 			<File
-				RelativePath=".\f2c.h"
+				RelativePath=".\gCal.h"
 				>
 			</File>
 			<File
@@ -393,6 +397,10 @@
 			</File>
 			<File
 				RelativePath="..\smalllib\string\strplus.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TODOLIST.txt"
 				>
 			</File>
 		</Filter>

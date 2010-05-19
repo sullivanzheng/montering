@@ -8,10 +8,10 @@ int CircularChain::getBranchNumber(){
 
 	//dLk=enkuhn*282./10.5*sigma 
 	//enkuhn is number of kuhn length in the circle.
-	double sigma=dLk/(bpperseg*totsegnum/10.5);
+	double sigma=dLk/(bpperunit*totsegnum/10.5);
 
 	//ek=jr1/enkuhn  which is num of seg per kuhn in my program.
-	double ek=282.686/bpperseg;
+	double ek=DNA_KUHN/bpperunit;
 
 	//The constant. If curve local writhe is larger than wrc,
 	//this part of curve will be considered as a branch.
@@ -56,10 +56,10 @@ int CircularChain::scanBranch(char* filename){
 
 	//dLk=enkuhn*282./10.5*sigma 
 	//enkuhn is number of kuhn length in the circle.
-	double sigma=dLk/(bpperseg*totsegnum/10.5);
+	double sigma=dLk/(bpperunit*totsegnum/10.5);
 
 	//ek=jr1/enkuhn  which is num of seg per kuhn in my program.
-	double ek=282.686/bpperseg;
+	double ek=DNA_KUHN/bpperunit;
 
 	//The constant. If curve local writhe is larger than wrc,
 	//this part of curve will be considered as a branch.

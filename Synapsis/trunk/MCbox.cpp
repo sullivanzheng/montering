@@ -15,9 +15,10 @@ MCbox_circular::MCbox_circular(
 	stringstream(config[string("crank_max_length")])>>crank_max_length;
 	stringstream(config[string("VEcutoff")])>>VEcutoff;
 
-	stringstream(config[string("g")])>>g;
+	stringstream(config[string("g_mainchain")])>>g_mainchain;
+	stringstream(config[string("g_localchain")])>>g_localchain;
 
-	stringstream(config[string("bpperseg")])>>bpperseg;
+	stringstream(config[string("bpperunit")])>>bpperunit;
 
 	stringstream(config[string("maxRotAng")])>>maxRotAng;
 	maxRotAng=maxRotAng/180*PI;
@@ -33,7 +34,7 @@ MCbox_circular::MCbox_circular(
 
 	this->fp_log = 
 		new ofstream(strcat_noOW(buf, strBufSize,const_cast<char*>(filePrefix), "_log.txt"));
-    this->dnaChain=
+    this->dnaChain =
 		new CircularChain(strcat_noOW(buf, strBufSize, const_cast<char*>(filePrefix), ".vmc"),totsegnum);
     
 	stringstream(config[string("seeding")])>>this->seeding;
@@ -331,9 +332,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
 //			Log Rigidbody status
-/*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
+		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
-*/
+
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();
@@ -365,7 +366,7 @@ void MCbox_circular::logParameters(void){
 			<<" maxnum	= "<<	maxnum	<<endl
 			<<" crank_max_length (auto_generated)= "<<	crank_max_length	<<endl
 			<<" g "<<g<<endl
-			<<">totsegnum * bpperseg = total bp \t"<<totsegnum<<'*'<<bpperseg<<'='<<totsegnum*bpperseg<<endl
+			<<">totsegnum * bpperunit = total bp \t"<<totsegnum<<'*'<<bpperunit<<'='<<totsegnum*bpperunit<<endl
 			<<">maxRotAng	= "<<	maxRotAng	<<endl
 			<<" P_SMALLROTATION	="<< P_SMALLROTATION<<endl
 			<<">FilePrefix = "<<filePrefix<<endl

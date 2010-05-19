@@ -13,9 +13,10 @@
 #include "math\ezlin.h"
 #include "string\strplus.h"
 #include "SmallTypes.h"
+#include "gCal.h"
 
 inline double G_b(double ang){
-	return g*ang*ang;//energy with quadratic energy term.
+	return g*ang*ang;//energy with quadratic energy term. //TODO g->C[i].g
 }
 
 inline int wrap(int i, int roundnum){
@@ -48,7 +49,7 @@ public:
 	void update_ref_v_xyz();
 };
 
-class allrigid  {
+class allrigid {
 private:
 	allrigid();
 public:
@@ -99,16 +100,17 @@ public:
 	struct segment{
 		double x,y,z;
 		double dx,dy,dz;
+		double l;
+		double g; //E_elastic=g*bangle*bangle
 		double bangle;
     }C[maxa];//C stands for "Chain"
 
 protected:
-    int length;
+    int _numofseg;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
 	static const int NORMALIZE_PERIOD=100000;
 	int readIniFile(char const *filename);
-    void initializeCircle(int num);
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],int m, int n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
@@ -119,6 +121,7 @@ protected:
 
 public:
 	double VolEx_R;
+	double total_length;
 	void auto_updt_stats(){
         stats.auto_moves++;
 		if (stats.auto_moves() % endToEndSampleCycle==0) {
@@ -134,13 +137,13 @@ private:
 	explicit Chain(void) {};
 
 public:
-	Chain::Chain(bool circular,int r_length);
-	explicit Chain(char const *filename, bool circular, int r_length);
+	explicit Chain(char const *filename, bool circular, int r_numofseg);
 	int dispChainCord();
 	virtual double calG_bSum() = 0;
 	virtual int crankshaft(int m, int n, double a) = 0;
     inline double getEndToEndAngle(void){
-        static segment Ci={0,0,0,0,0,0,0},Cf={0,0,0,0,0,0,0};
+        static segment Ci={0,0,0, 0,0,0, 0,0,0},
+					   Cf={0,0,0, 0,0,0, 0,0,0};
         static double endToEndAngleMemo=0.0;
         if (Ci.dx != C[0].dx || Ci.dy != C[0].dy || Ci.dz != C[0].dz 
             || Cf.dx != C[maxnum].dx || Cf.dy != C[maxnum].dy || Cf.dz != C[maxnum].dz )
@@ -175,20 +178,19 @@ public:
 
 	double E_t; //torsional energy.
 	double dLk;
-	int AlexPoly[2];
-
 
 	CircularChain();
-	CircularChain(int length);
-	CircularChain(char const *filename,int length);
+	CircularChain(char const *filename,int r_numofseg);
 	virtual double calG_bSum();
 	virtual int crankshaft(int m, int n, double a);
 	virtual double dE_reptation(int m, int n, int move);
 	virtual double dE_TrialCrankshaft(int m, int n, double a);
 	virtual void snapshot(char *filename);
-	int IEV(int in, int ik);
-	int kpoly(int ial[2], int &ierr);
-	int updateKPoly();
+
+
+/// ONLY THIS FILE IS UPDATED, AND ONLY TILL THIS FAR.
+/// NOT YET UPDATED FOR HETEROGENIOUS SEGMENTATION
+/*	int IEV(int in, int ik);
 	double Slow_E_t_updateWrithe_E_t();
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	int checkConsistancy();
@@ -200,5 +202,7 @@ private:
 	int _kndwr(int &ierr);
 	double _fastWr_topl_update();
 	double _wrfun(int m, int n);
+	*/  
+/// NOT YET UPDATED FOR HETEROGENIOUS SEGMENTATION
 };
 #endif /* CHAIN_H */
