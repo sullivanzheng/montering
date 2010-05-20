@@ -1035,11 +1035,13 @@ double allrigid::update_allrigid_and_E(){
 	static double r0=1.5,r01=2.,a0=20.0/180.*PI,R0=20.0/180.*PI;
 	static double A=12,B=10,C=5; //A+B=17
 	static double re=2.0,ree=0.05,Ar=1;
+	static double A02=15.0,r02=30.0;
 	this->E=-B*exp(
 		-(AxisBeta-PI)*(AxisBeta-PI)/(a0*a0)/2-r*r/(r0*r0)/2
 		-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2)
 //		-C*exp(-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2-r*r/(r0*r0)/2)
-		-A*exp(-r*r/(r01*r01)/2);
+		-A*exp(-r*r/(r01*r01)/2)
+		-A02*exp(-r*r/(r02*r02)/2);
 //		-A*(r>re?exp(-r*r/(r01*r01)/2):exp(-re*re/(r01*r01)/2))
 /*		+Ar*(r>re?
 				log(2*PI*re*re):
