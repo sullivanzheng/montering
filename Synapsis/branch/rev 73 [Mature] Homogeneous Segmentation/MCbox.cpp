@@ -156,7 +156,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//update energies.
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
-			this->dnaChain->updateKPoly();
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
@@ -204,7 +203,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					dnaChain->crankshaft(m,n,-rotAng);
 					RG.update_allrigid_and_E();
 					dnaChain->E_t_updateWrithe_E_t();
-					dnaChain->updateKPoly();
 			}
 		}//End Crankshaft movement.
 		else{
@@ -248,7 +246,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//update energies.
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
-			this->dnaChain->updateKPoly();
 
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
@@ -295,7 +292,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					dnaChain->dE_reptation(m,n,-rept_move);
 					RG.update_allrigid_and_E();
 					dnaChain->E_t_updateWrithe_E_t();
-					dnaChain->updateKPoly();
 			}
 
 		}//End reptation movement.

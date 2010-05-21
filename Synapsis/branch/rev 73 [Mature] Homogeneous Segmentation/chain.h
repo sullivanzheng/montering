@@ -56,6 +56,7 @@ public:
 	double AxisBeta;
 	double RadiusBeta;
 	double r;
+	double r_siteI;
 	std::vector<cls_rigid> R;
 	allrigid(char *configfile, CircularChain *taget);
 	std::vector<int> protect;
@@ -175,7 +176,7 @@ public:
 
 	double E_t; //torsional energy.
 	double dLk;
-	int AlexPoly[2];
+	
 
 
 	CircularChain();
@@ -187,8 +188,6 @@ public:
 	virtual double dE_TrialCrankshaft(int m, int n, double a);
 	virtual void snapshot(char *filename);
 	int IEV(int in, int ik);
-	int kpoly(int ial[2], int &ierr);
-	int updateKPoly();
 	double Slow_E_t_updateWrithe_E_t();
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	int checkConsistancy();
