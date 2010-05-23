@@ -42,6 +42,9 @@ MCbox_circular::MCbox_circular(
 	stringstream(config[string("VolEx_R")])>>this->dnaChain->VolEx_R;
 	stringstream(config[string("dLk")])>>this->dnaChain->dLk;
 
+	//-------Initialize dnaChain writhe info--------
+	dnaChain->E_t_updateWrithe_E_t();
+
     //Initialize statistical variables.
     for (int i = 0; i < 180; i++)
         anglenums[i] = 0;
@@ -114,7 +117,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//Therefore, all energy evaluation program should be careful with chain segment 
 		//iteration due to wrapping problem.
 
-        double dE, cacheRE, cacheE_t;
+        double dE, cacheRE, cacheE_t, cacheWrithe;
 		int m,n;
 		int E_condition=0,IEV_condition=0,topo_condition=0;
 		
@@ -158,6 +161,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			cacheRE=RG.E;
 			//old writhe energy;
 			cacheE_t=dnaChain->E_t;
+			cacheWrithe=dnaChain->writhe;
 
 			//bend energy change and movement.
 			dE=dnaChain->dE_TrialCrankshaft(m, n, rotAng);
@@ -212,7 +216,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			else{
 					dnaChain->crankshaft(m,n,-rotAng);
 					RG.update_allrigid_and_E();
-					dnaChain->E_t_updateWrithe_E_t();
+					dnaChain->writhe=cacheWrithe;
+					dnaChain->E_t=cacheE_t;
 			}
 		}//End Crankshaft movement.
 		else{
@@ -249,6 +254,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 			//old writhe energy;
 			cacheE_t=dnaChain->E_t;
+			cacheWrithe=dnaChain->writhe;
 
 			//bend energy change and movement.
 			dE=dnaChain->dE_reptation(m,n,rept_move);
@@ -301,17 +307,16 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			else{
 					dnaChain->dE_reptation(m,n,-rept_move);
 					RG.update_allrigid_and_E();
-					dnaChain->E_t_updateWrithe_E_t();
+					dnaChain->writhe=cacheWrithe;
+					dnaChain->E_t=cacheE_t;
 			}
 
 		}//End reptation movement.
 
 		if (moves%SNAPSHOT_INTERVAL==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
-			char buf2[200];
-			sprintf(buf2,"%s%09d_b.txt",filePrefix,moves);
+			cout <<buf<<endl;
 			dnaChain->snapshot(buf);
-			dnaChain->scanBranch(buf2);
 		}
 
 		if (moves%STAT_INTERVAL==0){
@@ -330,7 +335,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 			(*fp_log)<<"["<<moves<<"]";
 			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
-			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
+//			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
 			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 			(*fp_log)<<" Flags(E,IEV,topo)"<<"["
 				<<E_condition<<"(dE="<<dE<<"),"

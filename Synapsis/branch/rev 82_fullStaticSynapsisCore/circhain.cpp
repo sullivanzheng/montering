@@ -44,12 +44,10 @@ void CircularChain::driftProof()
 
 CircularChain::CircularChain(char const *filename,const int length)
 :Chain(filename,true,length){
-	this->E_t_updateWrithe_E_t();
 	this->snapshot("ini.txt");
 }
 
 CircularChain::CircularChain(int length):Chain(true,length){
-	this->E_t_updateWrithe_E_t();
 	this->snapshot("ini.txt");
 }
 

@@ -16,6 +16,7 @@
 #include "string\strplus.h"
 #include "SmallTypes.h"
 
+
 inline double G_b(double ang){
 	return g*ang*ang;//energy with quadratic energy term.
 }
@@ -34,6 +35,7 @@ inline int wrap(int i, int roundnum){
 	else
 		return i;
 }
+
 
 class CircularChain; //Finish declaration of Chain for the use of declaration of its nest friend class rigid;
 

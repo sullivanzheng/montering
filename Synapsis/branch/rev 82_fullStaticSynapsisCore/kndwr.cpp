@@ -75,10 +75,8 @@ int CircularChain::_kndwr_topl_update(double &topl,int &ierr){
 	for (n2 = jr4; n2 <= i__2; ++n2) {
 	    px2 = x[n2 - 1];
 	    py2 = y[n2 - 1];
-	    if ((d__1 = px1 - px2, abs(d__1)) > 2.1 || (d__2 = py1 - py2, abs(
-		    d__2)) > 2.1) {
-		goto L111;
-	    }
+	    if ((d__1 = px1 - px2, abs(d__1)) > 2.01) continue;
+		else if ((d__2 = py1 - py2, abs(d__2)) > 2.01) continue;
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
@@ -500,10 +498,8 @@ int CircularChain::_kndwr(int &ierr){
 	for (n2 = jr4; n2 <= i__2; ++n2) {
 	    px2 = x[n2 - 1];
 	    py2 = y[n2 - 1];
-	    if ((d__1 = px1 - px2, abs(d__1)) > 2.1 || (d__2 = py1 - py2, abs(
-		    d__2)) > 2.1) {
-		goto L111;
-	    }
+		if ((d__1 = px1 - px2, abs(d__1)) > 2.01 || (d__2 = py1 - py2, abs(
+			d__2)) > 2.01) goto L111;
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
@@ -530,7 +526,7 @@ int CircularChain::_kndwr(int &ierr){
 		}
 	    } else {
 		if (drx <= px21 || drx > px2) {
-		    goto L111;
+		    continue;
 		}
 	    }
 	    rx = drx;
