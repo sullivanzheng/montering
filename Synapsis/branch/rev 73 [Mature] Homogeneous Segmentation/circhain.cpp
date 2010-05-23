@@ -515,11 +515,13 @@ double allrigid::update_allrigid_and_E(){
 	this->r=modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]);
 
 	//Res Site I distance. 
+	//
 	//TODO: this may result in access violation if R[i].protect[0]<3!
+	static const int dev=6;
 	this->r_siteI=
-		modu(R[0].target->C[R[0].protect[0]-3].x-R[1].target->C[R[1].protect[0]-3].x,
-			 R[0].target->C[R[0].protect[0]-3].y-R[1].target->C[R[1].protect[0]-3].y,
-			 R[0].target->C[R[0].protect[0]-3].z-R[1].target->C[R[1].protect[0]-3].z);
+		modu(R[0].target->C[R[0].protect[0]-dev].x-R[1].target->C[R[1].protect[0]-dev].x,
+			 R[0].target->C[R[0].protect[0]-dev].y-R[1].target->C[R[1].protect[0]-dev].y,
+			 R[0].target->C[R[0].protect[0]-dev].z-R[1].target->C[R[1].protect[0]-dev].z);
 	
 //	A potential from Quan Du and A. Vologodskii.
 /*	double sigma2=1;
@@ -531,12 +533,30 @@ double allrigid::update_allrigid_and_E(){
 	*(pow(r0/r,q*2)-2*pow(r0/r,q));
 */
 
-/*
-	this->E += r * 50;
-	this->E += AxisBeta*(-10);
-	this->E += RadiusBeta *(-10);
-*/
 
+	this->E += r*50 ;
+	this->E += AxisBeta * (-15);
+	this->E += RadiusBeta * (-15);
+	this->E += r_siteI * 50;
+	double symm;
+	for (int ii=0;ii<=2;ii++){
+		symm+= abs(
+				modu(R[0].target->C[R[0].protect[ii]].x-R[1].target->C[R[1].protect[ii]-dev].x,
+					 R[0].target->C[R[0].protect[ii]].y-R[1].target->C[R[1].protect[ii]-dev].y,
+					 R[0].target->C[R[0].protect[ii]].z-R[1].target->C[R[1].protect[ii]-dev].z)
+			   -modu(R[1].target->C[R[1].protect[ii]].x-R[1].target->C[R[0].protect[ii]-dev].x,
+					 R[1].target->C[R[1].protect[ii]].y-R[1].target->C[R[0].protect[ii]-dev].y,
+					 R[1].target->C[R[1].protect[ii]].z-R[1].target->C[R[0].protect[ii]-dev].z));
+	}
+	this->E += symm*5;
+
+
+	/*double bend=60.0;
+	this->E += pow(R[0].target->C[R[0].protect[0]-3].bangle - bend/180*PI, 2)*50;
+	this->E += pow(R[1].target->C[R[1].protect[1]-3].bangle - bend/180*PI, 2)*50;*/
+
+
+/*
 // My latest design.
 	//A+B=17 suggested.
 	static const double B=10, a0=20.0/180.*PI, r0=1.5, R0=20.0/180.*PI;
@@ -553,7 +573,7 @@ double allrigid::update_allrigid_and_E(){
 		-A_siteII_att*exp(-r*r/(r0_siteII_att*r0_siteII_att)/2)
 
 		-A_siteI*exp(-r_siteI*r_siteI/(r0_siteI*r0_siteI)/2);
-
+*/
     return this->E;
 }
 

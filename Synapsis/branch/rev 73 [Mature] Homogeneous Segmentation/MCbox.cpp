@@ -327,9 +327,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
 //			Log Rigidbody status
-/*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
+		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
-*/
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();

@@ -89,7 +89,9 @@ int CircularChain::scanBranch(char* filename){
 }
 double CircularChain::_wrfun(int m, int n)
 {	
-    /* is,it,jr1 input parameter */
+//Calculate writhing number from m to n.
+
+	/* is,it,jr1 input parameter */
 	/* System generated locals */
     int i__1, i__2;
     double ret_val;

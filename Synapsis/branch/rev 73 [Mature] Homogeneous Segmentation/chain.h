@@ -1,6 +1,8 @@
 #ifndef CHAIN_H
 #define CHAIN_H
 
+#define MAXMatrixDet 200
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -176,9 +178,9 @@ public:
 
 	double E_t; //torsional energy.
 	double dLk;
+
+	int productLk(int vertM, int vertN);
 	
-
-
 	CircularChain();
 	CircularChain(int length);
 	CircularChain(char const *filename,int length);
@@ -198,6 +200,10 @@ private:
 	int _kndwr_topl_update(double & topl, int & ierr);
 	int _kndwr(int &ierr);
 	double _fastWr_topl_update();
+	double _det(int n, double da[MAXMatrixDet*MAXMatrixDet]);
+
+public:
 	double _wrfun(int m, int n);
+
 };
 #endif /* CHAIN_H */
