@@ -1,6 +1,7 @@
 #include "chain.h"
 #include "f2c.h"
 
+//Calculate the floating point part of writhe.
 double CircularChain::_bwr(int m,int n){
     if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{

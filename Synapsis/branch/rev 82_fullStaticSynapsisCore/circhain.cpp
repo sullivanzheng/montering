@@ -486,6 +486,8 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 }
 
 double allrigid::update_allrigid_and_E(){
+	this->E = 0; //TODO: disabled.
+	return 0;
 	//This section can be customized for different rigid body set.
 	if (R.size()==0) {
 		this->E = 0;

@@ -1,5 +1,7 @@
 #include "chain.h"
 #include "f2c.h"
+
+//Calculate integer part of writhe and AlexPoly(-1)
 int CircularChain::_kndwr_topl_update(double &topl,int &ierr){
 	const int isi=801;
 	const int range1=4001;
@@ -422,6 +424,8 @@ L1002:
     return 0;
 } /* _kndwr_topl_update */
 
+
+//Calculate integer part of writhe only.
 int CircularChain::_kndwr(int &ierr){
 	const int isi=801;
 	const int range1=4001;

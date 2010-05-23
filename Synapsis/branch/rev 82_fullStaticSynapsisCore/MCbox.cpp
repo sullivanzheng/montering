@@ -121,10 +121,20 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
+			int testp;int testflag;
 			do{
-				m = irand(maxnum + 1);
-				n = (m + (irand(crank_max_length - crank_min_length) + crank_min_length))%totsegnum;
-			}while (protect_list[m]==1 || protect_list[n]==1);
+				m=irand(maxnum+1);
+				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
+				//Check if containting any rigid body segments.
+				testp=m;testflag=0;
+				while (testp!=wrap(n+1,totsegnum)){
+					if (protect_list[testp]==1){
+						testflag=1;
+						break;
+					}
+					testp=wrap(testp+1,totsegnum);
+				}
+			}while(testflag==1);
 
 			//generate rotation angle.
 			double rotAng;
@@ -311,11 +321,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<'['
 				<<float(dnaChain->stats.crk_accepts())/dnaChain->stats.auto_moves()<<","
 				<<float(dnaChain->stats.rpt_accepts())/dnaChain->stats.auto_moves()
-				<<']'<<endl;
+				<<']';
 			dnaChain->stats.crk_accepts.lap();
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
-		
+			(*fp_log)<<endl;
 //----------Log acceptance and rigid body statistics.------------
 
 			(*fp_log)<<"["<<moves<<"]";
@@ -326,9 +336,12 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<E_condition<<"(dE="<<dE<<"),"
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
+//			Log AlexPoly(s,t)~Linking Number of recombination products.
+			(*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+
 //			Log Rigidbody status
-		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
-				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl;
+/*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
+				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl; */
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();
@@ -340,7 +353,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 //			Log Chain angle statistics
 /*			for (int i=0;i<=maxnum;i++)
 				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
-*/
+*/			(*fp_log)<<endl;
 		}
 	}
 	for (int i=0;i<=maxnum;i++){
