@@ -8,13 +8,24 @@ def readVMCfile(filename):
         return []
     dX=(dx[:len(dx)/3],dx[len(dx)/3:2*len(dx)/3],dx[2*len(dx)/3:])
     return dX
+
+def readDatafile(filename):
+#Read all coordinates in the file and return the X containing all coordinates X
+#expressed by a 3-tuple of lists of x coord., y coor. and z coor..
+    lines=file(filename).readlines()[1:]
+    dx=[float(j) for l in lines for j in l.split()]
+    if len(dx)%3 !=0:
+        print "file error, the x y z do not have the same number of coordinates."
+        return []
+    dX=(dx[:len(dx)/3],dx[len(dx)/3:2*len(dx)/3],dx[2*len(dx)/3:])
+    return dX
     
-def write_Jmol_file(filename,x,y,z):
+def write_Jmol_file(filename,x,y,z,atom_S="C"):
     num_of_atoms=len(x)
     fp=file(filename,'w')
     print >>fp,"    %d   In the main body"%num_of_atoms
     num=range(1,num_of_atoms+1)
-    atom=["c"]*3+["C"]*(num_of_atoms-3)
+    atom=[atom_S]*num_of_atoms
     typeatom=["1"]*num_of_atoms
     pos1=["2"]+[str(i) for i in range(1,num_of_atoms)]
     pos2=[" "]+[str(i) for i in range(3,num_of_atoms+1)]+[" "]

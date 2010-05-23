@@ -38,7 +38,7 @@ def dx2x(dx,base=0):
 def dx2xN(dx):
     return dx2x(dx,0)[1:]
 
-def write_Jmol_file_dx(filename,dx,dy,dz):
+def write_Jmol_file_dx(filename,dx,dy,dz,atom="C"):
     write_Jmol_file(filename,dx2x(dx),dx2x(dy),dx2x(dz))
 
 def makeCircle(n):
@@ -157,15 +157,92 @@ Therefore, 0<=h<<m<=dX[-1].index()"""
             dXfinal[1].tolist()[0],
             dXfinal[2].tolist()[0]]
 
-def main_case1():
+def ConnectUsingBreakCircle(dx1,dy1,dz1,dx2,dy2,dz2,h,m,InsBreak):
+    """Connect the break in dX2 or dXins in the subroutine to dX1 (dX1 is circular chain) and circle up.
+m is the point you want to insert to dX1. i.e. Break vertex m to insert dX2
+h is the hinge on dX1.
+InsBreak is the insertion point to dX2.
+dX1 circle will be cut open at the starting point of m,
+segments dX[h:m] will be rotated to creat an opening for dX2
+Therefore, 0<=h<<m<=dX[-1].index()"""
+    if not( h>=0 and m>h and len(dx1)>=m ):
+        raise StandardError("parameter error! at integrateToCircular")
+    #inserted vector
+    dXmain=matrix([dx1,dy1,dz1])
+    print "dXmain\n",dXmain
+    dXins=matrix([dx2,dy2,dz2])
+    print "dXins\n",dXins
+    vmain=matrix([dx2x(dx1[h:m])[-1],dx2x(dy1[h:m])[-1],dx2x(dz1[h:m])[-1]])
+    print "vmain",vmain
+    
+    vins=matrix([dx2x(dx2)[-1],
+          dx2x(dy2)[-1],
+          dx2x(dz2)[-1]])
+    print "vins",vins
+    #insertion vector
+    l=norm(matrix(vmain))
+    s=norm(matrix(vins)) #length of insertion vector
+    print "l,s-->",l,s
+
+    if l<s/2:
+        raise StandardError("parameter error! The circle has too small segment selected"+ \
+       "Which is in sufficent to accomodate the insertion chain [at integrateToCircular]")
+    
+    beta=acos((2*l*l-s*s)/(2*l*l))
+    print "beta",beta/pi*180
+    n=mXpt(vmain)*vins.T
+    n=n.T
+    print "axis rot:",n
+    rm=MatRotAngleAxis(beta,n)
+    print "rotation matrix of mainChain\n",rm
+    print "rotation sample:[1,0,0]\n",rm*matrix([1,0,0]).T
+    vmain2=rm*vmain.T
+    vmain2=vmain2.T
+    print "vmain2",vmain2
+    print "before rotation dXmain[:,h:m]\n",dXmain[:,h:m]
+    dXmain[:,h:m]=rm*dXmain[:,h:m]
+    print "rotated dXmain[:,h:m]\n",dXmain[:,h:m]
+    dXmain=MatRotVec1toVec2(vmain-vmain2,vins)*dXmain
+    print "dXmain rotated and aligned with dXins\n",dXmain
+    dXfinal=concatenate((
+        concatenate((dXins[:,InsBreak:],
+                      concatenate((dXmain[:,m:],dXmain[:,:m]),1)),1),
+                     dXins[:,:InsBreak]),1)
+    return   [dXfinal[0].tolist()[0],
+            dXfinal[1].tolist()[0],
+            dXfinal[2].tolist()[0]]
+
+def make_circle_with_2res():
+    makeCircle_File("main.txt",392)
     #case 1. 2* 4seg/res site, 192 seg circle =200*10.5bp/seg=2.1kbase
     dx1,dy1,dz1=readJmol("main.txt",1)
-    dx2,dy2,dz2=readJmol("res.txt",1)
+    dx2,dy2,dz2=readJmol("res225rise8.txt",1)
+#    dx2,dy2,dz2=readJmol("res150.txt",1)
     dx1,dy1,dz1=integrateToCircular(dx2,dy2,dz2,
              dx1,dy1,dz1,1,300)
     dx1,dy1,dz1=integrateToCircular(dx2,dy2,dz2,
              dx1,dy1,dz1,1,100)
     write_Jmol_file_dx("main.txt",dx1,dy1,dz1)
 
-makeCircle_File("main.txt",100)
-#main_case1()
+
+def make_synapsised_circular(core):
+    circlesize=189
+    InsBreak=11
+    dx1,dy1,dz1=makeCircle(circlesize)
+    dx2,dy2,dz2=readJmol(core,1)
+##  write_Jmol_file_dx(core+"ini.txt",dx2,dy2,dz2)
+
+    dx2,dy2,dz2= \
+    ConnectUsingBreakCircle(dx1,dy1,dz1,
+                        dx2,dy2,dz2,1,circlesize/2,InsBreak)
+##  ConnectUsingBreakCircle(dx1,dy1,dz1,
+##                            dx2,dy2,dz2,h,m,InsBreak)
+##  write_Jmol_file_dx(core+"intermediate.txt",dx2,dy2,dz2)
+    dx2,dy2,dz2=dx2[1:],dy2[1:],dz2[1:]
+    dx2,dy2,dz2= \
+    integrateToCircular(dx2,dy2,dz2,
+                         dx1,dy1,dz1,circlesize/3,circlesize*5/6)
+    write_Jmol_file_dx(core+"main.txt",dx2,dy2,dz2)
+
+if __name__=='__main__':
+    make_synapsised_circular("ResCore.txt")
