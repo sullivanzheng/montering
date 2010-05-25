@@ -6,10 +6,10 @@
 #include <iostream> 
 #include <fstream>
 #include <cstring>
-#include "math\randplus.h"
-#include "string\strplus.h"
+#include "math/randplus.h"
+#include "string/strplus.h"
 #include "chain.h"
-#include "file\configldr.h"
+#include "file/configldr.h"
 #include <map>
 #include <sstream>
 

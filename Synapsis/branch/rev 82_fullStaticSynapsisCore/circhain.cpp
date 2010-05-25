@@ -439,7 +439,7 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		protect_list[i]=0;
 	
 	vector<int> r_protect;
-	vector<vector<double>>r_ref_v;
+	vector< vector<double> >r_ref_v;
 	int hard_eof=0;
 
 	while (!f.eof() && !hard_eof){

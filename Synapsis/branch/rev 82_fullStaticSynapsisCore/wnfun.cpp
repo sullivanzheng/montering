@@ -1,6 +1,5 @@
 #include "chain.h"
 #include <cmath>
-#include "atan66.h"
 
 int CircularChain::getBranchNumber(){
 	

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream> //For debugging
 #include <cmath>
 #include "chain.h"
 using namespace std;
@@ -76,6 +77,15 @@ int CircularChain::productLk(int vertM, int vertN)
 	x[l1+l2+1]=C[vertM].x;
 	y[l1+l2+1]=C[vertM].y;
 	z[l1+l2+1]=C[vertM].z;
+
+/*//-=--------Debug
+	ofstream fp("product.txt");
+	for (i=0;i<=l1+l2+1;i++){
+		fp<<x[i]<<" "<<y[i]<<" "<<z[i]<<endl;
+	}
+	fp.close();
+//--------------*/
+
 
 /*      COMMON /x/ X(jrm),Y(jrm),Z(jrm) */
 /*      COMMON /F/ DA(200,200) */

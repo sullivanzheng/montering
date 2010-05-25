@@ -52,7 +52,7 @@ public:
     }
     TypeName getVar(){
         if (itemNum<=1) {
-            std::cout<<"statequeue:Could not return variance when itemNum<=1"<<endl;
+			std::cout<<"statequeue:Could not return variance when itemNum<=1"<<std::endl;
             getchar();exit(EXIT_FAILURE);
         }
         return (squareSum-(sum*sum)/itemNum)/(itemNum-1);

@@ -9,11 +9,11 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include "math\mtrand.h"
+#include "math/mtrand.h"
 #include "chainconst.h"
 #include "chaingbvar.h"
-#include "math\ezlin.h"
-#include "string\strplus.h"
+#include "math/ezlin.h"
+#include "string/strplus.h"
 #include "SmallTypes.h"
 
 
