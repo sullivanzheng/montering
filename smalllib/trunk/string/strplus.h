@@ -9,7 +9,7 @@
 #define STRPLUS_H
 
 
-char* strcat_noOW(char *tostr, int tostr_size,char *str1, char *str2);
+char* strcat_noOW(char *tostr, long tostr_size,char *str1, char *str2);
 
 /*
 std::string stoupper(std::string s)
