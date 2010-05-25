@@ -21,7 +21,7 @@ inline double G_b(double ang){
 	return g*ang*ang;//energy with quadratic energy term.
 }
 
-inline int wrap(int i, int roundnum){
+inline long wrap(long i, long roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
 		std::cout<<"[In global function 'warp']"
 			"Wrapping error, wrapping more than one round:"<<i<<std::endl;
@@ -44,10 +44,10 @@ private:
 	cls_rigid();
 public:
 	CircularChain* target;
-	std::vector<int> protect;
+	std::vector<long> protect;
 	std::vector<std::vector<double> > ref_v;
 	std::vector<std::vector<double> > ref_v_xyz;
-	cls_rigid(CircularChain * r_target, std::vector<int>r_protect,
+	cls_rigid(CircularChain * r_target, std::vector<long>r_protect,
 		std::vector<std::vector<double> > r_ref_v);
 	void update_ref_v_xyz();
 };
@@ -63,7 +63,7 @@ public:
 	double r_siteI;
 	std::vector<cls_rigid> R;
 	allrigid(char *configfile, CircularChain *taget);
-	std::vector<int> protect;
+	std::vector<long> protect;
 	double update_allrigid_and_E();
 };
 
@@ -97,7 +97,7 @@ public:
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
 			gyration_ratio.clear();
-			for (int i=0;i<maxa;i++) anglelist[i].clear();
+			for (long i=0;i<maxa;i++) anglelist[i].clear();
 		}        
 	}stats;
 
@@ -108,18 +108,18 @@ public:
     }C[maxa];//C stands for "Chain"
 
 protected:
-    int length;
+    long length;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
-	static const int NORMALIZE_PERIOD=100000;
-	int readIniFile(char const *filename);
-    void initializeCircle(int num);
+	static const long NORMALIZE_PERIOD=100000;
+	long readIniFile(char const *filename);
+    void initializeCircle(long num);
 	double calAngle(segment &C1, segment &C2);
-	void SetRotM_crankshaft(double M[3][3],int m, int n, double a);
+	void SetRotM_crankshaft(double M[3][3],long m, long n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
-	virtual int updateAllBangle() = 0;		
+	virtual long updateAllBangle() = 0;		
     void updateAllBangle_Ini(bool circular);		
-	virtual double updateBangle(int i) = 0;
+	virtual double updateBangle(long i) = 0;
     void normalize();
 
 public:
@@ -139,11 +139,11 @@ private:
 	explicit Chain(void) {};
 
 public:
-	Chain::Chain(bool circular,int r_length);
-	explicit Chain(char const *filename, bool circular, int r_length);
-	int dispChainCord();
+	Chain::Chain(bool circular,long r_length);
+	explicit Chain(char const *filename, bool circular, long r_length);
+	long dispChainCord();
 	virtual double calG_bSum() = 0;
-	virtual int crankshaft(int m, int n, double a) = 0;
+	virtual long crankshaft(long m, long n, double a) = 0;
     inline double getEndToEndAngle(void){
         static segment Ci={0,0,0,0,0,0,0},Cf={0,0,0,0,0,0,0};
         static double endToEndAngleMemo=0.0;
@@ -164,7 +164,7 @@ public:
                     C[maxnum].y+C[maxnum].dy-C[0].y,
                     C[maxnum].z+C[maxnum].dz-C[0].z);
     }
-	virtual double dE_TrialCrankshaft(int m, int n, double a) = 0;
+	virtual double dE_TrialCrankshaft(long m, long n, double a) = 0;
 	virtual void snapshot(char *filename);
 };
 
@@ -172,8 +172,8 @@ class CircularChain: public Chain{
 
 protected:
 	void driftProof();
-	virtual int updateAllBangle();
-	virtual double updateBangle(int i);
+	virtual long updateAllBangle();
+	virtual double updateBangle(long i);
 public:
 	double writhe;
 	double topl;
@@ -181,31 +181,31 @@ public:
 	double E_t; //torsional energy.
 	double dLk;
 
-	int productLk(int vertM, int vertN);
+	long productLk(long vertM, long vertN);
 	
 	CircularChain();
-	CircularChain(int length);
-	CircularChain(char const *filename,int length);
+	CircularChain(long length);
+	CircularChain(char const *filename,long length);
 	virtual double calG_bSum();
-	virtual int crankshaft(int m, int n, double a);
-	virtual double dE_reptation(int m, int n, int move);
-	virtual double dE_TrialCrankshaft(int m, int n, double a);
+	virtual long crankshaft(long m, long n, double a);
+	virtual double dE_reptation(long m, long n, long move);
+	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	virtual void snapshot(char *filename);
-	int IEV(int in, int ik);
+	long IEV(long in, long ik);
 	double Slow_E_t_updateWrithe_E_t();
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
-	int checkConsistancy();
-	int getBranchNumber();
-	int scanBranch(char* filename);
+	long checkConsistancy();
+	long getBranchNumber();
+	long scanBranch(char* filename);
 private:
-	double _bwr(int m, int n);
-	int _kndwr_topl_update(double & topl, int & ierr);
-	int _kndwr(int &ierr);
+	double _bwr(long m, long n);
+	long _kndwr_topl_update(double & topl, long & ierr);
+	long _kndwr(long &ierr);
 	double _fastWr_topl_update();
-	double _det(int n, double da[MAXMatrixDet*MAXMatrixDet]);
+	double _det(long n, double da[MAXMatrixDet*MAXMatrixDet]);
 
 public:
-	double _wrfun(int m, int n);
+	double _wrfun(long m, long n);
 
 };
 #endif /* CHAIN_H */

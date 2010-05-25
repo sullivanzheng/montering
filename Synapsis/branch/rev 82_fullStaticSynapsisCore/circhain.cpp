@@ -1,21 +1,21 @@
 #include "chain.h"
 using namespace std;
 
-int CircularChain::updateAllBangle()		
+long CircularChain::updateAllBangle()		
 {		
 	C[0].bangle = calAngle(C[maxnum], C[0]);		
-	for (int i = 1; i < maxnum + 1; i++)		
+	for (long i = 1; i < maxnum + 1; i++)		
 	{		
 		C[i].bangle = calAngle(C[i - 1], C[i]);		
 	}		
     cout <<"============Bangle Updated=============="<<endl;		
-	for (int i = 1; i < maxnum + 1; i++)		
+	for (long i = 1; i < maxnum + 1; i++)		
         cout <<"|"<< C[i].bangle << endl;		
     cout<<"------------------------------"<<endl;		
     return 0;	
 }		
 
-double CircularChain::updateBangle(int i)		
+double CircularChain::updateBangle(long i)		
 {		
 	if (i > maxnum || i < 0)		
 	{		
@@ -33,7 +33,7 @@ double CircularChain::updateBangle(int i)
 
 void CircularChain::driftProof()
 {
-	for (int i = 1; i < maxnum + 1; i++)
+	for (long i = 1; i < maxnum + 1; i++)
 	{
 		C[i].x -= C[0].x;
 		C[i].y -= C[0].y;
@@ -42,23 +42,23 @@ void CircularChain::driftProof()
 	C[0].x = C[0].y = C[0].z = 0.0;
 }
 
-CircularChain::CircularChain(char const *filename,const int length)
+CircularChain::CircularChain(char const *filename,const long length)
 :Chain(filename,true,length){
 	this->snapshot("ini.txt");
 }
 
-CircularChain::CircularChain(int length):Chain(true,length){
+CircularChain::CircularChain(long length):Chain(true,length){
 	this->snapshot("ini.txt");
 }
 
 double CircularChain::calG_bSum()
 {
 	double temp = 0;
-	for (int i = 0; i < maxnum + 1; i++)
+	for (long i = 0; i < maxnum + 1; i++)
 		temp += G_b(C[i].bangle);
 	return temp;
 }
-int CircularChain::crankshaft(int m, int n, double a)
+long CircularChain::crankshaft(long m, long n, double a)
 {
 	//Crankshaft for an angle
 	//The segment is from X(m) to X(n).
@@ -76,7 +76,7 @@ int CircularChain::crankshaft(int m, int n, double a)
 	}
 	double M[3][3];
 	SetRotM_crankshaft(M, m, n, a);
-	int i;
+	long i;
 	i = m;
 	while (i != n)
 	{
@@ -89,7 +89,7 @@ int CircularChain::crankshaft(int m, int n, double a)
 		C[i].dx = temp[0];
 		C[i].dy = temp[1];
 		C[i].dz = temp[2];
-		int j;
+		long j;
 		j = (i == maxnum ? 0 : i + 1);
 		C[j].x = C[i].x + C[i].dx;
 		C[j].y = C[i].y + C[i].dy;
@@ -101,7 +101,7 @@ int CircularChain::crankshaft(int m, int n, double a)
 	return 0;
 }
 
-double CircularChain::dE_reptation(int m, int n, int move){
+double CircularChain::dE_reptation(long m, long n, long move){
 	//this operation will make the reptation movement between node m  to n-1
 	//in the clockwise fashion, ie, the arc: m m+1 m+2 ...[maxnum 0 1]...n-2
 	//n-1. Therefore, n is not included.
@@ -117,7 +117,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	}
 
 	//Test if the segnum is within range.
-	int rep_segnum=wrap(n-m,totsegnum);
+	long rep_segnum=wrap(n-m,totsegnum);
 	if (rep_segnum<reptation_minlen || rep_segnum>reptation_maxlen){
 		cout<<"[In CircularChain::reptation]"
 			"segment involved is either larger than repation_maxlen"
@@ -126,7 +126,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	}
 
 	//Test if move is within range. move>0 means the reptation is forward, otherwise backward.
-	if (move==0 || abs(move)>int(rep_segnum/2)+1){
+	if (move==0 || abs(move)>long(rep_segnum/2)+1){
 		cout<<"[In CircularChain::reptation]"
 			"move is not in range, its absolute value should be within (-rep_segnum/2,rep_segnum/2)"
 			"and !=0: move="<<rep_segnum<<endl;
@@ -134,9 +134,9 @@ double CircularChain::dE_reptation(int m, int n, int move){
 		exit(EXIT_FAILURE);
 	}
 	//rigid protection detect
-	int nend=wrap(n-1,totsegnum);//exclude the last vertex. ie. n is now the last vector now.
+	long nend=wrap(n-1,totsegnum);//exclude the last vertex. ie. n is now the last vector now.
 	static segment temp[maxa];
-	int i,j;
+	long i,j;
 
 	//Lazy method: moving move(move < 0) is equivalent to moving rep_segnum+move;
 	move=wrap(move,rep_segnum);
@@ -169,7 +169,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	//Update X.
 	i=m;
 	while(i!=n){
-		int pre=wrap(i-1,totsegnum);
+		long pre=wrap(i-1,totsegnum);
 		C[i].x=C[pre].x+C[pre].dx;
 		C[i].y=C[pre].y+C[pre].dy;
 		C[i].z=C[pre].z+C[pre].dz;
@@ -193,7 +193,7 @@ double CircularChain::dE_reptation(int m, int n, int move){
 	return dE;
 }
 
-double CircularChain::dE_TrialCrankshaft(int m, int n, double a)
+double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 {
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
@@ -244,7 +244,7 @@ void CircularChain::snapshot(char *filename)
 {
 	ofstream fh (filename);
 	char buf[300];
-	int i;
+	long i;
 	if (!fh.good())
 	{
 		cout << "file not writable" << endl;
@@ -259,7 +259,7 @@ void CircularChain::snapshot(char *filename)
 	fh << buf << endl;
 	for ( i = 1; i <= maxnum; i++)
 	{	
-		int mark=protect_list[i];
+		long mark=protect_list[i];
 		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
 			i + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
@@ -267,7 +267,7 @@ void CircularChain::snapshot(char *filename)
 
 	//The first bead is repeated for convenient processing of convertJmol2For.py.
 	i=0;
-	int mark=protect_list[i];
+	long mark=protect_list[i];
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
 			totsegnum + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
@@ -295,7 +295,7 @@ void CircularChain::snapshot(char *filename)
 	fh.close();
 }
 
-int CircularChain::IEV( int in,  int ik){
+long CircularChain::IEV( long in,  long ik){
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
@@ -305,22 +305,22 @@ int CircularChain::IEV( int in,  int ik){
 	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
 		cout<<"Illegal values of in and ik "
-			"at int CircularChain::IEV( int in,  int ik) ("<<in<<','<<ik<<')';
+			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
 		exit(EXIT_FAILURE);
 	}
 	
-	int temp;
+	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	int iev=0,idiam=1;
+	long iev=0,idiam=1;
 	const double eps=1e-7;
 	double xij,yij,zij,a2,ddd;
 	double b,b2,rna,rnb,ak,bk,t;
 	double er,er2;				//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
 	er=this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
-	for (int i=in;i<=ik;i++){				// do 2 i=in,ik
-		for (int j=0;j<=maxnum;j++){		// do 3 j=1,jr1
+	for (long i=in;i<=ik;i++){				// do 2 i=in,ik
+		for (long j=0;j<=maxnum;j++){		// do 3 j=1,jr1
 			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
 			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
 /*			if (protect_list[i]==1 || protect_list[j]==1) continue; */
@@ -356,8 +356,8 @@ g4:         if(ddd<er*er) idiam=0;
 double CircularChain::Slow_E_t_updateWrithe_E_t(){
 	double temp[3];double dX[3];
 	double _writhe=0;
-	for (int s=0;s<=maxnum;s++){
-		for (int t=0;t<=maxnum;t++){
+	for (long s=0;s<=maxnum;s++){
+		for (long t=0;t<=maxnum;t++){
 			if (s==t) continue;
 			Xprod_exp(C[t].dx,C[t].dy,C[t].dz,
 					  C[s].dx,C[s].dy,C[s].dz,temp);
@@ -394,7 +394,7 @@ double CircularChain::_fastWr_topl_update(){
       wr=jwr+beta
 	*/	
 
-	int kndwr,ierr=0;
+	long kndwr,ierr=0;
 	kndwr=this->_kndwr_topl_update(this->topl,ierr);
 	if (ierr!=0){
 		cout<<"[In CircularChain::_fastWr()] ierr!=0"<<endl;
@@ -407,11 +407,11 @@ double CircularChain::_fastWr_topl_update(){
 	return double(kndwr)+bwr;
 }
 
-int CircularChain::checkConsistancy(){
+long CircularChain::checkConsistancy(){
 	//return 1 if inconsistent.
 	static const double eps=1e-5;
-	int flag=0;
-	for (int i=0;i<=maxnum;i++){
+	long flag=0;
+	for (long i=0;i<=maxnum;i++){
 		if (fabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz) > eps ){
@@ -435,12 +435,12 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 	}
 
 	//Clear global protect list to 0;
-	for (int i=0;i<=maxnum;i++)
+	for (long i=0;i<=maxnum;i++)
 		protect_list[i]=0;
 	
-	vector<int> r_protect;
+	vector<long> r_protect;
 	vector< vector<double> >r_ref_v;
-	int hard_eof=0;
+	long hard_eof=0;
 
 	while (!f.eof() && !hard_eof){
 		string tempbuf;
@@ -463,7 +463,7 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		}
 		else if (token==string("$")){ //protect
 			while (!sline.eof()){
-				int temp;
+				long temp;
 				sline>>temp;
 				r_protect.push_back(temp);
 			}
@@ -477,8 +477,8 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		}
 
 	}
-	for (int i=0;i<this->R.size();i++)
-		for (int j=0;j<this->R[i].protect.size();j++)
+	for (long i=0;i<this->R.size();i++)
+		for (long j=0;j<this->R[i].protect.size();j++)
 			this->protect.push_back(R[i].protect[j]);
 	this->update_allrigid_and_E();
 }
@@ -491,7 +491,7 @@ double allrigid::update_allrigid_and_E(){
 		this->E = 0;
 		return 0.;
 	}
-	for (int i=0;i<this->R.size();i++){
+	for (long i=0;i<this->R.size();i++){
 		R[i].update_ref_v_xyz();
 	}
 	this->E = 0;
@@ -517,7 +517,7 @@ double allrigid::update_allrigid_and_E(){
 	//Res Site I distance. 
 	//
 	//TODO: this may result in access violation if R[i].protect[0]<3!
-	static const int dev=6;
+	static const long dev=6;
 	this->r_siteI=
 		modu(R[0].target->C[R[0].protect[0]-dev].x-R[1].target->C[R[1].protect[0]-dev].x,
 			 R[0].target->C[R[0].protect[0]-dev].y-R[1].target->C[R[1].protect[0]-dev].y,
@@ -539,7 +539,7 @@ double allrigid::update_allrigid_and_E(){
 	this->E += RadiusBeta * (-15);
 	this->E += r_siteI * 50;
 	double symm;
-	for (int ii=0;ii<=2;ii++){
+	for (long ii=0;ii<=2;ii++){
 		symm+= abs(
 				modu(R[0].target->C[R[0].protect[ii]].x-R[1].target->C[R[1].protect[ii]-dev].x,
 					 R[0].target->C[R[0].protect[ii]].y-R[1].target->C[R[1].protect[ii]-dev].y,
@@ -578,7 +578,7 @@ double allrigid::update_allrigid_and_E(){
 }
 
 
-cls_rigid::cls_rigid(CircularChain* r_target, std::vector<int> r_protect,
+cls_rigid::cls_rigid(CircularChain* r_target, std::vector<long> r_protect,
 	std::vector < vector<double> > r_ref_v):
 target(r_target),protect(r_protect),ref_v(r_ref_v){
 	//When cls_rigid is constructed, it will automatically update the global
@@ -598,7 +598,7 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 	Mv[1][2]=target->C[protect[2]].dy;
 	Mv[2][2]=target->C[protect[2]].dz;
 
-	for (int i=0;i<this->ref_v.size();i++){
+	for (long i=0;i<this->ref_v.size();i++){
 		vector<double> a(3,0);
 
 		//input vector
@@ -608,12 +608,12 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 		//output vector
 		double o[3];
 		mat33mulvec3(Mv,b,o);
-		for (int j=0;j<3;j++) { a[j]=o[j]; }
+		for (long j=0;j<3;j++) { a[j]=o[j]; }
 		ref_v_xyz.push_back(a);
 	}
 
 	std::cout<<"Rigid body constructed, ref_v_xyz as follows:"<<std::endl;
-	for (int i=0;i<this->ref_v_xyz.size();i++){
+	for (long i=0;i<this->ref_v_xyz.size();i++){
 		std::cout<<'['<<i<<']';
 		std::cout<<ref_v_xyz[i][0]<<" ";
 		std::cout<<ref_v_xyz[i][1]<<" ";
@@ -621,13 +621,13 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 	}
 
 	//Initialize or append the global protection list for rigid bodies.
-	for (int i=0;i<this->protect.size();i++){
+	for (long i=0;i<this->protect.size();i++){
 		protect_list[this->protect[i]]=1;
 	}
 //	protect_list.push_back(this->protect.back + 1);
 
 	std::cout<<"Constructing rigid body is over. The current status of global protect_list is:"<<endl;
-	for (int i=0;i<maxa;i++)
+	for (long i=0;i<maxa;i++)
 		if (protect_list[i])
 			std::cout<<'['<<i<<']'<<protect_list[i]<<std::endl;
 }
@@ -646,7 +646,7 @@ void cls_rigid::update_ref_v_xyz(){
 	Mv[1][2]=target->C[protect[2]].dy;
 	Mv[2][2]=target->C[protect[2]].dz;
 
-	for (int i=0;i<this->ref_v.size();i++){
+	for (long i=0;i<this->ref_v.size();i++){
 		vector<double> a(3,0);
 
 		//input vector
@@ -656,7 +656,7 @@ void cls_rigid::update_ref_v_xyz(){
 		//output vector
 		double o[3];
 		mat33mulvec3(Mv,b,o);
-		for (int j=0;j<3;j++) { a[j]=o[j]; }
+		for (long j=0;j<3;j++) { a[j]=o[j]; }
 		ref_v_xyz[i]=a;
 	}
 }

@@ -23,9 +23,9 @@ return (x*(c1 + x2*c2)/(c3 + x2));
 double atan66(double x){
 double y; // return from atan__s function
 static bool const FALSE=false,TRUE=true;
-int complement= FALSE; // true if arg was >1
-int region= FALSE; // true depending on region arg is in
-int sign= FALSE; // true if arg was < 0
+long complement= FALSE; // true if arg was >1
+long region= FALSE; // true depending on region arg is in
+long sign= FALSE; // true if arg was < 0
 static double const 
 		halfpi=1.5707963267948966,
 		sixthpi=0.52359877559829882,

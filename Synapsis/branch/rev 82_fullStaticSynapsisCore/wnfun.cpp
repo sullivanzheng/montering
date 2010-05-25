@@ -1,10 +1,10 @@
 #include "chain.h"
 #include <cmath>
 
-int CircularChain::getBranchNumber(){
+long CircularChain::getBranchNumber(){
 	
 	//Max subcript in Fortran convention.
-	int jr1=maxnum+1;
+	long jr1=maxnum+1;
 
 	//dLk=enkuhn*282./10.5*sigma 
 	//enkuhn is number of kuhn length in the circle.
@@ -19,19 +19,19 @@ int CircularChain::getBranchNumber(){
 	double s100=100*sigma;
 
 	//Length of the local curve examined.
-    static const int loop=int((8.*s100+90)*ek/10.0);
+    static const long loop=long((8.*s100+90)*ek/10.0);
 
 	//Once a peak is detected, the program will jump forward a distance
 	//of loopd to get away from this peak, which eliminate multiple counting
 	//of the same peak.
-	static const int loopd=int(0.667*loop)+1;
+	static const long loopd=long(0.667*loop)+1;
 	
 	double wrt;
 
-	int nl=0;
-    int lf=0;
-	int il=1;
-	int ik;
+	long nl=0;
+    long lf=0;
+	long il=1;
+	long ik;
 L871:
 	ik=il+loop;
 	wrt=this->_wrfun(il-1,ik-1);//il-1 because il is fortran convention here.
@@ -48,11 +48,11 @@ L871:
 	return nl;
 }
 
-int CircularChain::scanBranch(char* filename){
+long CircularChain::scanBranch(char* filename){
 	using namespace std;
 	
 	//Max subcript in Fortran convention.
-	int jr1=maxnum+1;
+	long jr1=maxnum+1;
 
 	//dLk=enkuhn*282./10.5*sigma 
 	//enkuhn is number of kuhn length in the circle.
@@ -67,18 +67,18 @@ int CircularChain::scanBranch(char* filename){
 	double s100=100*sigma;
 
 	//Length of the local curve examined.
-    static const int loop=int((8.*s100+90)*ek/10.0);
+    static const long loop=long((8.*s100+90)*ek/10.0);
 
 	//Once a peak is detected, the program will jump forward a distance
 	//of loopd to get away from this peak, which eliminate multiple counting
 	//of the same peak.
-	static const int loopd=int(0.667*loop)+1;
+	static const long loopd=long(0.667*loop)+1;
 
 	ofstream fp(filename);
 	
 	double wrt;
 
-	int m, n;
+	long m, n;
 	for (m=0;m<=maxnum;m++){
 		n=m+loop;
 		wrt=this->_wrfun(m,n);
@@ -87,24 +87,24 @@ int CircularChain::scanBranch(char* filename){
 	fp.close();
 	return 0;
 }
-double CircularChain::_wrfun(int m, int n)
+double CircularChain::_wrfun(long m, long n)
 {	
 //Calculate writhing number from m to n.
 
 	/* is,it,jr1 input parameter */
 	/* System generated locals */
-    int i__1, i__2;
+    long i__1, i__2;
     double ret_val;
 
     /* Local variables */
-    static int i, k;
+    static long i, k;
     static double x[maxa], y[maxa], z[maxa];
     static double f1, f2, f3, f4, ab, ai, ak;
-    static int ip, kp;
+    static long ip, kp;
     static double dx[maxa], dy[maxa], dz[maxa];
-    static int is, it;
+    static long is, it;
     static double rx, ry, rz;
-    static int jr1;
+    static long jr1;
     static double zn1, zn2, zn3, zn4, abc, cal, abq, sql, www, bllb, blli, bllk;
 
 
@@ -115,7 +115,7 @@ double CircularChain::_wrfun(int m, int n)
 /*     dx, dy, and dz are arrays of bond vectors, ie dx(i) = x(i+1)-x(i). */
 
 	//Importing x and dx
-	for (int tempi=0;tempi<=maxnum;tempi++){
+	for (long tempi=0;tempi<=maxnum;tempi++){
 		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;
 		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;
 	}

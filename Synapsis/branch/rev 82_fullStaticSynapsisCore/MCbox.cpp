@@ -4,7 +4,7 @@ MCbox_circular::MCbox_circular(
 	using namespace std;
 	//Read Config File;
 	config=readconfig(configFile);
-	for (int i = 0; i<maxa; i++){
+	for (long i = 0; i<maxa; i++){
 		protect_list[i]=0;
 	}
 	//#############################GLOBAL##############################
@@ -46,7 +46,7 @@ MCbox_circular::MCbox_circular(
 	dnaChain->E_t_updateWrithe_E_t();
 
     //Initialize statistical variables.
-    for (int i = 0; i < 180; i++)
+    for (long i = 0; i < 180; i++)
         anglenums[i] = 0;
     //Log file handle.
     //dnaChain->snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
@@ -66,7 +66,7 @@ void MCbox_circular::logAngleDist(char *suffix)
     strcat_noOW(buf, strBufSize, filePrefix, "_angleDist.txt");
     ofstream fp (strcat_noOW(buf, strBufSize, buf, suffix));
     fp << "Angle distribution" << endl;
-    for (int i = 0; i < 180; i++)
+    for (long i = 0; i < 180; i++)
         fp << i << '\t' << anglenums[i] << endl;
     fp << endl;
     fp.close();
@@ -74,15 +74,15 @@ void MCbox_circular::logAngleDist(char *suffix)
 
 void MCbox_circular::clearAngleStats(void)
 {
-    for (int i = 0; i < 180; i++)
+    for (long i = 0; i < 180; i++)
         anglenums[i] = 0;
 }
 
 void MCbox_circular::pushAngleStats(void)
 {
-    for (int i = 0; i < maxnum; i++)
+    for (long i = 0; i < maxnum; i++)
     {
-        anglenums[int(floor(dnaChain->C[i].bangle * 180 / PI))]++;
+        anglenums[long(floor(dnaChain->C[i].bangle * 180 / PI))]++;
     }
 }
 
@@ -106,7 +106,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
 
-	for (int moves = 1; moves <= monte_step; moves++)
+	for (long moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
 
@@ -118,13 +118,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//iteration due to wrapping problem.
 
         double dE, cacheRE, cacheE_t, cacheWrithe;
-		int m,n;
-		int E_condition=0,IEV_condition=0,topo_condition=0;
+		long m,n;
+		long E_condition=0,IEV_condition=0,topo_condition=0;
 		
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
-			int testp;int testflag;
+			long testp;long testflag;
 			do{
 				m=irand(maxnum+1);
 				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
@@ -225,7 +225,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//generate reptation segment.
 			//The segment between vertices m and n will be changed.
 			//that is vectors m~n-1
-			int testp;int testflag;
+			long testp;long testflag;
 			do{
 				m=irand(maxnum+1);
 				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
@@ -240,7 +240,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				}
 			}while(testflag==1);
 			
-			int rept_move;
+			long rept_move;
 			rept_move=0;
 			while(rept_move==0)
 				//[-rept_move_range,rept_move_range] excluding 0
@@ -356,12 +356,12 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 */
 
 //			Log Chain angle statistics
-/*			for (int i=0;i<=maxnum;i++)
+/*			for (long i=0;i<=maxnum;i++)
 				dnaChain->stats.anglelist[i].push(dnaChain->C[i].bangle);
 */			(*fp_log)<<endl;
 		}
 	}
-	for (int i=0;i<=maxnum;i++){
+	for (long i=0;i<=maxnum;i++){
 		(*fp_log)<<i<<" "<<dnaChain->stats.anglelist[i].getMean()<<" "
 			<<dnaChain->stats.anglelist[i].getStdev()<<" "<<endl;
 	}
@@ -386,7 +386,7 @@ void MCbox_circular::logParameters(void){
 }
 
 double MCbox_circular::calcGyration(void){
-	int i;
+	long i;
 	double meanx,meany,meanz;
 	meanx=meany=meanz=0;
 	for(i=0;i<=maxnum;i++){

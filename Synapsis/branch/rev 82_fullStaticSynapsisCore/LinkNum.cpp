@@ -4,7 +4,7 @@
 #include "chain.h"
 using namespace std;
 
-int CircularChain::productLk(int vertM, int vertN)
+long CircularChain::productLk(long vertM, long vertN)
 {	
 	if ((vertM<0||vertN<0)||(vertN>maxnum || vertM>maxnum))
 	{
@@ -13,35 +13,35 @@ int CircularChain::productLk(int vertM, int vertN)
 		exit(EXIT_FAILURE);
 	}
 	if (vertM>vertN){
-		int temp;
+		long temp;
 		temp=vertM;vertM=vertN;vertN=temp;
 	}
 
-	int ret_val, i__1, i__2, i__3;
+	long ret_val, i__1, i__2, i__3;
     double d__1;
-	static const int jrm=910,icrm=910;
+	static const long jrm=910,icrm=910;
 	static const double eps=1.0e-5;
 
     /* Local variables */
     static double d;
-    static int k, m, n;
+    static long k, m, n;
     static double r;
 	static double x[jrm], y[jrm], z[jrm];
     static double h1[jrm], h2[jrm], h3[jrm];
-    static int j1,n1, j2, n2, i1;
+    static long j1,n1, j2, n2, i1;
     static double r1, s1, s2, r2;
-    static int m1;
+    static long m1;
     static double da[MAXMatrixDet*MAXMatrixDet];
     static double h11, h21, h31;
-    static int kb, l11, l21, n11, mj;
+    static long kb, l11, l21, n11, mj;
     static double cx[icrm];
-    static int ir, mp, ks, ix[icrm], ns, nv;
+    static long ir, mp, ks, ix[icrm], ns, nv;
     static double rx, xr;
-    static int ic1[icrm], ic2[icrm], jr3, jr4, jr5;
+    static long ic1[icrm], ic2[icrm], jr3, jr4, jr5;
     static double rl1, rl2;
-    static int nv1;
+    static long nv1;
     static double rz1, rz2, dkn;
-    static int ipv;
+    static long ipv;
 
 /*	L1 and L2, are the numbers of segments in the first and second contours. The coordinates of the first contour are written in in the first (L1+1) elements of arrays x, y, z; the elements from L1+2 till L1+L2+2 contain the second contour. Note that
 	x((L1+1)=x(1)
@@ -51,8 +51,8 @@ int CircularChain::productLk(int vertM, int vertN)
 	y((L1+L2+2)=y(L1+2)
 	z((L1+L2+2)=z(L1+2) */
 
-	int l1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
-	int l2=vertN-vertM;           //Number of seg in the 2nd circle
+	long l1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
+	long l2=vertN-vertM;           //Number of seg in the 2nd circle
 
 //Assume strand exchange happened at the vertices m and n (m<n)
 //Therefore the circle will be broken to two circles and they
@@ -60,7 +60,7 @@ int CircularChain::productLk(int vertM, int vertN)
 //C[0~m-1,n~maxnum] maped to X[0~l1-1] and X[l1] to C[0]
 //C[m~n-1] maped to X[l1+1~l1+l2] and X[l1+l2+1] to C[m]
 
-	int i,j;
+	long i,j;
 	for (i=0,j=0;i<=vertM-1;i++,j++){
 		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
 	}
@@ -520,7 +520,7 @@ L262:
     }
     dkn = _det(n, da) / 2.f;
 L550:
-    ret_val = int(fabs(dkn) + 0.1);
+    ret_val = long(fabs(dkn) + 0.1);
     return ret_val;
 L291:
     ++ipv;
@@ -546,18 +546,18 @@ L295:
     goto L297;
 }
 
-double CircularChain::_det(int n, double da[MAXMatrixDet*MAXMatrixDet])
+double CircularChain::_det(long n, double da[MAXMatrixDet*MAXMatrixDet])
 {
     /* System generated locals */
-    int i1, i2, i3;
+    long i1, i2, i3;
     double ret_val;
     double d;
 
     double c;
-    int i, j, k, l;
-    int jj;
+    long i, j, k, l;
+    long jj;
     double dr;
-    int jmin, kmax;
+    long jmin, kmax;
 
     c = 1.f;
     kmax = n - 1;

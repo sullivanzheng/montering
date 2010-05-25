@@ -1,7 +1,7 @@
 #include "chain.h" 
 using namespace std;
 
-void Chain::initializeCircle(int numofseg)
+void Chain::initializeCircle(long numofseg)
 {   
     cout << endl << "Chain::readIniFile::No file input, start building circular chain." << endl;
     cout << "Segment number: " <<numofseg <<endl;
@@ -10,7 +10,7 @@ void Chain::initializeCircle(int numofseg)
     this->SetRotM_halfchain(M,rv,angle);
     C[0].x=C[0].y=C[0].z=C[0].dy=C[0].dz=0;
     C[0].dx=1.0;
-    for (int i=1;i<numofseg;i++){
+    for (long i=1;i<numofseg;i++){
         C[i].x=C[i-1].x+C[i-1].dx;
         C[i].y=C[i-1].y+C[i-1].dy;
         C[i].z=C[i-1].z+C[i-1].dz;
@@ -20,7 +20,7 @@ void Chain::initializeCircle(int numofseg)
         C[i].dx=result[0];C[i].dy=result[1];C[i].dz=result[2];
     }
 }
-int Chain::readIniFile(char const *filename)
+long Chain::readIniFile(char const *filename)
 {
 	ifstream file_st (filename);
     cout << endl<<"Chain::readIniFile: Reading Ini coordinate file: "<<filename<<endl
@@ -38,19 +38,19 @@ int Chain::readIniFile(char const *filename)
 	}
 	C[0].x = C[0].y = C[0].z = 0;
 	file_st >> C[0].dx;
-	for (int i = 1; i < maxnum + 1; i++)
+	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dx;
 		C[i].x = C[i - 1].x + C[i - 1].dx;
 	}
 	file_st >> C[0].dy;
-	for (int i = 1; i < maxnum + 1; i++)
+	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dy;
 		C[i].y = C[i - 1].y + C[i - 1].dy;
 	}
 	file_st >> C[0].dz;
-	for (int i = 1; i < maxnum + 1; i++)
+	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dz;
 		C[i].z = C[i - 1].z + C[i - 1].dz;
@@ -71,8 +71,8 @@ void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 	mat33mulscalOW(M, cosa);
 	//cos(a)*eye(3);
 	double M2[3][3];
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
+	for (long i = 0; i < 3; i++)
+		for (long j = 0; j < 3; j++)
 			M2[i][j] = rv[i] * rv[j];
 	mat33mulscalOW(M2, (1 - cosa));
 	double M3[3][3] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -90,7 +90,7 @@ void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 	mat33addOW(M, M2);
 	mat33addOW(M, M3);
 }
-void Chain::SetRotM_crankshaft(double M[3][3],int m, int n, double a)
+void Chain::SetRotM_crankshaft(double M[3][3],long m, long n, double a)
 {
 	double rv_norm;
 	double rv[3];
@@ -120,7 +120,7 @@ void Chain::SetRotM_crankshaft(double M[3][3],int m, int n, double a)
 }
 
 void Chain::normalize(){
-    for (int i=0;i<=maxnum-1;i++){
+    for (long i=0;i<=maxnum-1;i++){
         double temp=modu(C[i].dx,C[i].dy,C[i].dz);
         C[i].dx/=temp;
         C[i].dy/=temp;
@@ -151,7 +151,7 @@ double Chain::calAngle(segment &C1, segment &C2)
 		angle = acos(temp);
 	return angle;
 }
-Chain::Chain(char const *filename, bool circular,int r_length)
+Chain::Chain(char const *filename, bool circular,long r_length)
 {   
     this->endToEndSampleCycle=this->defaultSampleCycle;
     if (r_length>maxa||r_length<5){
@@ -167,7 +167,7 @@ Chain::Chain(char const *filename, bool circular,int r_length)
     stats.resetStat();
 }
 
-Chain::Chain(bool circular,int r_length)
+Chain::Chain(bool circular,long r_length)
 {   
     this->endToEndSampleCycle=this->defaultSampleCycle;
     if (r_length>maxa||r_length<5){
@@ -190,21 +190,21 @@ void Chain::updateAllBangle_Ini(bool circular = false)
 {		
 	if (circular){		
 		C[0].bangle = calAngle(C[maxnum], C[0]);		
-		for (int i = 1; i < maxnum + 1; i++)		
+		for (long i = 1; i < maxnum + 1; i++)		
 		{		
 			C[i].bangle = calAngle(C[i - 1], C[i]);		
 		}		
 	}		
 	else		
 	{		
-		for (int i = 1; i < maxnum + 1; i++)		
+		for (long i = 1; i < maxnum + 1; i++)		
 		{		
 			C[i].bangle = calAngle(C[i - 1], C[i]);		
 		}		
 		C[0].bangle=0.0;		
 	}		
 	cout <<"============BangleInitiated=============="<<endl;		
-	for (int i = 1; i < maxnum + 1; i++)		
+	for (long i = 1; i < maxnum + 1; i++)		
 		cout <<'['<<i<<']'<< C[i].bangle;
 	cout<<"[END]"<<endl;
 }
@@ -221,7 +221,7 @@ void Chain::snapshot(char *filename)
 	}
 	sprintf(buf, "%6d %20s", maxnum + 1, "[General Chain Snapshot, treat as Linear]");
 	fh << buf << endl;
-    int	i=0;
+    long	i=0;
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
         i + 1, "F", C[i].x, C[i].y, C[i].z, 1, 1);
 	fh << buf << endl;

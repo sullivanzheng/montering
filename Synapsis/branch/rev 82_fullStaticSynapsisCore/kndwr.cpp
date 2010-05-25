@@ -2,47 +2,47 @@
 #include "f2c.h"
 
 //Calculate integer part of writhe and AlexPoly(-1)
-int CircularChain::_kndwr_topl_update(double &topl,int &ierr){
-	const int isi=801;
-	const int range1=4001;
+long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
+	const long isi=801;
+	const long range1=4001;
 
     /* System generated locals */
-    int i__1, i__2, i__3;
+    long i__1, i__2, i__3;
     double r__1;
     double d__1, d__2;
     /* Local variables */
     static double c__;
     static double d__;
-    static int i__, j, k, l;
+    static long i__, j, k, l;
     static double x[maxa], y[maxa], z[maxa];
-    static int i1, n1, n2, m4, n4;
+    static long i1, n1, n2, m4, n4;
 	
     static double r1, r2, da[isi*isi];
-    static int n11, n21, n41, jj;
+    static long n11, n21, n41, jj;
     static double dr;
-    static int mj;
+    static long mj;
     static double cx[range1];
     static double dx[maxa], dy[maxa], dz[maxa];
-    static int ir, ks, ix[range1], js, nv;
+    static long ir, ks, ix[range1], js, nv;
     static double rx, xr;
-    static int ic1[range1], ic2[range1], jr1, jr2, jr3, jr4;
+    static long ic1[range1], ic2[range1], jr1, jr2, jr3, jr4;
     static double rl1, rl2;
-    static int nv1;
+    static long nv1;
     static double px1, py1, px2, py2;
     static double rz1, rz2;
     static double  px11, px21, drx;
-    static int jwr;
+    static long jwr;
     static double zet;
     static double pdx1, pdy1, pdx2, pdy2;
-    static int jmin;
+    static long jmin;
     static double pdx12;
-    static int kmax, iint, iiwr;
+    static long kmax, iint, iiwr;
 
     const double deps = 1e-10;
     const double eps = 1e-4f;
 
 /* import C[i].dX to dX*///--------------------------------
-	for (int tempi=0;tempi<=maxnum;tempi++){
+	for (long tempi=0;tempi<=maxnum;tempi++){
 		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;		
 		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
 	}
@@ -424,48 +424,48 @@ L1002:
 
 
 //Calculate integer part of writhe only.
-int CircularChain::_kndwr(int &ierr){
-	const int isi=801;
-	const int range1=4001;
+long CircularChain::_kndwr(long &ierr){
+	const long isi=801;
+	const long range1=4001;
 
     /* System generated locals */
-    int i__1, i__2, i__3;
+    long i__1, i__2, i__3;
     double r__1;
     double d__1, d__2;
     /* Local variables */
     static double c__;
     static double d__;
-    static int i__, j, k, l;
+    static long i__, j, k, l;
     static double x[maxa], y[maxa], z[maxa];
-    static int i1, n1, n2, m4, n4;
+    static long i1, n1, n2, m4, n4;
 	
     static double r1, r2, da[isi*isi];
-    static int n11, n21, n41, jj;
+    static long n11, n21, n41, jj;
     static double dr;
-    static int mj;
+    static long mj;
     static double cx[range1];
     static double dx[maxa], dy[maxa], dz[maxa];
-    static int ir, ks, ix[range1], js, nv;
+    static long ir, ks, ix[range1], js, nv;
     static double rx, xr;
-    static int ic1[range1], ic2[range1], jr1, jr2, jr3, jr4;
+    static long ic1[range1], ic2[range1], jr1, jr2, jr3, jr4;
     static double rl1, rl2;
-    static int nv1;
+    static long nv1;
     static double px1, py1, px2, py2;
     static double rz1, rz2;
     static double  px11, px21, drx;
-    static int jwr;
+    static long jwr;
     static double zet;
     static double pdx1, pdy1, pdx2, pdy2;
-    static int jmin;
+    static long jmin;
     static double pdx12;
-    static int kmax, iint, iiwr;
+    static long kmax, iint, iiwr;
 
     const double deps = 1e-10;
     const double eps = 1e-4f;
 
 	ierr=0;
 /* import C[i].dX to dX*///--------------------------------
-	for (int tempi=0;tempi<=maxnum;tempi++){
+	for (long tempi=0;tempi<=maxnum;tempi++){
 		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;		
 		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
 	}

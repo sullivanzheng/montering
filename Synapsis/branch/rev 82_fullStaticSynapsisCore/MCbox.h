@@ -22,7 +22,7 @@ using std::endl;
 
 class MCbox_circular{
 protected:
-	static const int strBufSize=180;
+	static const long strBufSize=180;
 	char buf[strBufSize];
 	char filePrefix[80];
 	unsigned long anglenums[180];

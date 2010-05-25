@@ -2,37 +2,37 @@
 #include "f2c.h"
 
 //Calculate the floating point part of writhe.
-double CircularChain::_bwr(int m,int n){
+double CircularChain::_bwr(long m,long n){
     if ((m<0||n<0)||(n>maxnum || m>maxnum))
 	{
-		std::cout<<"[in _bwr(int m,int n)]Illegal values of m and n ("<<m<<','<<n<<')';
+		std::cout<<"[in _bwr(long m,long n)]Illegal values of m and n ("<<m<<','<<n<<')';
 		exit(EXIT_FAILURE);
 	}
 	if (m>=n)
 	{
-		std::cout<<"[in _bwr(int m,int n)]Illegal values of m and n, m should be smaller than n ("<<m<<','<<n<<')';
+		std::cout<<"[in _bwr(long m,long n)]Illegal values of m and n, m should be smaller than n ("<<m<<','<<n<<')';
 		exit(EXIT_FAILURE);
 	}
 
 	/* System generated locals */
-    int i__1;
+    long i__1;
 
     /* Local variables */
-    static int i__, m__;
+    static long i__, m__;
     static double w[maxa];
     static double a1, a2;
-    static int m1;
+    static long m1;
     static double t1, t2;
-    static int ii, ik, in;
-    static int mm;
+    static long ii, ik, in;
+    static long mm;
     static double dx[maxa], dy[maxa], dz[maxa];
     static double si;
     static double sm, rp;
-    static int jr1;
+    static long jr1;
     static double sm1;
     static double pi12;
     static double rxy;
-    static int ibad[maxa];
+    static long ibad[maxa];
     static double cchi;
     static double beta, cphi[maxa];
     static double schi;
@@ -53,10 +53,10 @@ double CircularChain::_bwr(int m,int n){
 /* ------------------------------------------------ */
 
 /* import C[i].dX to dX*///--------------------------------
-	for (int tempi=0;tempi<=maxnum;tempi++){
+	for (long tempi=0;tempi<=maxnum;tempi++){
 		dx[tempi]=C[tempi].dx; dy[tempi]=C[tempi].dy; dz[tempi]=C[tempi].dz;		
 	}
-	for (int tempi=0;tempi<=maxnum;tempi++){
+	for (long tempi=0;tempi<=maxnum;tempi++){
 		w[tempi]=0;//TODO w or as we can see from the program, it is not necessary.
 	}
 	jr1=maxnum+1;
