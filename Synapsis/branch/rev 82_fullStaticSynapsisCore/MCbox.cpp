@@ -171,7 +171,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
 			//total energy change.
-			dE= dE /*+ (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t)*/;
+			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
 			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
 			E_condition=0;
@@ -280,11 +280,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
-			E_condition=0;
-			IEV_condition=0;
-    		topo_condition=0;
-			rigid_IEV_condition=0;
-			
 			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
 			E_condition=0;
 			IEV_condition=0;
@@ -308,25 +303,31 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				}
 			}
 			
-			if (E_condition==1 && RG.IEV_spheres(m,n)==1){
-				rigid_IEV_condition=1;
-			}
-			else{
-				rigid_IEV_condition=-1;
+			if (E_condition==1){
+				if (RG.IEV_spheres(m,n)==1){
+					rigid_IEV_condition=1;
+				}
+				else{
+					rigid_IEV_condition=-1;
+				}
+			} 
+			
+			if (rigid_IEV_condition==1){//rigid_IEV_condition
+				if (this->dnaChain->IEV_with_rigidbody(m,n)==1){
+						IEV_condition=1;
+					}
+					else{
+						IEV_condition=-1;
+				}
 			}
 
-			if (rigid_IEV_condition==1 && this->dnaChain->IEV(m,n)==1){
-				IEV_condition=1;
-			}
-			else{
-				IEV_condition=-1;
-			}
-
-			if (IEV_condition==1 && this->dnaChain->topl<1.5){ 
-				topo_condition=1;
-			}
-			else{
-				topo_condition=-1;
+			if (IEV_condition==1){
+				if (this->dnaChain->topl<1.5){ 
+					topo_condition=1;
+				}
+				else{
+					topo_condition=-1;
+				}
 			}
 
 			if (E_condition==1 && rigid_IEV_condition==1 
