@@ -12,10 +12,10 @@ def denominator(g):
     #print "DENMT:IN:g=%12.6f OUT=%12.6f ERR=%12.6f"%(g,result[0],result[1])
     return result[0]
 
-for k in range(1,100):#[282.686/21,]:#[28.57142857,]:
+for k in [282./21,282./42,282./84]:#[282.686/21,]:#[28.57142857,]:
 #k=5.0#282.686 #Kuhn length in the unit of segments.
     m=(k-1.0)/(k+1.0)
     g=fsolve(lambda g:numerator(g)/denominator(g)-m,4);
-    print "%3f\t%12.9f\t%12.9f"%(k/2.0,g,fabs(g*2/(k/2)-1))
+    print "k/2=%3f\tg=%12.9f\tfabs(g*2/(k/2)-1)=%12.9f"%(k/2.0,g,fabs(g*2/(k/2)-1))
 
 

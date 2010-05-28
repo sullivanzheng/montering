@@ -231,18 +231,28 @@ def make_synapsised_circular(core):
     dx1,dy1,dz1=makeCircle(circlesize)
     dx2,dy2,dz2=readJmol(core,1)
 ##  write_Jmol_file_dx(core+"ini.txt",dx2,dy2,dz2)
-
     dx2,dy2,dz2= \
     ConnectUsingBreakCircle(dx1,dy1,dz1,
                         dx2,dy2,dz2,1,circlesize/2,InsBreak)
-##  ConnectUsingBreakCircle(dx1,dy1,dz1,
-##                            dx2,dy2,dz2,h,m,InsBreak)
-##  write_Jmol_file_dx(core+"intermediate.txt",dx2,dy2,dz2)
     dx2,dy2,dz2=dx2[1:],dy2[1:],dz2[1:]
     dx2,dy2,dz2= \
     integrateToCircular(dx2,dy2,dz2,
                          dx1,dy1,dz1,circlesize/3,circlesize*5/6)
     write_Jmol_file_dx(core+"main.txt",dx2,dy2,dz2)
 
+def make_sphere(x0,y0,z0,r,filename):
+    mesh=10.0
+    theta=[i/mesh*2*pi for i in range(mesh)]
+    beta=[i/mesh*pi - pi/2. for i in range(mesh)]
+    x=[cos(j)*cos(i)*r+x0 for j in beta for i in theta]
+    y=[cos(j)*sin(i)*r+y0 for j in beta for i in theta]
+    z=[sin(j)*r+z0 for j in beta for i in theta]
+    write_Jmol_file(filename,x,y,z)
+    
+
 if __name__=='__main__':
-    make_synapsised_circular("ResCore.txt")
+    #make_synapsised_circular("ResCore.txt")
+    make_sphere(-25.1352, 8.83568, -1.43287,1.4,'sphere1.txt')
+    make_sphere(-25.5516, 10.7521, -1.34465,1.0,'sphere2.txt')
+
+    
