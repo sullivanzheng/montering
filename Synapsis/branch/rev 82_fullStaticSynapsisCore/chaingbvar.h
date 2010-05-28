@@ -17,4 +17,6 @@ extern long protect_list[maxa];
 extern long reptation_maxlen;
 extern long reptation_minlen;
 extern long rept_move_range;
+extern long VolEx_cutoff_rigidbody;
+
 #endif /* CHAINGBVARH */

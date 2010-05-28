@@ -1,6 +1,5 @@
 #include "MCbox.h" 
-MCbox_circular::MCbox_circular(
-    char const *configFile){	
+MCbox_circular::MCbox_circular(char const *configFile){	
 	using namespace std;
 	//Read Config File;
 	config=readconfig(configFile);
@@ -27,6 +26,8 @@ MCbox_circular::MCbox_circular(
 	stringstream(config[string("reptation_maxlen")])>>reptation_maxlen;
 	stringstream(config[string("reptation_minlen")])>>reptation_minlen;
 	stringstream(config[string("rept_move_range")])>>rept_move_range;
+
+	stringstream(config[string("VolEx_cutoff_rigidbody")])>>VolEx_cutoff_rigidbody;
 
 	//#############################MCBox Variables#####################
 	strcpy(filePrefix,config[string("filePrefix")].c_str());
@@ -97,7 +98,6 @@ void MCbox_circular::logAccepts(void)
 void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 {
     MTRand53 mt(seeding);
-	
 	allrigid RG("_rigid.cfg", this->dnaChain);
 
 	long SNAPSHOT_INTERVAL;
@@ -119,7 +119,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
         double dE, cacheRE, cacheE_t, cacheWrithe;
 		long m,n;
-		long E_condition=0,IEV_condition=0,topo_condition=0;
+		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		
 		if (drand(1.0)>P_REPT){
 		//Crankshaft movement.
@@ -171,12 +171,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
 			//total energy change.
-			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
+			dE= dE /*+ (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t)*/;
 			
 			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
 			E_condition=0;
 			IEV_condition=0;
     		topo_condition=0;
+			rigid_IEV_condition=0;
 
 			if (dE < 0){
 				E_condition=1;
@@ -195,22 +196,35 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				}
 			}
 			
+			if (E_condition==1){
+				if (RG.IEV_spheres(m,n)==1){
+					rigid_IEV_condition=1;
+				}
+				else{
+					rigid_IEV_condition=-1;
+				}
+			} 
+			
+			if (rigid_IEV_condition==1){//rigid_IEV_condition
+				if (this->dnaChain->IEV_with_rigidbody(m,n)==1){
+						IEV_condition=1;
+					}
+					else{
+						IEV_condition=-1;
+				}
+			}
 
-			if (this->dnaChain->IEV(m,n)==1){
-				IEV_condition=1;
-			}
-			else{
-				IEV_condition=0;
-			}
-
-			if (this->dnaChain->topl<1.5){ 
-				topo_condition=1;
-			}
-			else{
-				topo_condition=0;
+			if (IEV_condition==1){
+				if (this->dnaChain->topl<1.5){ 
+					topo_condition=1;
+				}
+				else{
+					topo_condition=-1;
+				}
 			}
 
-			if (E_condition==1 && IEV_condition==1  && topo_condition==1){
+			if (E_condition==1 && rigid_IEV_condition==1 
+				&& IEV_condition==1  && topo_condition==1){
 					this->dnaChain->stats.crk_accepts++;		
 			}
 			else{
@@ -269,6 +283,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			E_condition=0;
 			IEV_condition=0;
     		topo_condition=0;
+			rigid_IEV_condition=0;
+			
+			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
+			E_condition=0;
+			IEV_condition=0;
+    		topo_condition=0;
+			rigid_IEV_condition=0;
 
 			if (dE < 0){
 				E_condition=1;
@@ -283,25 +304,33 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					 E_condition=1;
 				}
 				else{
-					 E_condition=0;
+					 E_condition=-1;
 				}
 			}
+			
+			if (E_condition==1 && RG.IEV_spheres(m,n)==1){
+				rigid_IEV_condition=1;
+			}
+			else{
+				rigid_IEV_condition=-1;
+			}
 
-			if (this->dnaChain->IEV(m,n)==1){
+			if (rigid_IEV_condition==1 && this->dnaChain->IEV(m,n)==1){
 				IEV_condition=1;
 			}
 			else{
-				IEV_condition=0;
+				IEV_condition=-1;
 			}
 
-			if (this->dnaChain->topl<1.5){
+			if (IEV_condition==1 && this->dnaChain->topl<1.5){ 
 				topo_condition=1;
 			}
 			else{
-				topo_condition=0;
+				topo_condition=-1;
 			}
 
-			if (E_condition==1 && IEV_condition==1  && topo_condition==1){
+			if (E_condition==1 && rigid_IEV_condition==1 
+				&& IEV_condition==1  && topo_condition==1){
 				dnaChain->stats.rpt_accepts++;
 			}
 			else{
@@ -337,8 +366,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
 			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
-			(*fp_log)<<" Flags(E,IEV,topo)"<<"["
+			(*fp_log)<<" Flags(E,rigidIEV,IEV,topo)"<<"["
 				<<E_condition<<"(dE="<<dE<<"),"
+				<<rigid_IEV_condition<<","
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.

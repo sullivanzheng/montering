@@ -11,5 +11,6 @@ long protect_list[maxa];
 long reptation_maxlen;
 long reptation_minlen;
 long rept_move_range;
+long VolEx_cutoff_rigidbody;
 
 

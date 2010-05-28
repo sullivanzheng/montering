@@ -8,9 +8,6 @@ long maindo(){
 }
 
 long main(){
-	//maindo();
-	using namespace std;
-	for (long i=0;i<100;i++){
-		cout<<drand(1.0)<<" ";
-	}
+	maindo();
+	return 0;
 }

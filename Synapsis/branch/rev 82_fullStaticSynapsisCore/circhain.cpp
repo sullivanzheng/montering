@@ -353,6 +353,69 @@ g4:         if(ddd<er*er) idiam=0;
 	return iev;
 }
 
+long CircularChain::IEV_with_rigidbody( long in,  long ik){
+// Excluded volume effects, enhanced version with the existense of rigidbody.
+// Chain segments in immediate adjacency of the contour are excluded 
+// Global variable VolEx_cutoff_rigidbody is used.
+// iev=0 corresponds to intersection
+// iev=1 corresponds to no intersection
+// This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
+// ER AND ER2 are volume exclusion DIAMETER.
+
+	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+	{
+		cout<<"Illegal values of in and ik "
+			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
+		exit(EXIT_FAILURE);
+	}
+	
+	long temp;
+	if (in>ik) {temp=in;in=ik;ik=temp;}
+
+	long iev=0,idiam=1;
+	const double eps=1e-7;
+	double xij,yij,zij,a2,ddd;
+	double b,b2,rna,rnb,ak,bk,t;
+	double er,er2;				//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+	er=this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+
+	for (long i=in;i<=ik;i++){				// do 2 i=in,ik
+		for (long j=0;j<=maxnum;j++){		// do 3 j=1,jr1
+			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
+			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
+			if ((protect_list[i-VolEx_cutoff_rigidbody]==1 ||
+				protect_list[i+VolEx_cutoff_rigidbody+1]==1) &&
+				protect_list[j]==1) continue;
+/*			if (protect_list[i]==1 || protect_list[j]==1) continue; */
+			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
+			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
+			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
+			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
+			ddd=a2;//ddd=a2
+			if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
+			b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
+			b2=1.0-b*b; //b2=1.-b*b
+			rna=xij*C[i].dx+yij*C[i].dy+zij*C[i].dz;//rna=xij*dx(i)+yij*dy(i)+zij*dz(i)
+			rnb=xij*C[j].dx+yij*C[j].dy+zij*C[j].dz;//rnb=xij*dx(j)+yij*dy(j)+zij*dz(j)
+			if(fabs(b2) < eps) goto g1; // if dXi//dXj   //if(abs(b2).lt.eps) goto 1
+			ak=(rna-rnb*b)/b2;
+			bk=(-rnb+rna*b)/b2;
+			if(( ak<0 || ak>1 ) || (bk<0 || bk >1) ) goto g1;//if((ak.lt.0..or.ak.gt.1.).or.(bk.lt.0..or.bk.gt.1.)) goto 1
+			ddd=a2+bk*bk+ak*ak+2.*bk*rnb-2.*ak*rna-2.*ak*bk*b;
+			goto g4;
+g1:         if(rna<0 || rna>1) goto g5;
+			ddd=a2-rna*rna;
+g5:         if(rnb>0 || rnb<-1.) goto g4;
+			t=a2-rnb*rnb;
+			if(t<ddd) ddd=t;
+g4:         if(ddd<er*er) idiam=0;
+		}//3 continue
+	if(idiam==0) return iev;//iev=0 here;
+	}    //2 continue
+	iev=1;
+	return iev;
+}
+
 double CircularChain::Slow_E_t_updateWrithe_E_t(){
 	double temp[3];double dX[3];
 	double _writhe=0;
@@ -472,6 +535,11 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			cls_rigid temp_rigid(target, r_protect, r_ref_v);
 			this->R.push_back(temp_rigid);
 		}
+		else if (token==string("sphere")){
+			sphere s;
+			sline>>s.rg0>>s.x0>>s.rg1>>s.x1>>s.d;
+			this->spheres.push_back(s);
+		}
 		else if (token==string("[endoffile]")){
 			hard_eof=1;
 		}
@@ -481,6 +549,36 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		for (long j=0;j<this->R[i].protect.size();j++)
 			this->protect.push_back(R[i].protect[j]);
 	this->update_allrigid_and_E();
+}
+
+int allrigid::IEV_spheres(long m, long n){
+	//return 0-intersetion 1-no intersection
+	vector<sphere>::iterator it;
+	for ( it=this->spheres.begin(); it < this->spheres.end() ; it++){
+
+		CircularChain *t0=this->R[it->rg0].target;
+		CircularChain *t1=this->R[it->rg1].target;
+		long pt0=this->R[0].protect[it->x0];
+		long pt1=this->R[1].protect[it->x1];
+		double cx=(t0->C[pt0].x + t1->C[pt1].x)/2.;
+		double cy=(t0->C[pt0].y + t1->C[pt1].y)/2.;
+		double cz=(t0->C[pt0].z + t1->C[pt1].z)/2.;
+			
+		long p=m;
+		for (p=m; wrap(p+1,totsegnum)!=n ; p=wrap(p+1,totsegnum) ){
+			if (protect_list[p-VolEx_cutoff_rigidbody]==1 ||
+				protect_list[p+VolEx_cutoff_rigidbody-2]==1) continue;
+
+			if (modu(t0->C[p].x - cx,t0->C[p].y - cy,t0->C[p].z - cz) < it->d/2.)
+						 return 0;
+
+			if (modu(t0->C[p].x + 0.5 * t0->C[p].dx - cx,
+				     t0->C[p].y + 0.5 * t0->C[p].dy - cy,
+					 t0->C[p].z + 0.5 * t0->C[p].dz - cz) < it->d/2.)
+						 return 0;
+		}
+	}
+	return 1;
 }
 
 double allrigid::update_allrigid_and_E(){
