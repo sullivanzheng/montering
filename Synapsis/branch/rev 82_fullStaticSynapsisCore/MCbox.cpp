@@ -58,8 +58,7 @@ MCbox_circular::MCbox_circular(char const *configFile){
 			"between alleged number of segment in _config file and the actual number of"
 			" segments."<<endl;
 		exit(EXIT_FAILURE);
-	}
-
+	}	
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
