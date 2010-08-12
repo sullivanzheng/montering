@@ -272,7 +272,7 @@ void CircularChain::snapshot(char *filename)
 	long i;
 	if (!fh.good())
 	{
-		cout << "file not writable" << endl;
+		cout << filename << " file not writable" << endl;
 		getchar();
 		exit(EXIT_FAILURE);
 	}
@@ -438,13 +438,82 @@ long CircularChain::IEV( long in,  long ik){
 	return 1;
 }
 
-long CircularChain::IEV_with_rigidbody( long in,  long ik){
+long CircularChain::IEV_Alex( long in,  long ik, double info[3]){
+// excluded volume effects
+// iev=0 corresponds to intersection
+// iev=1 corresponds to no intersection
+// This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
+// ER AND ER2 are volume exclusion DIAMETER.
+
+        if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+        {
+                cout<<"Illegal values of in and ik "
+                        "at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
+                exit(EXIT_FAILURE);
+        }
+        
+        long temp;
+        if (in>ik) {temp=in;in=ik;ik=temp;}
+
+        long iev=0,idiam=1;
+        const double eps=1e-7;
+        double xij,yij,zij,a2,ddd;
+        double b,b2,rna,rnb,ak,bk,t;
+        double er,er2;                          //PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+        er=this->VolEx_R*2.0;           //That is why we need to time this->VolEx_R by 2.0
+
+        for (long i=in;i<=ik;i++){                              // do 2 i=in,ik
+                for (long j=0;j<=maxnum;j++){           // do 3 j=1,jr1
+                        if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
+
+      					long tempi=i<j?i:j,tempj=i<j?j:i;
+						if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
+
+/*                      if (protect_list[i]==1 || protect_list[j]==1) continue; */
+                        xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
+                        yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
+                        zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
+                        a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
+                        ddd=a2;//ddd=a2
+                        if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
+                        b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
+                        b2=1.0-b*b; //b2=1.-b*b
+                        rna=xij*C[i].dx+yij*C[i].dy+zij*C[i].dz;//rna=xij*dx(i)+yij*dy(i)+zij*dz(i)
+                        rnb=xij*C[j].dx+yij*C[j].dy+zij*C[j].dz;//rnb=xij*dx(j)+yij*dy(j)+zij*dz(j)
+                        if(fabs(b2) < eps) goto g1; // if dXi//dXj   //if(abs(b2).lt.eps) goto 1
+                        ak=(rna-rnb*b)/b2;
+                        bk=(-rnb+rna*b)/b2;
+                        if(( ak<0 || ak>1 ) || (bk<0 || bk >1) ) goto g1;//if((ak.lt.0..or.ak.gt.1.).or.(bk.lt.0..or.bk.gt.1.)) goto 1
+                        ddd=a2+bk*bk+ak*ak+2.*bk*rnb-2.*ak*rna-2.*ak*bk*b;
+                        goto g4;
+g1:					if(rna<0 || rna>1) goto g5;
+                        ddd=a2-rna*rna;
+g5:			        if(rnb>0 || rnb<-1.) goto g4;
+                        t=a2-rnb*rnb;
+                        if(t<ddd) ddd=t;
+g4:					if(ddd<er*er) {
+						idiam=0;
+						info[0]=i;
+						info[1]=j;
+						return iev;
+					}
+				if (idiam == 0) 
+					return iev;
+				}//3 continue
+		}    //2 continue
+        iev=1;
+        return iev;
+}
+
+long CircularChain::IEV_with_rigidbody( long in,  long ik, double info[3]){
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
 // This subroutine is adapted from:
 //       http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm.
 // ER is volume exclusion DIAMETER.
+
+// info will be used to passback the first i,j segment pair that collides.
 
 	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
@@ -559,7 +628,11 @@ long CircularChain::IEV_with_rigidbody( long in,  long ik){
 			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
 			
 			//Collision detected, subroutine returns with 0;
-			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) return 0;
+			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) {
+				info[0]=i;
+				info[1]=j;
+				return 0;
+			}
 		}
 	}
 	//No collision detected

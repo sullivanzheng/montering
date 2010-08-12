@@ -222,7 +222,7 @@ void Chain::snapshot(char *filename)
 	char buf[300];
 	if (!fh.good())
 	{
-		cout << "file not writable" << endl;
+		cout << filename<<" file not writable" << endl;
 		getchar();
 		exit(EXIT_FAILURE);
 	}

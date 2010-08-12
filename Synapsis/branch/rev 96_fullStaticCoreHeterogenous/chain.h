@@ -7,7 +7,7 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
-#include <string>
+#include <cstring>
 #include <sstream>
 #include "math/mtrand.h"
 #include "chainconst.h"
@@ -197,7 +197,8 @@ public:
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	virtual void snapshot(char *filename);
 	long IEV(long in, long ik);
-	long IEV_with_rigidbody( long in,  long ik);
+	long IEV_Alex(long in, long ik, double info[3]);
+	long IEV_with_rigidbody( long in,  long ik, double info[3]);
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	long checkConsistancy();
 	long getBranchNumber();
