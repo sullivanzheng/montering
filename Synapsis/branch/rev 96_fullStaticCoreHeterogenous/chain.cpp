@@ -36,31 +36,50 @@ long Chain::readIniFile(char const *filename)
 		getchar();
 		exit(EXIT_FAILURE);
 	}
+
+	//initialize x,y,z,dx,dy,dz
 	C[0].x = C[0].y = C[0].z = 0;
+
 	file_st >> C[0].dx;
 	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dx;
 		C[i].x = C[i - 1].x + C[i - 1].dx;
 	}
+
 	file_st >> C[0].dy;
 	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dy;
 		C[i].y = C[i - 1].y + C[i - 1].dy;
 	}
+
 	file_st >> C[0].dz;
 	for (long i = 1; i < maxnum + 1; i++)
 	{
 		file_st >> C[i].dz;
 		C[i].z = C[i - 1].z + C[i - 1].dz;
 	}
+
+	//initialize l (the length of the segment) and contour length.
+	this-> contour_length = 0;
+	for (long i = 0; i < maxnum + 1;i++){
+		C[i].l=sqrt(C[i].dx * C[i].dx +
+					C[i].dy * C[i].dy +
+					C[i].dz * C[i].dz);
+		contour_length += C[i].l;
+	}
+
 	file_st.close();
+	
 	return 0;
 }
 
 void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 {
+	//M[3][3]: the output rotation matrix
+	//rv[3]: rotation vector (rotation axis determined by right hand rule)
+	//a: angle of rotation in radian
 	double cosa;
 	double sina;
 	cosa = cos(a);
@@ -120,19 +139,22 @@ void Chain::SetRotM_crankshaft(double M[3][3],long m, long n, double a)
 }
 
 void Chain::normalize(){
-    for (long i=0;i<=maxnum-1;i++){
+	long i=0;
+    for (i=0;i <= maxnum-1;i++){
         double temp=modu(C[i].dx,C[i].dy,C[i].dz);
-        C[i].dx/=temp;
-        C[i].dy/=temp;
-        C[i].dz/=temp;
+        C[i].dx = C[i].dx / temp * C[i].l;
+        C[i].dy = C[i].dy / temp * C[i].l;
+        C[i].dz = C[i].dz / temp * C[i].l;
         C[i+1].x=C[i].x+C[i].dx;
         C[i+1].y=C[i].y+C[i].dy;
         C[i+1].z=C[i].z+C[i].dz;
     }
-    double temp=modu(C[maxnum].dx,C[maxnum].dy,C[maxnum].dz);
-    C[maxnum].dx/=temp;
-    C[maxnum].dy/=temp;
-    C[maxnum].dz/=temp;
+	
+	i = maxnum;
+	double temp=modu(C[i].dx,C[i].dy,C[i].dz);
+	C[i].dx = C[i].dx / temp * C[i].l;
+	C[i].dy = C[i].dy / temp * C[i].l;
+	C[i].dz = C[i].dz / temp * C[i].l;
 }
 
 double Chain::calAngle(segment &C1, segment &C2)
@@ -140,8 +162,8 @@ double Chain::calAngle(segment &C1, segment &C2)
 	double temp;
 	double angle;
 	temp = C1.dx * C2.dx + C1.dy * C2.dy + C1.dz * C2.dz;
-    temp = temp/modu(C1.dx,C1.dy,C1.dz)
-        /modu(C2.dx,C2.dy,C2.dz);
+	temp = temp/( C1.l * C2.l );
+    //temp = temp/(modu(C1.dx,C1.dy,C1.dz)*modu(C2.dx,C2.dy,C2.dz));
 	if (temp > 1 || temp < -1)
 	{
 		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.auto_moves, temp);
@@ -151,41 +173,26 @@ double Chain::calAngle(segment &C1, segment &C2)
 		angle = acos(temp);
 	return angle;
 }
-Chain::Chain(char const *filename, bool circular,long r_length)
+
+Chain::Chain(char const *filename, bool circular,long r_totsegnum)
 {   
-    this->endToEndSampleCycle=this->defaultSampleCycle;
-    if (r_length>maxa||r_length<5){
+    this->endToEndSampleCycle = this->defaultSampleCycle;
+    if (r_totsegnum>maxa || r_totsegnum<5){
          cout<<"The chain is too long or too short. Simulation aborted."<<endl
              <<"Chain with 5~910 segments are allowed."<<endl;
          getchar();
          exit(EXIT_FAILURE);
     }
-    maxnum=(this->length=r_length)-1;
+	this->totsegnum = r_totsegnum;
+    maxnum = this->totsegnum -1;
 	readIniFile(filename);
     //updateAllBangleKinkNum(); Calling virtual function is dangerous.		
 	updateAllBangle_Ini(circular);
     stats.resetStat();
 }
 
-Chain::Chain(bool circular,long r_length)
-{   
-    this->endToEndSampleCycle=this->defaultSampleCycle;
-    if (r_length>maxa||r_length<5){
-         cout<<"The chain is too long or too short. Simulation aborted."<<endl
-             <<"Chain with 5~910 segments are allowed."<<endl;
-         getchar();
-         exit(EXIT_FAILURE);
-    }
-	this->length=r_length;
-	maxnum=(this->length)-1;
-	this->initializeCircle(length);
-	//updateAllBangleKinkNum(); Calling virtual function is dangerous.		
-	updateAllBangle_Ini(circular);
-    stats.resetStat();
-}
-
 //updateAllBangle_Ini is supposed to be used in constructor.		
-//Therefore it contains a "curcular" parameter that make it not virtual.		
+//Therefore it contains a "circular" parameter that make it not virtual.		
 void Chain::updateAllBangle_Ini(bool circular = false)		
 {		
 	if (circular){		
@@ -221,10 +228,12 @@ void Chain::snapshot(char *filename)
 	}
 	sprintf(buf, "%6d %20s", maxnum + 1, "[General Chain Snapshot, treat as Linear]");
 	fh << buf << endl;
+
     long	i=0;
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
         i + 1, "F", C[i].x, C[i].y, C[i].z, 1, 1);
 	fh << buf << endl;
+
 	for (i = 1; i <= maxnum-1; i++)
 	{
 		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
@@ -238,6 +247,7 @@ void Chain::snapshot(char *filename)
         C[maxnum].z + C[maxnum].dz, 1, maxnum);
 	fh << buf << endl;
 
+	//Output detailed information of the chain.
     fh << endl << "Detailed Info" << endl;
 	for (i = 0; i < maxnum; i++)
 	{
@@ -250,6 +260,7 @@ void Chain::snapshot(char *filename)
             C[i].bangle);
 		fh << buf << endl;
 	}
+
 	i=maxnum;
     sprintf(buf, "seg %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15s %15.10f", 
             i+1, C[i].dx,C[i].dy,C[i].dz,

@@ -7,8 +7,7 @@
 extern long maxnum, totsegnum;
 extern long crank_min_length,crank_max_length;
 extern long VEcutoff;
-extern double g;//(k=150)//g=2.402948861(k=10),k=1,
-extern double bpperseg;
+extern double bpperunit;
 extern double maxRotAng;//crankshaft
 extern double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 						//supposed to create local fluctuation.

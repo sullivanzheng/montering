@@ -16,7 +16,7 @@ long CircularChain::updateAllBangle()
 }		
 
 double CircularChain::updateBangle(long i)		
-{		
+{
 	if (i > maxnum || i < 0)		
 	{		
 		printf("bangle update (num): refered to non-existing segment %d", i);		
@@ -42,22 +42,33 @@ void CircularChain::driftProof()
 	C[0].x = C[0].y = C[0].z = 0.0;
 }
 
-CircularChain::CircularChain(char const *filename,const long length)
-:Chain(filename,true,length){
+CircularChain::CircularChain(char const *filename,const long totsegnum)
+:Chain(filename,true,totsegnum){
 	this->snapshot("ini.txt");
 }
 
-CircularChain::CircularChain(long length):Chain(true,length){
-	this->snapshot("ini.txt");
+double CircularChain::G_b(long n){
+	return getg(n) * C[n].bangle * C[n].bangle ;
+}
+
+double CircularChain::getg(long n){
+	//return rigidity constant of the starting point of segment C[n]
+	static double a = 141./bpperunit; //persistence length in # of unit length.
+	double g; //Rigidity constant s.t. E = g * bangle * bangle;
+	long n_pre = (n==0) ? maxnum : (n-1);
+	g = 1/( (C[n_pre].l+C[n].l) / a );
+	return g;
 }
 
 double CircularChain::calG_bSum()
 {
 	double temp = 0;
 	for (long i = 0; i < maxnum + 1; i++)
-		temp += G_b(C[i].bangle);
+		temp += G_b(i);
 	return temp;
 }
+
+
 long CircularChain::crankshaft(long m, long n, double a)
 {
 	//Crankshaft for an angle
@@ -68,12 +79,14 @@ long CircularChain::crankshaft(long m, long n, double a)
 		cout<<"Illegal values of m and n ("<<m<<','<<n<<')';
 		exit(EXIT_FAILURE);
 	}
-	//how many moves are accepted.
+
+	//Anti-drift.
 	if (fabs(C[0].x) > (totsegnum) / 2 || fabs(C[0].y) > (totsegnum) / 2 || fabs(C[0].z) > (totsegnum) / 2)
 	{
 		cout << "Step #" << stats.auto_moves() << " Drift proof." << endl;
 		driftProof();
 	}
+
 	double M[3][3];
 	SetRotM_crankshaft(M, m, n, a);
 	long i;
@@ -96,8 +109,10 @@ long CircularChain::crankshaft(long m, long n, double a)
 		C[j].z = C[i].z + C[i].dz;
 		i = j;
 	}
+
 	updateBangle(m);	
 	updateBangle(n);
+
 	return 0;
 }
 
@@ -141,6 +156,23 @@ double CircularChain::dE_reptation(long m, long n, long move){
 	//Lazy method: moving move(move < 0) is equivalent to moving rep_segnum+move;
 	move=wrap(move,rep_segnum);
 
+
+
+	//Illustration:
+	//Before movement:
+	//          |<-----n-move-m------> |<-----move----> |
+	//-->-->--> |-->-->-->-->-->-->--> |-->-->-->-->--> |-->-->-->-->-->-->-->-->
+	//          m                      n-move       n-1 n
+
+	//After movement:
+	//          |<-----move----> |<-----n-move-m------> |
+	//-->-->--> |-->-->-->-->--> |-->-->-->-->-->-->--> |-->-->-->-->-->-->-->-->
+	//          m                m+move             n-1 n
+
+
+	//store the initial energy at cleaving points
+	double initialG_b = G_b(m) + G_b(n) + G_b(wrap(n-move,totsegnum));
+
 	//copy n-move ~ n-1 vector to temp;
 	i=wrap(n-move,totsegnum);j=0;
 	while (i!=n){
@@ -177,19 +209,10 @@ double CircularChain::dE_reptation(long m, long n, long move){
 	}
 	
 	//Return the delta E: the change of energy.
-	//The bandangles have only been altered at three locations. m,n and m+move
-	double _a[3];
-	_a[0]=this->C[m].bangle;
-	_a[1]=this->C[wrap(m+move,totsegnum)].bangle;
-	_a[2]=this->C[n].bangle;
-	double a[3];
-	a[0]=this->updateBangle(m);
-	a[1]=this->updateBangle(wrap(m+move,totsegnum));
-	a[2]=this->updateBangle(n);
-	double dE=0;
-	for (i=0;i<3;i++){
-		dE+=G_b(a[i])-G_b(_a[i]);
-	}
+	this->updateBangle(m);
+	this->updateBangle(wrap(m+move,totsegnum));
+	this->updateBangle(n);
+	double dE = G_b(m) + G_b(n) + G_b(wrap(m+move,totsegnum)) - initialG_b;
 	return dE;
 }
 
@@ -230,7 +253,9 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 
 	//double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
 	//C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength
-	dE = (+G_b(newA1) + G_b(newA2) - G_b(oldA1) - G_b(oldA2));
+	double gm = getg(m), gn = getg(n);
+	dE = gm * newA1 * newA1 + gn * newA2 * newA2
+	   - gm * oldA1 * oldA1 - gn * oldA2 * oldA2;
 
 	/*
 	C_=2*pi*pi*C;
@@ -299,8 +324,9 @@ long CircularChain::IEV( long in,  long ik){
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
-// This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
-// ER AND ER2 are volume exclusion DIAMETER.
+// This subroutine is adapted from:
+//       http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm.
+// ER is volume exclusion DIAMETER.
 
 	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
@@ -312,55 +338,113 @@ long CircularChain::IEV( long in,  long ik){
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	long iev=0,idiam=1;
-	const double eps=1e-7;
-	double xij,yij,zij,a2,ddd;
-	double b,b2,rna,rnb,ak,bk,t;
-	double er,er2;				//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
-	er=this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+	const float eps = 2e-7;
+    
+	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+	float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
-	for (long i=in;i<=ik;i++){				// do 2 i=in,ik
-		for (long j=0;j<=maxnum;j++){		// do 3 j=1,jr1
-			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
-			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
-/*			if (protect_list[i]==1 || protect_list[j]==1) continue; */
-			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
-			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
-			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
-			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
-			ddd=a2;//ddd=a2
-			if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
-			b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
-			b2=1.0-b*b; //b2=1.-b*b
-			rna=xij*C[i].dx+yij*C[i].dy+zij*C[i].dz;//rna=xij*dx(i)+yij*dy(i)+zij*dz(i)
-			rnb=xij*C[j].dx+yij*C[j].dy+zij*C[j].dz;//rnb=xij*dx(j)+yij*dy(j)+zij*dz(j)
-			if(fabs(b2) < eps) goto g1; // if dXi//dXj   //if(abs(b2).lt.eps) goto 1
-			ak=(rna-rnb*b)/b2;
-			bk=(-rnb+rna*b)/b2;
-			if(( ak<0 || ak>1 ) || (bk<0 || bk >1) ) goto g1;//if((ak.lt.0..or.ak.gt.1.).or.(bk.lt.0..or.bk.gt.1.)) goto 1
-			ddd=a2+bk*bk+ak*ak+2.*bk*rnb-2.*ak*rna-2.*ak*bk*b;
-			goto g4;
-g1:         if(rna<0 || rna>1) goto g5;
-			ddd=a2-rna*rna;
-g5:         if(rnb>0 || rnb<-1.) goto g4;
-			t=a2-rnb*rnb;
-			if(t<ddd) ddd=t;
-g4:         if(ddd<er*er) idiam=0;
-		}//3 continue
-	if(idiam==0) return iev;//iev=0 here;
-	}    //2 continue
-	iev=1;
-	return iev;
+	for (long i=in;i<=ik;i++){		
+		for (long j=0;j<=maxnum;j++){
+
+			if (j >= in && j <= ik) continue;
+
+      		long tempi=i<j?i:j,tempj=i<j?j:i;
+			if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
+			
+			float wx,wy,wz,w2;
+			//wji=Xi-Xj
+			wx = C[i].x-C[j].x;
+			wy = C[i].y-C[j].y;
+			wz = C[i].z-C[j].z;
+			//if far far away
+			w2 = wx*wx + wy*wy + wz*wz;
+			if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+
+			float a,b,c,d,e,D;
+			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
+			b = C[i].dx * C[j].dx + C[i].dy * C[j].dy + C[i].dz * C[j].dz;
+			c = C[j].dx * C[j].dx + C[j].dy * C[j].dy + C[j].dz * C[j].dz;
+
+			d = C[i].dx * wx + C[i].dy * wy + C[i].dz * wz;
+			e = C[j].dx * wx + C[j].dy * wy + C[j].dz * wz;
+
+			D = a * c - b * b;
+			
+			float    sc, sN, sD = D;      // sc = sN / sD, default sD = D >= 0
+			float    tc, tN, tD = D;      // tc = tN / tD, default tD = D >= 0
+
+			// compute the line parameters of the two closest points
+			if (D < eps) { // the lines are almost parallel
+				sN = 0.0;        // force using point P0 on segment S1
+				sD = 1.0;        // to prevent possible division by 0.0 later
+				tN = e;
+				tD = c;
+			}
+			else {                // get the closest points on the infinite lines
+				sN = (b*e - c*d);
+				tN = (a*e - b*d);
+				if (sN < 0.0) {       // sc < 0 => the s=0 edge is visible
+					sN = 0.0;
+					tN = e;
+					tD = c;
+				}
+				else if (sN > sD) {  // sc > 1 => the s=1 edge is visible
+					sN = sD;
+					tN = e + b;
+					tD = c;
+				}
+			}
+
+			if (tN < 0.0) {           // tc < 0 => the t=0 edge is visible
+				tN = 0.0;
+				// recompute sc for this edge
+				if (-d < 0.0)
+					sN = 0.0;
+				else if (-d > a)
+					sN = sD;
+				else {
+					sN = -d;
+					sD = a;
+				}
+			}
+			else if (tN > tD) {      // tc > 1 => the t=1 edge is visible
+				tN = tD;
+				// recompute sc for this edge
+				if ((-d + b) < 0.0)
+					sN = 0;
+				else if ((-d + b) > a)
+					sN = sD;
+				else {
+					sN = (-d + b);
+					sD = a;
+				}
+			}
+			// finally do the division to get sc and tc
+			sc = (abs(sN) < eps ? 0.0 : sN / sD);
+			tc = (abs(tN) < eps ? 0.0 : tN / tD);
+
+			//get the difference of the two closest points
+			//Vector   dP = w + (sc * u) - (tc * v); 
+			float dPx,dPy,dPz;
+			dPx = wx + (sc * C[i].dx) - (tc * C[j].dx);
+			dPy = wy + (sc * C[i].dy) - (tc * C[j].dy);
+			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
+			
+			//Collision detected, subroutine returns with 0;
+			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) return 0;
+		}
+	}
+	//No collision detected
+	return 1;
 }
 
 long CircularChain::IEV_with_rigidbody( long in,  long ik){
-// Excluded volume effects, enhanced version with the existense of rigidbody.
-// Chain segments in immediate adjacency of the contour are excluded 
-// Global variable VolEx_cutoff_rigidbody is used.
+// excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
-// This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
-// ER AND ER2 are volume exclusion DIAMETER.
+// This subroutine is adapted from:
+//       http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm.
+// ER is volume exclusion DIAMETER.
 
 	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
@@ -372,75 +456,120 @@ long CircularChain::IEV_with_rigidbody( long in,  long ik){
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	long iev=0,idiam=1;
-	const double eps=1e-7;
-	double xij,yij,zij,a2,ddd;
-	double b,b2,rna,rnb,ak,bk,t;
-	double er,er2;				//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
-	er=this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+	const float eps = 2e-7;
+    
+	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+	float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
-	for (long i=in;i<=ik;i++){				// do 2 i=in,ik
-		for (long j=0;j<=maxnum;j++){		// do 3 j=1,jr1
-			if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
-			if (abs(i-j) <= VEcutoff) continue;//(if(iabs(i-j).le.lll) goto 3
+	for (long i=in;i<=ik;i++){		
+		for (long j=0;j<=maxnum;j++){
+			if (j >= in && j <= ik) continue;
+
+			long tempi,tempj;
+			if (i<j){
+				tempi=i;tempj=j;
+			}
+			else{
+				tempi=j;tempj=i;
+			}
+			//TODO: test this new cutoff algorithm.
+			if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
+
 			if ((protect_list[i-VolEx_cutoff_rigidbody]==1 ||
 				protect_list[i+VolEx_cutoff_rigidbody+1]==1) &&
-				protect_list[j]==1) continue;
-/*			if (protect_list[i]==1 || protect_list[j]==1) continue; */
-			xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
-			yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
-			zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
-			a2=modu2(xij,yij,zij);//a2=xij*xij+yij*yij+zij*zij
-			ddd=a2;//ddd=a2
-			if (a2 >= (2+er)*(2+er)) continue;// if(a2.ge.4.+4.*er+er2) goto 3
-			b=C[i].dx*C[j].dx+C[i].dy*C[j].dy+C[i].dz*C[j].dz;// b=dx(i)*dx(j)+dy(i)*dy(j)+dz(i)*dz(j)
-			b2=1.0-b*b; //b2=1.-b*b
-			rna=xij*C[i].dx+yij*C[i].dy+zij*C[i].dz;//rna=xij*dx(i)+yij*dy(i)+zij*dz(i)
-			rnb=xij*C[j].dx+yij*C[j].dy+zij*C[j].dz;//rnb=xij*dx(j)+yij*dy(j)+zij*dz(j)
-			if(fabs(b2) < eps) goto g1; // if dXi//dXj   //if(abs(b2).lt.eps) goto 1
-			ak=(rna-rnb*b)/b2;
-			bk=(-rnb+rna*b)/b2;
-			if(( ak<0 || ak>1 ) || (bk<0 || bk >1) ) goto g1;//if((ak.lt.0..or.ak.gt.1.).or.(bk.lt.0..or.bk.gt.1.)) goto 1
-			ddd=a2+bk*bk+ak*ak+2.*bk*rnb-2.*ak*rna-2.*ak*bk*b;
-			goto g4;
-g1:         if(rna<0 || rna>1) goto g5;
-			ddd=a2-rna*rna;
-g5:         if(rnb>0 || rnb<-1.) goto g4;
-			t=a2-rnb*rnb;
-			if(t<ddd) ddd=t;
-g4:         if(ddd<er*er) idiam=0;
-		}//3 continue
-	if(idiam==0) return iev;//iev=0 here;
-	}    //2 continue
-	iev=1;
-	return iev;
-}
+				protect_list[j]==1) continue;	
 
-double CircularChain::Slow_E_t_updateWrithe_E_t(){
-	double temp[3];double dX[3];
-	double _writhe=0;
-	for (long s=0;s<=maxnum;s++){
-		for (long t=0;t<=maxnum;t++){
-			if (s==t) continue;
-			Xprod_exp(C[t].dx,C[t].dy,C[t].dz,
-					  C[s].dx,C[s].dy,C[s].dz,temp);
-			dX[0]=C[t].x - C[s].x;
-			dX[1]=C[t].y - C[s].y;
-			dX[2]=C[t].z - C[s].z;
-			_writhe += dot_product(temp,dX)/pow(modu2V(dX),3.0/2.0)
-				/modu(C[t].dx, C[t].dy, C[t].dz)
-				/modu(C[s].dx, C[s].dy, C[s].dz);
+			float wx,wy,wz,w2;
+			//wji=Xi-Xj
+			wx = C[i].x-C[j].x;
+			wy = C[i].y-C[j].y;
+			wz = C[i].z-C[j].z;
+			//if far far away
+			w2 = wx*wx + wy*wy + wz*wz;
+			if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+
+			float a,b,c,d,e,D;
+			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
+			b = C[i].dx * C[j].dx + C[i].dy * C[j].dy + C[i].dz * C[j].dz;
+			c = C[j].dx * C[j].dx + C[j].dy * C[j].dy + C[j].dz * C[j].dz;
+
+			d = C[i].dx * wx + C[i].dy * wy + C[i].dz * wz;
+			e = C[j].dx * wx + C[j].dy * wy + C[j].dz * wz;
+
+			D = a * c - b * b;
+			
+			float    sc, sN, sD = D;      // sc = sN / sD, default sD = D >= 0
+			float    tc, tN, tD = D;      // tc = tN / tD, default tD = D >= 0
+
+			// compute the line parameters of the two closest points
+			if (D < eps) { // the lines are almost parallel
+				sN = 0.0;        // force using point P0 on segment S1
+				sD = 1.0;        // to prevent possible division by 0.0 later
+				tN = e;
+				tD = c;
+			}
+			else {                // get the closest points on the infinite lines
+				sN = (b*e - c*d);
+				tN = (a*e - b*d);
+				if (sN < 0.0) {       // sc < 0 => the s=0 edge is visible
+					sN = 0.0;
+					tN = e;
+					tD = c;
+				}
+				else if (sN > sD) {  // sc > 1 => the s=1 edge is visible
+					sN = sD;
+					tN = e + b;
+					tD = c;
+				}
+			}
+
+			if (tN < 0.0) {           // tc < 0 => the t=0 edge is visible
+				tN = 0.0;
+				// recompute sc for this edge
+				if (-d < 0.0)
+					sN = 0.0;
+				else if (-d > a)
+					sN = sD;
+				else {
+					sN = -d;
+					sD = a;
+				}
+			}
+			else if (tN > tD) {      // tc > 1 => the t=1 edge is visible
+				tN = tD;
+				// recompute sc for this edge
+				if ((-d + b) < 0.0)
+					sN = 0;
+				else if ((-d + b) > a)
+					sN = sD;
+				else {
+					sN = (-d + b);
+					sD = a;
+				}
+			}
+			// finally do the division to get sc and tc
+			sc = (abs(sN) < eps ? 0.0 : sN / sD);
+			tc = (abs(tN) < eps ? 0.0 : tN / tD);
+
+			//get the difference of the two closest points
+			//Vector   dP = w + (sc * u) - (tc * v); 
+			float dPx,dPy,dPz;
+			dPx = wx + (sc * C[i].dx) - (tc * C[j].dx);
+			dPy = wy + (sc * C[i].dy) - (tc * C[j].dy);
+			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
+			
+			//Collision detected, subroutine returns with 0;
+			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) return 0;
 		}
 	}
-	this->writhe = _writhe/4/PI;
-	this->E_t= 2 * PI * PI * C_t / (totsegnum * bpperseg) *
-				(dLk - this->writhe)*(dLk - this->writhe);
-	return this->E_t;
+	//No collision detected
+	return 1;
 }
 
 double CircularChain::E_t_updateWrithe_E_t(){
+	return 0; //RESUME;
 	this->writhe = this->_fastWr_topl_update();
-	this->E_t= 2 * PI * PI * C_t / (totsegnum * bpperseg) *
+	this->E_t= 2 * PI * PI * C_t / (this->contour_length * bpperunit) *
 				(dLk - this->writhe)*(dLk - this->writhe);
 	return this->E_t;
 }
@@ -636,6 +765,10 @@ double allrigid::update_allrigid_and_E(){
 	this->E += AxisBeta * (-15);
 	this->E += RadiusBeta * (-15);
 	this->E += r_siteI * 50;
+
+	//if the Complex I Site I -> Complex II Site II has the same distance as
+	//       Complex II Site I -> Complex I Site II.
+	//This will identify the symmetry of the complete synaptic complex (Complex I-II)
 	double symm;
 	for (long ii=0;ii<=2;ii++){
 		symm+= abs(

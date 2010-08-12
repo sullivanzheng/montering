@@ -17,10 +17,6 @@
 #include "SmallTypes.h"
 
 
-inline double G_b(double ang){
-	return g*ang*ang;//energy with quadratic energy term.
-}
-
 inline long wrap(long i, long roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
 		std::cout<<"[In global function 'warp']"
@@ -52,7 +48,7 @@ public:
 	void update_ref_v_xyz();
 };
 
-class allrigid  {
+class allrigid {
 private:
 	allrigid();
 public:
@@ -67,7 +63,7 @@ public:
 	double r;
 	double r_siteI;
 	std::vector<cls_rigid> R;
-	allrigid(char *configfile, CircularChain *taget);
+	allrigid(char *configfile, CircularChain *target);
 	std::vector<long> protect;
 	std::vector<sphere> spheres;
 	double update_allrigid_and_E();
@@ -111,11 +107,13 @@ public:
 	struct segment{
 		double x,y,z;
 		double dx,dy,dz;
+		double l; //segment length
 		double bangle;
     }C[maxa];//C stands for "Chain"
 
 protected:
-    long length;
+    long totsegnum;
+	double contour_length;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
 	static const long NORMALIZE_PERIOD=100000;
@@ -146,8 +144,7 @@ private:
 	explicit Chain(void) {};
 
 public:
-	Chain::Chain(bool circular,long r_length);
-	explicit Chain(char const *filename, bool circular, long r_length);
+	explicit Chain(char const *filename, bool circular, long r_totsegnum);
 	long dispChainCord();
 	virtual double calG_bSum() = 0;
 	virtual long crankshaft(long m, long n, double a) = 0;
@@ -191,8 +188,9 @@ public:
 	long productLk(long vertM, long vertN);
 	
 	CircularChain();
-	CircularChain(long length);
-	CircularChain(char const *filename,long length);
+	CircularChain(char const *filename,long totsegnum);
+	virtual double G_b(long n);
+	virtual double getg(long n);
 	virtual double calG_bSum();
 	virtual long crankshaft(long m, long n, double a);
 	virtual double dE_reptation(long m, long n, long move);
@@ -200,7 +198,6 @@ public:
 	virtual void snapshot(char *filename);
 	long IEV(long in, long ik);
 	long IEV_with_rigidbody( long in,  long ik);
-	double Slow_E_t_updateWrithe_E_t();
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	long checkConsistancy();
 	long getBranchNumber();

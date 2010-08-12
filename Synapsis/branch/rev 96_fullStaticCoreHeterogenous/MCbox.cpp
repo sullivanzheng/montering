@@ -7,16 +7,14 @@ MCbox_circular::MCbox_circular(char const *configFile){
 		protect_list[i]=0;
 	}
 	//#############################GLOBAL##############################
-	stringstream(config[string("length")])>>totsegnum;
+	stringstream(config[string("totsegnum")])>>totsegnum;
 	maxnum= totsegnum -1;
 
 	stringstream(config[string("crank_min_length")])>>crank_min_length;
 	stringstream(config[string("crank_max_length")])>>crank_max_length;
 	stringstream(config[string("VEcutoff")])>>VEcutoff;
 
-	stringstream(config[string("g")])>>g;
-
-	stringstream(config[string("bpperseg")])>>bpperseg;
+	stringstream(config[string("bpperunit")])>>bpperunit;
 
 	stringstream(config[string("maxRotAng")])>>maxRotAng;
 	maxRotAng=maxRotAng/180*PI;
@@ -58,7 +56,7 @@ MCbox_circular::MCbox_circular(char const *configFile){
 			"between alleged number of segment in _config file and the actual number of"
 			" segments."<<endl;
 		exit(EXIT_FAILURE);
-	}	
+	}
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -372,18 +370,21 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			(*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+			//RESUME: (*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
 
 //			Log Rigidbody status
 /*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl; */
 
 //			Log Gyration Radius
-/*			double gyration_ratio=this->calcGyration();
+			double gyration_ratio=this->calcGyration();
 			dnaChain->stats.gyration_ratio.push(gyration_ratio);
-			(*fp_log)<<"["<<moves<<"] ";
-			(*fp_log)<<"Rg "<<gyration_ratio<<endl;
-*/
+			(*fp_log)<<endl<<"$"<<moves<<"] ";
+			(*fp_log)<<"Rg "<<gyration_ratio
+				<<"<"<<dnaChain->stats.gyration_ratio.getMean()<<"+/-"
+				<<dnaChain->stats.gyration_ratio.getStdev()<<"/meanstd"
+				<<dnaChain->stats.gyration_ratio.getStdevOfMean()<<">"<<endl;
+
 
 //			Log Chain angle statistics
 /*			for (long i=0;i<=maxnum;i++)
@@ -407,8 +408,7 @@ void MCbox_circular::logParameters(void){
 			<<"===================GLOBAL VARIABLES====================="<<endl
 			<<" maxnum	= "<<	maxnum	<<endl
 			<<" crank_max_length (auto_generated)= "<<	crank_max_length	<<endl
-			<<" g "<<g<<endl
-			<<">totsegnum * bpperseg = total bp \t"<<totsegnum<<'*'<<bpperseg<<'='<<totsegnum*bpperseg<<endl
+			<<">totsegnum "<<totsegnum<<"  bpperunit"<<bpperunit<<endl
 			<<">maxRotAng	= "<<	maxRotAng	<<endl
 			<<" P_SMALLROTATION	="<< P_SMALLROTATION<<endl
 			<<">FilePrefix = "<<filePrefix<<endl

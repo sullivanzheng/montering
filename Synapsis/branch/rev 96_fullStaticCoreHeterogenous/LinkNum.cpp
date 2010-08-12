@@ -547,6 +547,7 @@ L295:
 }
 
 double CircularChain::_det(long n, double da[MAXMatrixDet*MAXMatrixDet])
+// Calculate the determinant of a matrix.
 {
     /* System generated locals */
     long i1, i2, i3;
