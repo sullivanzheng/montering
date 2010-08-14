@@ -204,15 +204,15 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
 				double info[3]={0,0,0},info_old[3]={0,0,0};
-				int IEVflag=this->dnaChain->IEV_with_rigidbody(m,n,info);
-				int IEVflag_old=this->dnaChain->IEV_Alex(m,n,info_old);
+				int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
+				int IEVflag_old=this->dnaChain->IEV_Alex_closeboundary(m,n,info_old);
 				if (IEVflag!=IEVflag_old){
 					char filebuf[100];
 					sprintf(filebuf,"IEVerr_c%d,%d_%010d_(new %d[%3.0f,%3.0f],old %d[%3.0f,%3.0f]).txt",
 						m,n,moves,IEVflag,info[0],info[1],IEVflag_old,info_old[0],info_old[1]);
 					this->dnaChain->snapshot(filebuf);
 				}
-				if (this->dnaChain->IEV_with_rigidbody(m,n,info)==1){
+				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
 						IEV_condition=1;
 					}
 					else{
@@ -320,7 +320,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
 				double info[3]={0,0,0};
-				if (this->dnaChain->IEV_with_rigidbody(m,n,info)==1){
+				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
 						IEV_condition=1;
 					}
 					else{

@@ -320,33 +320,33 @@ void CircularChain::snapshot(char *filename)
 	fh.close();
 }
 
-long CircularChain::IEV( long in,  long ik){
+long CircularChain::IEV_closeboundary( long in,  long ik){
+// closeboundary means from check it IEV from seg in's starting point to ik's starting point (ik-1's endpoint)
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
 // This subroutine is adapted from:
 //       http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm.
 // ER is volume exclusion DIAMETER.
+	long temp;
+	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+	if ((in<0||ik<1)||(in>maxnum-1 || ik>maxnum))
 	{
 		cout<<"Illegal values of in and ik "
 			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
 		exit(EXIT_FAILURE);
 	}
 	
-	long temp;
-	if (in>ik) {temp=in;in=ik;ik=temp;}
-
 	const float eps = 2e-7;
     
 	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
 	float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
-	for (long i=in;i<=ik;i++){		
+	for (long i=in;i<=ik-1;i++){		
 		for (long j=0;j<=maxnum;j++){
 
-			if (j >= in && j <= ik) continue;
+			if (j >= in && j <= ik-1) continue;
 
       		long tempi=i<j?i:j,tempj=i<j?j:i;
 			if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
@@ -438,22 +438,23 @@ long CircularChain::IEV( long in,  long ik){
 	return 1;
 }
 
-long CircularChain::IEV_Alex( long in,  long ik, double info[3]){
+long CircularChain::IEV_Alex_closeboundary( long in,  long ik, double info[3]){
+// closeboundary means from check it IEV from seg in's starting point to ik's starting point (ik-1's endpoint)
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
 // This subroutine is translated from A. Vologodskii Monte FORTRAN 77 program.
 // ER AND ER2 are volume exclusion DIAMETER.
 
-        if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
-        {
-                cout<<"Illegal values of in and ik "
-                        "at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
-                exit(EXIT_FAILURE);
-        }
-        
-        long temp;
-        if (in>ik) {temp=in;in=ik;ik=temp;}
+	long temp;
+	if (in>ik) {temp=in;in=ik;ik=temp;}
+
+	if ((in<0||ik<1)||(in>maxnum-1 || ik>maxnum))
+	{
+		cout<<"Illegal values of in and ik "
+			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
+		exit(EXIT_FAILURE);
+	}
 
         long iev=0,idiam=1;
         const double eps=1e-7;
@@ -462,9 +463,9 @@ long CircularChain::IEV_Alex( long in,  long ik, double info[3]){
         double er,er2;                          //PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
         er=this->VolEx_R*2.0;           //That is why we need to time this->VolEx_R by 2.0
 
-        for (long i=in;i<=ik;i++){                              // do 2 i=in,ik
+        for (long i=in;i<=ik-1;i++){                              // do 2 i=in,ik
                 for (long j=0;j<=maxnum;j++){           // do 3 j=1,jr1
-                        if (j >= in && j <= ik) continue;//if(j.ge.in.and.j.le.ik) goto 3
+                        if (j >= in && j <= ik-1) continue;//if(j.ge.in.and.j.le.ik) goto 3
 
       					long tempi=i<j?i:j,tempj=i<j?j:i;
 						if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
@@ -505,7 +506,8 @@ g4:					if(ddd<er*er) {
         return iev;
 }
 
-long CircularChain::IEV_with_rigidbody( long in,  long ik, double info[3]){
+long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double info[3]){
+// closeboundary means from check it IEV from seg in's starting point to ik's starting point (ik-1's endpoint)
 // excluded volume effects
 // iev=0 corresponds to intersection
 // iev=1 corresponds to no intersection
@@ -515,24 +517,25 @@ long CircularChain::IEV_with_rigidbody( long in,  long ik, double info[3]){
 
 // info will be used to passback the first i,j segment pair that collides.
 
-	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+	long temp;
+	if (in>ik) {temp=in;in=ik;ik=temp;}
+
+	if ((in<0||ik<1)||(in>maxnum-1 || ik>maxnum))
 	{
 		cout<<"Illegal values of in and ik "
 			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
 		exit(EXIT_FAILURE);
 	}
-	
-	long temp;
-	if (in>ik) {temp=in;in=ik;ik=temp;}
+
 
 	const float eps = 2e-7;
     
 	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
 	float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 
-	for (long i=in;i<=ik;i++){		
+	for (long i=in;i<=ik-1;i++){		
 		for (long j=0;j<=maxnum;j++){
-			if (j >= in && j <= ik) continue;
+			if (j >= in && j <= ik-1) continue;
 
 			long tempi,tempj;
 			if (i<j){
