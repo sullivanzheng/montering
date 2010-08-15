@@ -138,7 +138,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				if (testflag==0) break;
 
 				//From seg n to m-1
-				testflag=0;
+				//This section disabled since crank_max_length < totsegnum/2.
+				//If it can't pass the n~m-1 test, it won't pass the following one either
+				//since m~n-1 is longer than totsegnum/2.
+			   /* testp=n;testflag=0;
 				while (testp!=wrap(m,totsegnum)){
 					if (protect_list[testp]==1){
 						testflag=1;
@@ -146,6 +149,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					}
 					testp=wrap(testp+1,totsegnum);
 				}
+				if (testflag==0) break;*/
 			}while(testflag==1);
 
 			//(*this->fp_log)<<m<<' '<<n<<endl;
