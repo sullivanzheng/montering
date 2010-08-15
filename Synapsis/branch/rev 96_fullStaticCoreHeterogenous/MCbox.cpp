@@ -118,16 +118,28 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		long m,n;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		
-		if (drand(1.0)>P_REPT){
+		if (drand(1.0)>P_REPT){//==================================================================
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
 			long testp;long testflag;
 			do{
 				m=irand(maxnum+1);
-				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
+				n=wrap(m+irand(crank_min_length,crank_max_length+1),totsegnum);
 				//Check if containting any rigid body segments.
 				testp=m;testflag=0;
-				while (testp!=wrap(n+1,totsegnum)){
+				//From seg m to n-1
+				while (testp!=wrap(n,totsegnum)){
+					if (protect_list[testp]==1){
+						testflag=1;
+						break;
+					}
+					testp=wrap(testp+1,totsegnum);
+				}
+				if (testflag==0) break;
+
+				//From seg n to m-1
+				testflag=0;
+				while (testp!=wrap(m,totsegnum)){
 					if (protect_list[testp]==1){
 						testflag=1;
 						break;
@@ -136,7 +148,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				}
 			}while(testflag==1);
 
-			(*this->fp_log)<<m<<n<<endl;
+			//(*this->fp_log)<<m<<' '<<n<<endl;
 
 			//generate rotation angle.
 			double rotAng;
@@ -242,7 +254,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					dnaChain->E_t=cacheE_t;
 			}
 		}//End Crankshaft movement.
-		else{
+		else{//==================================================================================
 		//Reptation movement.
 			//generate reptation segment.
 			//The segment between vertices m and n will be changed.
