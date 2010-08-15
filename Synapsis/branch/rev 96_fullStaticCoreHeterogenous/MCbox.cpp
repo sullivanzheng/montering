@@ -136,6 +136,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				}
 			}while(testflag==1);
 
+			(*this->fp_log)<<m<<n<<endl;
+
 			//generate rotation angle.
 			double rotAng;
 			double selection;
@@ -204,14 +206,14 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
 				double info[3]={0,0,0},info_old[3]={0,0,0};
-				int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
+				/*int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
 				int IEVflag_old=this->dnaChain->IEV_Alex_closeboundary(m,n,info_old);
 				if (IEVflag!=IEVflag_old){
 					char filebuf[100];
 					sprintf(filebuf,"IEVerr_c%d,%d_%010d_(new %d[%3.0f,%3.0f],old %d[%3.0f,%3.0f]).txt",
 						m,n,moves,IEVflag,info[0],info[1],IEVflag_old,info_old[0],info_old[1]);
 					this->dnaChain->snapshot(filebuf);
-				}
+				}*/
 				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
 						IEV_condition=1;
 					}
@@ -380,21 +382,21 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			//RESUME: (*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+			(*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
 
 //			Log Rigidbody status
 /*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl; */
 
 //			Log Gyration Radius
-			double gyration_ratio=this->calcGyration();
+/*			double gyration_ratio=this->calcGyration();
 			dnaChain->stats.gyration_ratio.push(gyration_ratio);
 			(*fp_log)<<endl<<"$"<<moves<<"] ";
 			(*fp_log)<<"Rg "<<gyration_ratio
 				<<"<"<<dnaChain->stats.gyration_ratio.getMean()<<"+/-"
 				<<dnaChain->stats.gyration_ratio.getStdev()<<"/meanstd"
 				<<dnaChain->stats.gyration_ratio.getStdevOfMean()<<">"<<endl;
-
+*/
 
 //			Log Chain angle statistics
 /*			for (long i=0;i<=maxnum;i++)

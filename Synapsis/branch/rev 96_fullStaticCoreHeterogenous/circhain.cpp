@@ -467,10 +467,39 @@ long CircularChain::IEV_Alex_closeboundary( long in,  long ik, double info[3]){
                 for (long j=0;j<=maxnum;j++){           // do 3 j=1,jr1
                         if (j >= in && j <= ik-1) continue;//if(j.ge.in.and.j.le.ik) goto 3
 
+						//Volume exclusion waiver.
+						//Make sure there is no collision check between a segment in the vinicity of rigid body core.
+						if (
+							  (
+								(  
+								   protect_list[i-VolEx_cutoff_rigidbody]==1 
+								   ||
+								   protect_list[i+VolEx_cutoff_rigidbody+1]==1
+								) 
+								&&
+								protect_list[j]==1
+							  )
+							  ||
+							  (
+								(  
+								   protect_list[j-VolEx_cutoff_rigidbody]==1 
+								   ||
+								   protect_list[j+VolEx_cutoff_rigidbody+1]==1
+								) 
+								&&
+								protect_list[i]==1
+							  )
+						)continue;	
+
       					long tempi=i<j?i:j,tempj=i<j?j:i;
 						if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
 
-/*                      if (protect_list[i]==1 || protect_list[j]==1) continue; */
+						if (protect_list[i]==1 && protect_list[j]==1) {
+							cout <<"Illegal segment collision detection appeared."
+								"Should not detect collision inside core."<<endl;
+							cout <<"This error checking step is not for two half sites simulation"<<endl;
+							continue;
+						}
                         xij=this->C[j].x-this->C[i].x;    //xij=x(j)-x(i)
                         yij=this->C[j].y-this->C[i].y;//yij=y(j)-y(i)
                         zij=this->C[j].z-this->C[i].z;//zij=z(j)-z(i)
@@ -546,10 +575,29 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			}
 			//TODO: test this new cutoff algorithm.
 			if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
-
-			if ((protect_list[i-VolEx_cutoff_rigidbody]==1 ||
-				protect_list[i+VolEx_cutoff_rigidbody+1]==1) &&
-				protect_list[j]==1) continue;	
+			//Volume exclusion waiver.
+			//Make sure there is no collision check between a segment in the vinicity of rigid body core.
+			if (
+				  (
+					(  
+					   protect_list[i-VolEx_cutoff_rigidbody]==1 
+					   ||
+					   protect_list[i+VolEx_cutoff_rigidbody+1]==1
+					) 
+					&&
+					protect_list[j]==1
+				  )
+				  ||
+				  (
+					(  
+					   protect_list[j-VolEx_cutoff_rigidbody]==1 
+					   ||
+					   protect_list[j+VolEx_cutoff_rigidbody+1]==1
+					) 
+					&&
+					protect_list[i]==1
+				  )
+			)continue;	
 
 			float wx,wy,wz,w2;
 			//wji=Xi-Xj
@@ -643,7 +691,6 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 }
 
 double CircularChain::E_t_updateWrithe_E_t(){
-	return 0; //RESUME;
 	this->writhe = this->_fastWr_topl_update();
 	this->E_t= 2 * PI * PI * C_t / (this->contour_length * bpperunit) *
 				(dLk - this->writhe)*(dLk - this->writhe);
@@ -770,9 +817,19 @@ int allrigid::IEV_spheres(long m, long n){
 		double cz=(t0->C[pt0].z + t1->C[pt1].z)/2.;
 			
 		long p=m;
+
+		// Volume exclusion waiver.
+		// Diagram of how the volume exclusion waiver works.
+		// e.g.VolEx_cutoff_rigidbody=3
+		// protect list index:
+		//    -4-3-2-1 0 1 2 3 4 5 6 7 8  9 101112
+		//    [********************************]  
+		//->->->->->|->*>*>*>*>*>*>*>*>*>|->->->->
+		//   |1 2 3 |-------rigid--------|1	2 3 |
+		//->: free vector; *>: vector with protected (fixed) starting point.
 		for (p=m; wrap(p+1,totsegnum)!=n ; p=wrap(p+1,totsegnum) ){
-			if (protect_list[p-VolEx_cutoff_rigidbody]==1 ||
-				protect_list[p+VolEx_cutoff_rigidbody-2]==1) continue;
+			if (protect_list[p-VolEx_cutoff_rigidbody]==1 ||  
+				protect_list[p+VolEx_cutoff_rigidbody+1]==1) continue; 
 
 			if (modu(t0->C[p].x - cx,t0->C[p].y - cy,t0->C[p].z - cz) < it->d/2.)
 						 return 0;
