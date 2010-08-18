@@ -410,7 +410,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<"KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			(*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+			(*fp_log)<<" Lk_recomb="<<Lk_recomb;
+			if (Lk_recomb != 1 ){
+				char LkSnapBuf[100];
+				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
+				this->dnaChain->snapshot(LkSnapBuf);
+			}
 
 //			Log Rigidbody status
 /*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
