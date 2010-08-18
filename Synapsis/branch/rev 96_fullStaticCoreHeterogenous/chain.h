@@ -114,6 +114,7 @@ public:
 protected:
     long totsegnum;
 	double contour_length;
+	double max_seglength;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
 	static const long NORMALIZE_PERIOD=100000;

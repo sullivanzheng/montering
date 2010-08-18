@@ -546,6 +546,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 
 // info will be used to passback the first i,j segment pair that collides.
 
+
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
@@ -560,7 +561,8 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 	const float eps = 2e-7;
     
 	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
-	float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+	static float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+	static float cutoff2=(this->max_seglength+er)*(this->max_seglength+er);
 
 	for (long i=in;i<=ik-1;i++){		
 		for (long j=0;j<=maxnum;j++){
@@ -619,7 +621,10 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			wz = C[i].z-C[j].z;
 			//if far far away
 			w2 = wx*wx + wy*wy + wz*wz;
-			if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+//			if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+//Should use a faster version:
+			if (w2 > cutoff2) continue;
+
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;

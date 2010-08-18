@@ -63,11 +63,13 @@ long Chain::readIniFile(char const *filename)
 
 	//initialize l (the length of the segment) and contour length.
 	this-> contour_length = 0;
+	this-> max_seglength = 0;
 	for (long i = 0; i < maxnum + 1;i++){
 		C[i].l=sqrt(C[i].dx * C[i].dx +
 					C[i].dy * C[i].dy +
 					C[i].dz * C[i].dz);
 		contour_length += C[i].l;
+		if (C[i].l>this->max_seglength) this->max_seglength=C[i].l;
 	}
 
 	file_st.close();

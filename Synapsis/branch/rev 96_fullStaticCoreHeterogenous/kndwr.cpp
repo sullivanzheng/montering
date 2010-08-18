@@ -56,6 +56,9 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 /* cx(i) - x-value of i-th intersection */
 /* ic1(i) - number of undergoing segment for i-th intersection */
 /* ic2(i) - number of overgoing segment for i-th intersection */
+	static double cutoff=this->max_seglength;
+
+
     jr2 = jr1 - 2;
     n4 = 1;
     i__1 = jr2;
@@ -78,12 +81,20 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 		//This waiver is no more valid for heterogenous segmentation.
 	    /*if ((d__1 = px1 - px2, abs(d__1)) > 2.01) continue;
 		else if ((d__2 = py1 - py2, abs(d__2)) > 2.01) continue;*/
+
+		//Accelarated version of waiver.
+		d__1 = px1 - px2;
+		if ( d__1 > cutoff || d__1 < -cutoff) continue;
+		else{
+			d__2 = py1 - py2;
+			if ( d__2 > cutoff || d__2 < -cutoff) continue;
+		}
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
 	    px21 = x[n21 - 1];
 	    d__ = pdx2 * pdy1 - pdx1 * pdy2;
-	    if (abs(d__) < deps) {
+	    if (d__ < deps && d__ > -deps) {
 		goto L111;
 	    }
 	    pdx12 = pdx1 * pdx2;

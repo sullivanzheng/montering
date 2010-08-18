@@ -71,6 +71,7 @@ int CircularChain::kpoly(long ial[2],long ierr)
 		    d__2)) > 2.f) {
 		goto L111;
 	    }*/
+		//This waiver can be restored if the maximum segmentation is known.
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
