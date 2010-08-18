@@ -56,7 +56,7 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 /* cx(i) - x-value of i-th intersection */
 /* ic1(i) - number of undergoing segment for i-th intersection */
 /* ic2(i) - number of overgoing segment for i-th intersection */
-	static double cutoff=this->max_seglength;
+	static double cutoff=this->max_seglength * 2;
 
 
     jr2 = jr1 - 2;
