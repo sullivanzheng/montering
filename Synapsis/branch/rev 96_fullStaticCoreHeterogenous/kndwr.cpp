@@ -75,8 +75,9 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 	for (n2 = jr4; n2 <= i__2; ++n2) {
 	    px2 = x[n2 - 1];
 	    py2 = y[n2 - 1];
-	    if ((d__1 = px1 - px2, abs(d__1)) > 2.01) continue;
-		else if ((d__2 = py1 - py2, abs(d__2)) > 2.01) continue;
+		//This waiver is no more valid for heterogenous segmentation.
+	    /*if ((d__1 = px1 - px2, abs(d__1)) > 2.01) continue;
+		else if ((d__2 = py1 - py2, abs(d__2)) > 2.01) continue;*/
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;

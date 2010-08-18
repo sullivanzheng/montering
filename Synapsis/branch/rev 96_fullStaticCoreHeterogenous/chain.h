@@ -19,7 +19,7 @@
 
 inline long wrap(long i, long roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
-		std::cout<<"[In global function 'warp']"
+		std::cout<<"[In global function 'wrap']"
 			"Wrapping error, wrapping more than one round:"<<i<<std::endl;
 		getchar();
 		exit(EXIT_FAILURE);
@@ -195,6 +195,7 @@ public:
 	virtual long crankshaft(long m, long n, double a);
 	virtual double dE_reptation(long m, long n, long move);
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
+	int kpoly(long ial[2],long ierr);
 	virtual void snapshot(char *filename);
 	long IEV_closeboundary(long in, long ik);
 	long IEV_Alex_closeboundary(long in, long ik, double info[3]);

@@ -103,6 +103,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
 
+	long tal[2]={0,0},ter=0;
+	this->dnaChain->kpoly(tal,ter);
+	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
+
 	for (long moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -117,6 +121,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
         double dE, cacheRE, cacheE_t, cacheWrithe;
 		long m,n;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
+		double info[3]={0,0,0},info_old[3]={0,0,0};
+
 		
 		if (drand(1.0)>P_REPT){//==================================================================
 		//Crankshaft movement.
@@ -127,15 +133,20 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				n=wrap(m+irand(crank_min_length,crank_max_length+1),totsegnum);
 				//Check if containting any rigid body segments.
 				testp=m;testflag=0;
-				//From seg m to n-1
-				while (testp!=wrap(n,totsegnum)){
-					if (protect_list[testp]==1){
-						testflag=1;
-						break;
-					}
-					testp=wrap(testp+1,totsegnum);
+				//Check from vertex m to n, ensure they are not protected inside rigidbody.
+				if (protect_list[testp]==1){
+					testflag=1;
 				}
-				if (testflag==0) break;
+				else{
+					do{
+						testp=wrap(testp+1,totsegnum);
+						if (protect_list[testp]==1){
+							testflag=1;
+							break;
+						}
+					}while (testp!=n);
+				}
+				//if (testflag==0) break;
 
 				//From seg n to m-1
 				//This section disabled since crank_max_length < totsegnum/2.
@@ -221,7 +232,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			} 
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
-				double info[3]={0,0,0},info_old[3]={0,0,0};
 				/*int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
 				int IEVflag_old=this->dnaChain->IEV_Alex_closeboundary(m,n,info_old);
 				if (IEVflag!=IEVflag_old){
@@ -337,7 +347,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			} 
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
-				double info[3]={0,0,0};
 				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
 						IEV_condition=1;
 					}
@@ -387,7 +396,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->stats.auto_moves.lap();
 			(*fp_log)<<endl;
 //----------Log acceptance and rigid body statistics.------------
-
+			long ial[2],ierr=0;
+			this->dnaChain->kpoly(ial,ierr);
 			(*fp_log)<<"["<<moves<<"]";
 			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
@@ -395,7 +405,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			(*fp_log)<<" Flags(E,rigidIEV,IEV,topo)"<<"["
 				<<E_condition<<"(dE="<<dE<<"),"
 				<<rigid_IEV_condition<<","
-				<<IEV_condition<<","<<topo_condition<<".topl:"<<dnaChain->topl<<"]";
+				<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')'
+				<<","<<topo_condition<<".topl:"<<dnaChain->topl
+				<<"KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
 			(*fp_log)<<" Lk_recomb="<<dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);

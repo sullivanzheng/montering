@@ -454,6 +454,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\kpoly.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\LinkNum.cpp"
 				>
 			</File>

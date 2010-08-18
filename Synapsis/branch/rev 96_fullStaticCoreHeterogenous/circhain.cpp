@@ -577,6 +577,9 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			if (tempj-tempi <= VEcutoff || tempi+totsegnum-tempj <= VEcutoff) continue;
 			//Volume exclusion waiver.
 			//Make sure there is no collision check between a segment in the vinicity of rigid body core.
+
+			//Strict check
+			/*
 			if (
 				  (
 					(  
@@ -598,6 +601,16 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 					protect_list[i]==1
 				  )
 			)continue;	
+			*/
+
+			//Loose check
+			if ((protect_list[i-VolEx_cutoff_rigidbody]==1
+				||
+				protect_list[i+VolEx_cutoff_rigidbody+1]==1)
+				&&
+				(protect_list[j-VolEx_cutoff_rigidbody]==1
+				||
+				protect_list[j+VolEx_cutoff_rigidbody+1]==1)) continue;
 
 			float wx,wy,wz,w2;
 			//wji=Xi-Xj
