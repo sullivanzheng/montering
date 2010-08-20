@@ -124,7 +124,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		double info[3]={0,0,0},info_old[3]={0,0,0};
 
 		
-		if (drand(1.0)>P_REPT){//==================================================================
+		if (drand(1.0)>=P_REPT){//==================================================================
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
 			long testp;long testflag;
