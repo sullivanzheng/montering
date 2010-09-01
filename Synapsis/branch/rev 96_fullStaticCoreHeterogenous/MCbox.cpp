@@ -103,6 +103,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
 
+	long EXOTIC_LK_SNAPSHOT;
+	std::stringstream(config["EXOTIC_LK_SNAPSHOT"])>>EXOTIC_LK_SNAPSHOT;
+
 	long tal[2]={0,0},ter=0;
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
@@ -412,7 +415,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
 			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
 			(*fp_log)<<" Lk_recomb="<<Lk_recomb;
-			if (Lk_recomb != 1 ){
+			if ( EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 ){
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
