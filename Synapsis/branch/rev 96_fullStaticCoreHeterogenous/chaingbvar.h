@@ -13,6 +13,7 @@ extern double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 						//supposed to create local fluctuation.
 extern double P_REPT; //Probability to make a reptation move.
 extern long protect_list[maxa];
+extern double specify_rigidity_list[maxa];
 extern long reptation_maxlen;
 extern long reptation_minlen;
 extern long rept_move_range;

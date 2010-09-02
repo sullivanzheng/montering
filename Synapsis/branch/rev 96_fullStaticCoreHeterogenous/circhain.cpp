@@ -52,12 +52,17 @@ double CircularChain::G_b(long n){
 }
 
 double CircularChain::getg(long n){
-	//return rigidity constant of the starting point of segment C[n]
-	static double a = 141./bpperunit; //persistence length in # of unit length.
-	double g; //Rigidity constant s.t. E = g * bangle * bangle;
-	long n_pre = (n==0) ? maxnum : (n-1);
-	g = 1/( (C[n_pre].l+C[n].l) / a );
-	return g;
+	if (specify_rigidity_list[n]<0){
+		//return rigidity constant of the starting point of segment C[n]
+		static double a = 141./bpperunit; //persistence length in # of unit length.
+		double g; //Rigidity constant s.t. E = g * bangle * bangle;
+		long n_pre = (n==0) ? maxnum : (n-1);
+		g = 1/( (C[n_pre].l+C[n].l) / a );
+		return g;
+	}
+	else{
+		return specify_rigidity_list[n];
+	}
 }
 
 double CircularChain::calG_bSum()
@@ -768,12 +773,16 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 	}
 
 	//Clear global protect list to 0;
-	for (long i=0;i<=maxnum;i++)
+	//Global specify_rigidity_list list to -1.0;
+	for (long i=0;i<=maxnum;i++){
 		protect_list[i]=0;
+		specify_rigidity_list[i]=-1.0;
+	}
 	
 	vector<long> r_protect;
 	vector< vector<double> >r_ref_v;
 	long hard_eof=0;
+	long specify_rigidity_flag=0;
 
 	while (!f.eof() && !hard_eof){
 		string tempbuf;
@@ -782,9 +791,13 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		string initial;
 		sline>>initial;
 		if (initial[0]=='#') continue;
+		
+		
 
 		string token(initial);
-				//lock points (vertices), indices from 0.
+
+		//RIGID BODY DEFINITION
+		//lock points (vertices), indices from 0.
 		if (token=="rigidstart"){
 			r_protect.clear();
 			r_ref_v.clear();
@@ -805,6 +818,32 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			cls_rigid temp_rigid(target, r_protect, r_ref_v);
 			this->R.push_back(temp_rigid);
 		}
+
+		//Artificial rigidity specification.
+		else if (token==string("specify_rigidity")){
+			specify_rigidity_flag=1;
+		}
+		else if (token==string("end_specify_rigidity")){
+			if (specify_rigidity_flag==1) {
+				specify_rigidity_flag=0;
+			}
+			else{
+				cout<<"Encounter end_specify_rigidity before specify_rigidity"<<endl;
+		        exit(EXIT_FAILURE);
+			}
+		}
+		else if (token==string(">")){
+			if (specify_rigidity_flag==1){
+				int a; double b;
+				sline >>a>>b;
+				specify_rigidity_list[a]=b;
+			}
+			else{
+				cout<<"Encouter '>' while not in a specify_rigidity - end_specify_rigidity block"<<endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+
 		else if (token==string("sphere")){
 			sphere s;
 			sline>>s.rg0>>s.x0>>s.rg1>>s.x1>>s.d;
@@ -815,6 +854,8 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		}
 
 	}
+
+	//Global rigid body initialization.
 	for (long i=0;i<this->R.size();i++)
 		for (long j=0;j<this->R[i].protect.size();j++)
 			this->protect.push_back(R[i].protect[j]);
