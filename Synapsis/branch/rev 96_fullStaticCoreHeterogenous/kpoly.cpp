@@ -1,4 +1,5 @@
 #include "chain.h"
+#include "f2c.h"
 
 /* subroutine from Alex V. */
 /* calculate I(-1) and I(-2) Alexander Polynomial--put at ial(1) ial(2) */
@@ -419,7 +420,7 @@ L790:
 	goto L790;
     }
     ikn = (long) (c + .1f);
-    if (t == -2.f) {
+	if (t == -2.f) {
 L789:
 	if (ikn / 2 << 1 < ikn) {
 	    goto L788;

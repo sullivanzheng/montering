@@ -173,12 +173,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				FavorSizeOrSpeed="1"
-				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="D:\_rch\GradProg\smalllib\"
-				ExceptionHandling="1"
-				FloatingPointModel="2"
-				WarningLevel="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -191,7 +186,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				LinkTimeCodeGeneration="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -531,6 +525,10 @@
 			</File>
 			<File
 				RelativePath="..\smalllib\math\mtrand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\smalllib\math\randplus.cpp"
 				>
 			</File>
 			<File
