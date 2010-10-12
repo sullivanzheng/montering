@@ -387,6 +387,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		}
 
 		if (moves%STAT_INTERVAL==0){
+			(*fp_log).precision(15);
 			(*fp_log)<<"accepted:"<<dnaChain->stats.crk_accepts()
 				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
