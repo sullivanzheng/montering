@@ -15,6 +15,7 @@
 #include "math/ezlin.h"
 #include "string/strplus.h"
 #include "SmallTypes.h"
+#include "bias.h"
 
 
 inline long wrap(long i, long roundnum){
@@ -43,8 +44,13 @@ public:
 	std::vector<long> protect;
 	std::vector<std::vector<double> > ref_v;
 	std::vector<std::vector<double> > ref_v_xyz;
-	cls_rigid(CircularChain * r_target, std::vector<long>r_protect,
-		std::vector<std::vector<double> > r_ref_v);
+	std::vector<long> ref_vec_basis;
+	long anchor;
+	cls_rigid(CircularChain * r_target, 
+		      std::vector<long>r_protect,
+			  std::vector<std::vector<double> > r_ref_v, 
+			  std::vector<long>r_ref_vec_basis,
+			  long r_anchor);
 	void update_ref_v_xyz();
 };
 
@@ -57,15 +63,28 @@ public:
 		int rg0,rg1;
 		double d;
 	};
+	struct sphere_simple{
+		double x;
+		double y;
+		double z;
+		double r;
+	};
 	double E;
+
+	//Site II and III comformation parameters
 	double AxisBeta;
 	double RadiusBeta;
 	double r;
+
+	//Site I comformation parameters
 	double r_siteI;
+	double siteI_direction;
+
 	std::vector<cls_rigid> R;
 	allrigid(char *configfile, CircularChain *target);
 	std::vector<long> protect;
 	std::vector<sphere> spheres;
+	std::vector<sphere_simple> spheres_simple;
 	double update_allrigid_and_E();
 	int IEV_spheres(long m, long n);
 };

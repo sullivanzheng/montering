@@ -780,7 +780,10 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 	}
 	
 	vector<long> r_protect;
-	vector< vector<double> >r_ref_v;
+	vector<long> r_ref_vec_basis; //The vectors of segments as new basis.
+	vector< vector<double> >r_ref_v;//The rigid body vector expressed using the new basis.
+	long r_anchor; 
+
 	long hard_eof=0;
 	long specify_rigidity_flag=0;
 
@@ -801,6 +804,7 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		if (token=="rigidstart"){
 			r_protect.clear();
 			r_ref_v.clear();
+			r_ref_vec_basis.clear();
 		}
 		else if (token==string("vec")){
 			vector<double> a(3,0);
@@ -814,8 +818,21 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 				r_protect.push_back(temp);
 			}
 		}
+		else if (token==string("ref_vec_basis")){
+			while (!sline.eof()){
+				long temp;
+				sline>>temp;
+				r_ref_vec_basis.push_back(temp);
+			}
+		}
+		else if (token==string("anchor")){
+			long temp;
+			sline>>temp;
+			r_anchor=temp;
+		}
+		
 		else if (token==string("rigidend")){
-			cls_rigid temp_rigid(target, r_protect, r_ref_v);
+			cls_rigid temp_rigid(target, r_protect, r_ref_v, r_ref_vec_basis, r_anchor);
 			this->R.push_back(temp_rigid);
 		}
 
@@ -849,6 +866,12 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			sline>>s.rg0>>s.x0>>s.rg1>>s.x1>>s.d;
 			this->spheres.push_back(s);
 		}
+
+		else if (token==string("sphere_simple")){
+			sphere_simple s;
+			sline>>s.x>>s.y>>s.z>>s.r;
+		}
+
 		else if (token==string("[endoffile]")){
 			hard_eof=1;
 		}
@@ -863,6 +886,9 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 }
 
 int allrigid::IEV_spheres(long m, long n){
+	//TODO: add simple judgement for sphere_simple.
+
+	//For complicated spheres that locate the center by relative value of 
 	//return 0-intersetion 1-no intersection
 	vector<sphere>::iterator it;
 	for ( it=this->spheres.begin(); it < this->spheres.end() ; it++){
@@ -903,8 +929,10 @@ int allrigid::IEV_spheres(long m, long n){
 }
 
 double allrigid::update_allrigid_and_E(){
+
+
 	this->E = 0; //TODO: disabled.
-	return 0;
+	//return 0;
 	//This section can be customized for different rigid body set.
 	if (R.size()==0) {
 		this->E = 0;
@@ -915,32 +943,88 @@ double allrigid::update_allrigid_and_E(){
 	}
 	this->E = 0;
 
-	//Axis Orientation. ref_v_xyz[0]
-	this->AxisBeta=betaVec1Vec2(this->R[0].ref_v_xyz[0],this->R[1].ref_v_xyz[0]);
+	//Axis Orientation. ref_v_xyz[3]=z
+	this->AxisBeta=3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[3],this->R[1].ref_v_xyz[3]); //z
 
-	//Curvature radius direction orientation. ref_v_xyz[1]
-	this->RadiusBeta =betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1]);
+	//Curvature radius direction orientation. ref_v_xyz[1]=x
+	this->RadiusBeta =3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1]);//x
 
-	//Center point of each rigid body. ref_v_xyz[2]
+	//Center point of each rigid body. ref_v_xyz[0]+anchor segment coordinate
 	double t0[3],t1[3];
-	t0[0]=R[0].ref_v_xyz[2][0] + R[0].target->C[R[0].protect[0]].x;
-	t0[1]=R[0].ref_v_xyz[2][1] + R[0].target->C[R[0].protect[0]].y;
-	t0[2]=R[0].ref_v_xyz[2][2] + R[0].target->C[R[0].protect[0]].z;
+	t0[0]=R[0].ref_v_xyz[0][0] + R[0].target->C[R[0].protect[R[0].anchor] ].x;
+	t0[1]=R[0].ref_v_xyz[0][1] + R[0].target->C[R[0].protect[R[0].anchor] ].y;
+	t0[2]=R[0].ref_v_xyz[0][2] + R[0].target->C[R[0].protect[R[0].anchor] ].z;
 
-	t1[0]=R[1].ref_v_xyz[2][0] + R[1].target->C[R[1].protect[0]].x;
-	t1[1]=R[1].ref_v_xyz[2][1] + R[1].target->C[R[1].protect[0]].y;
-	t1[2]=R[1].ref_v_xyz[2][2] + R[1].target->C[R[1].protect[0]].z;
+	t1[0]=R[1].ref_v_xyz[0][0] + R[1].target->C[R[1].protect[R[1].anchor] ].x;
+	t1[1]=R[1].ref_v_xyz[0][1] + R[1].target->C[R[1].protect[R[1].anchor] ].y;
+	t1[2]=R[1].ref_v_xyz[0][2] + R[1].target->C[R[1].protect[R[1].anchor] ].z;
 	
 	this->r=modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]);
 
 	//Res Site I distance. 
 	//
 	//TODO: this may result in access violation if R[i].protect[0]<3!
-	static const long dev=6;
+	
 	this->r_siteI=
-		modu(R[0].target->C[R[0].protect[0]-dev].x-R[1].target->C[R[1].protect[0]-dev].x,
-			 R[0].target->C[R[0].protect[0]-dev].y-R[1].target->C[R[1].protect[0]-dev].y,
-			 R[0].target->C[R[0].protect[0]-dev].z-R[1].target->C[R[1].protect[0]-dev].z);
+		modu(R[0].target->C[R[0].protect[0]].x-R[1].target->C[R[1].protect[0]].x,
+			 R[0].target->C[R[0].protect[0]].y-R[1].target->C[R[1].protect[0]].y,
+			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
+
+	//Calcuate if site I's are all aligned to the -y direction.
+	double yangle1=0,yangle2=0;
+	{
+		double Yx=R[0].ref_v_xyz[2][0],
+			   Yy=R[0].ref_v_xyz[2][1],
+			   Yz=R[0].ref_v_xyz[2][2];
+		
+		double x0=R[0].target->C[R[0].protect[0]].x,
+			   y0=R[0].target->C[R[0].protect[0]].y,
+			   z0=R[0].target->C[R[0].protect[0]].z;
+		double dx0=x0-t0[0],
+			   dy0=y0-t0[1],
+			   dz0=z0-t0[2];
+		yangle1=3.14159-acos((Yx*dx0 + Yy*dy0 + Yz*dz0)/modu(Yx,Yy,Yz)/modu(dx0,dy0,dz0));
+	}
+	
+	{
+		double Yx=R[1].ref_v_xyz[2][0],
+			   Yy=R[1].ref_v_xyz[2][1],
+			   Yz=R[1].ref_v_xyz[2][2];
+		
+		double x0=R[1].target->C[R[1].protect[0]].x,
+			   y0=R[1].target->C[R[1].protect[0]].y,
+			   z0=R[1].target->C[R[1].protect[0]].z;
+		double dx0=x0-t1[0],
+			   dy0=y0-t1[1],
+			   dz0=z0-t1[2];
+		yangle2=3.14159-acos((Yx*dx0 + Yy*dy0 + Yz*dz0)/modu(Yx,Yy,Yz)/modu(dx0,dy0,dz0));
+	}
+	this->siteI_direction=yangle1+yangle2;
+
+	//---------------Artificial Reaction Coordinate------------
+	double D1=digitalneg(r,3,4.4);
+	double D2=digitalneg(AxisBeta,50/180*3.14,10)
+		     *digitalneg(RadiusBeta,50/180*3.14,10);
+	double Q=r
+		+(-5)*exp(
+			-(AxisBeta*AxisBeta+RadiusBeta*RadiusBeta)/(2*4.0)
+		)*D1
+		+(-5)*exp(
+			-(siteI_direction*siteI_direction
+			  +r_siteI*r_siteI)/(2*4.0)
+		)*D1*D2;
+
+	//---------------Reshape Biasing potential-----------------
+	this->E=U.getBiasingE(r);	
+
+	if (r<7){
+		double E11= (fabs(AxisBeta-0/180.0*3.14159) - 3)*10;
+		double E12= (fabs(RadiusBeta-0/180.0*3.14159)-3)*10;
+		this->E += (E11+E12)*digitalneg(r,5.0,2.2);
+	}
+	
+
+
 	
 //	A potential from Quan Du and A. Vologodskii.
 /*	double sigma2=1;
@@ -950,76 +1034,49 @@ double allrigid::update_allrigid_and_E(){
 	this->E=
 	A*exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
 	*(pow(r0/r,q*2)-2*pow(r0/r,q));
+
+
+
+	double r0=0,r0std=11.0,a0=10;
+	double E0=-a0*exp(-(r-r0)*(r-r0)/2/r0std);
+	//double E11= fabs(AxisBeta-50/180.0*3.14159) * (0);
+	//double E12= fabs(RadiusBeta-30/180.0*3.14159) * (0);
+
+	double E21= fabs(AxisBeta-0/180.0*3.14159) * (5);
+	double E22= fabs(RadiusBeta-0/180.0*3.14159) * (5);
+	double E4= r_siteI * 0;
+	double E5= siteI_direction * (0);
+
+	this->E=E0
+		//+(E11+E12)*digital(r,2.5,3)
+		+(E21+E22)*(1-digital(r,2.0,																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																						3))
+		+E4+E5;
 */
 
 
-	this->E += r*50 ;
-	this->E += AxisBeta * (-15);
-	this->E += RadiusBeta * (-15);
-	this->E += r_siteI * 50;
-
-	//if the Complex I Site I -> Complex II Site II has the same distance as
-	//       Complex II Site I -> Complex I Site II.
-	//This will identify the symmetry of the complete synaptic complex (Complex I-II)
-	double symm;
-	for (long ii=0;ii<=2;ii++){
-		symm+= abs(
-				modu(R[0].target->C[R[0].protect[ii]].x-R[1].target->C[R[1].protect[ii]-dev].x,
-					 R[0].target->C[R[0].protect[ii]].y-R[1].target->C[R[1].protect[ii]-dev].y,
-					 R[0].target->C[R[0].protect[ii]].z-R[1].target->C[R[1].protect[ii]-dev].z)
-			   -modu(R[1].target->C[R[1].protect[ii]].x-R[1].target->C[R[0].protect[ii]-dev].x,
-					 R[1].target->C[R[1].protect[ii]].y-R[1].target->C[R[0].protect[ii]-dev].y,
-					 R[1].target->C[R[1].protect[ii]].z-R[1].target->C[R[0].protect[ii]-dev].z));
-	}
-	this->E += symm*5;
-
-
-	/*double bend=60.0;
-	this->E += pow(R[0].target->C[R[0].protect[0]-3].bangle - bend/180*PI, 2)*50;
-	this->E += pow(R[1].target->C[R[1].protect[1]-3].bangle - bend/180*PI, 2)*50;*/
-
-
-/*
-// My latest design.
-	//A+B=17 suggested.
-	static const double B=10, a0=20.0/180.*PI, r0=1.5, R0=20.0/180.*PI;
-	static const double A=12,r0_siteII=2.0;
-	static const double A_siteII_att=80.0,r0_siteII_att=30.0;//Additional SiteI site II attachment force
-
-	static const double A_siteI=80.0, r0_siteI=6.0;
-
-	this->E=-B*exp(
-		-(AxisBeta-PI)*(AxisBeta-PI)/(a0*a0)/2-r*r/(r0*r0)/2
-		-(RadiusBeta-PI)*(RadiusBeta-PI)/(R0*R0)/2)
-
-		-A*exp(-r*r/(r0_siteII*r0_siteII)/2)
-		-A_siteII_att*exp(-r*r/(r0_siteII_att*r0_siteII_att)/2)
-
-		-A_siteI*exp(-r_siteI*r_siteI/(r0_siteI*r0_siteI)/2);
-*/
     return this->E;
 }
 
 
 cls_rigid::cls_rigid(CircularChain* r_target, std::vector<long> r_protect,
-	std::vector < vector<double> > r_ref_v):
-target(r_target),protect(r_protect),ref_v(r_ref_v){
+					 std::vector < vector<double> > r_ref_v, std::vector <long> r_ref_vec_basis, long r_anchor):
+target(r_target),protect(r_protect),ref_v(r_ref_v), ref_vec_basis(r_ref_vec_basis), anchor(r_anchor){
 	//When cls_rigid is constructed, it will automatically update the global
 	//variable "protect_list", which is the copy of .protect member (vector)
 	// of cls_rigid's container class "all_rigid".
 	//This copy is made for better global access of protect list.
 	double Mv[3][3];
-	Mv[0][0]=target->C[protect[0]].dx;
-	Mv[1][0]=target->C[protect[0]].dy;
-	Mv[2][0]=target->C[protect[0]].dz;
+	Mv[0][0]=target->C[protect[this->ref_vec_basis[0]]].dx;
+	Mv[1][0]=target->C[protect[this->ref_vec_basis[0]]].dy;
+	Mv[2][0]=target->C[protect[this->ref_vec_basis[0]]].dz;
 
-	Mv[0][1]=target->C[protect[1]].dx;
-	Mv[1][1]=target->C[protect[1]].dy;
-	Mv[2][1]=target->C[protect[1]].dz;
+	Mv[0][1]=target->C[protect[this->ref_vec_basis[1]]].dx;
+	Mv[1][1]=target->C[protect[this->ref_vec_basis[1]]].dy;
+	Mv[2][1]=target->C[protect[this->ref_vec_basis[1]]].dz;
 
-	Mv[0][2]=target->C[protect[2]].dx;
-	Mv[1][2]=target->C[protect[2]].dy;
-	Mv[2][2]=target->C[protect[2]].dz;
+	Mv[0][2]=target->C[protect[this->ref_vec_basis[2]]].dx;
+	Mv[1][2]=target->C[protect[this->ref_vec_basis[2]]].dy;
+	Mv[2][2]=target->C[protect[this->ref_vec_basis[2]]].dz;
 
 	for (long i=0;i<this->ref_v.size();i++){
 		vector<double> a(3,0);
@@ -1057,17 +1114,17 @@ target(r_target),protect(r_protect),ref_v(r_ref_v){
 
 void cls_rigid::update_ref_v_xyz(){
 	double Mv[3][3];
-	Mv[0][0]=target->C[protect[0]].dx;
-	Mv[1][0]=target->C[protect[0]].dy;
-	Mv[2][0]=target->C[protect[0]].dz;
+	Mv[0][0]=target->C[protect[this->ref_vec_basis[0]]].dx;
+	Mv[1][0]=target->C[protect[this->ref_vec_basis[0]]].dy;
+	Mv[2][0]=target->C[protect[this->ref_vec_basis[0]]].dz;
 
-	Mv[0][1]=target->C[protect[1]].dx;
-	Mv[1][1]=target->C[protect[1]].dy;
-	Mv[2][1]=target->C[protect[1]].dz;
+	Mv[0][1]=target->C[protect[this->ref_vec_basis[1]]].dx;
+	Mv[1][1]=target->C[protect[this->ref_vec_basis[1]]].dy;
+	Mv[2][1]=target->C[protect[this->ref_vec_basis[1]]].dz;
 
-	Mv[0][2]=target->C[protect[2]].dx;
-	Mv[1][2]=target->C[protect[2]].dy;
-	Mv[2][2]=target->C[protect[2]].dz;
+	Mv[0][2]=target->C[protect[this->ref_vec_basis[2]]].dx;
+	Mv[1][2]=target->C[protect[this->ref_vec_basis[2]]].dy;
+	Mv[2][2]=target->C[protect[this->ref_vec_basis[2]]].dz;
 
 	for (long i=0;i<this->ref_v.size();i++){
 		vector<double> a(3,0);

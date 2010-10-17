@@ -2,6 +2,7 @@
 #define CHAINGBVAR_H	
 
 #include "chainconst.h"
+#include "bias.h"
 #include <vector>
 
 extern long maxnum, totsegnum;
@@ -18,5 +19,6 @@ extern long reptation_maxlen;
 extern long reptation_minlen;
 extern long rept_move_range;
 extern long VolEx_cutoff_rigidbody;
+extern BiasingPotential U;
 
 #endif /* CHAINGBVARH */

@@ -110,6 +110,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
+	U.load("ArtificialPotential.txt");
+
 	for (long moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -134,37 +136,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			do{
 				m=irand(maxnum+1);
 				n=wrap(m+irand(crank_min_length,crank_max_length+1),totsegnum);
-				//Check if containting any rigid body segments.
-				testp=m;testflag=0;
-				//Check from vertex m to n, ensure they are not protected inside rigidbody.
-				if (protect_list[testp]==1){
-					testflag=1;
-				}
-				else{
-					do{
-						testp=wrap(testp+1,totsegnum);
-						if (protect_list[testp]==1){
-							testflag=1;
-							break;
-						}
-					}while (testp!=n);
-				}
-				//if (testflag==0) break;
-
-				//From seg n to m-1
-				//This section disabled since crank_max_length < totsegnum/2.
-				//If it can't pass the n~m-1 test, it won't pass the following one either
-				//since m~n-1 is longer than totsegnum/2.
-			   /* testp=n;testflag=0;
-				while (testp!=wrap(m,totsegnum)){
-					if (protect_list[testp]==1){
-						testflag=1;
-						break;
-					}
-					testp=wrap(testp+1,totsegnum);
-				}
-				if (testflag==0) break;*/
-			}while(testflag==1);
+			}while(protect_list[m]==1 || protect_list[n]==1);
 
 			//(*this->fp_log)<<m<<' '<<n<<endl;
 
@@ -380,15 +352,18 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 		}//End reptation movement.
 
+		U.collect(RG.r);
+
 		if (moves%SNAPSHOT_INTERVAL==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			cout <<buf<<endl;
 			dnaChain->snapshot(buf);
+			U.pickle("ArtificialPotential.txt");
 		}
 
 		if (moves%STAT_INTERVAL==0){
-			(*fp_log).precision(15);
-			(*fp_log)<<"accepted:"<<dnaChain->stats.crk_accepts()
+			(*fp_log).precision(5);
+/*			(*fp_log)<<"accepted:"<<dnaChain->stats.crk_accepts()
 				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['
@@ -399,8 +374,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
 			(*fp_log)<<endl;
+*/
+
 //----------Log acceptance and rigid body statistics.------------
-			long ial[2],ierr=0;
+/*			long ial[2],ierr=0;
 			this->dnaChain->kpoly(ial,ierr);
 			(*fp_log)<<"["<<moves<<"]";
 			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
@@ -421,10 +398,22 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
 			}
+*/
 
 //			Log Rigidbody status
-/*		    (*fp_log)<<" r "<<RG.r<<" Ax "<<180-RG.AxisBeta/PI*180
-				<<" Ra "<<180-RG.RadiusBeta/PI*180<<" E "<<RG.E<<endl; */
+		    (*fp_log)<<" "<<RG.r
+				<<" "<<RG.AxisBeta/PI*180
+				<<" "<<RG.RadiusBeta/PI*180
+				<<" "<<RG.r_siteI
+				<<" "<<RG.siteI_direction
+				<<" "<<RG.E;
+				/*
+				<<" r "<<RG.r
+				<<" Ax "<<180-RG.AxisBeta/PI*180
+				<<" Ra "<<180-RG.RadiusBeta/PI*180
+				<<" | r_siteI "<<RG.r_siteI
+				<<" SiteIDir "<<RG.siteI_direction
+				<<" E "<<RG.E;*/
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();
