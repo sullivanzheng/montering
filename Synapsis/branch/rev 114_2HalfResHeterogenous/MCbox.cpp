@@ -110,7 +110,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
-	U.load("ArtificialPotential.txt");
+	//U.load("ArtificialPotential.txt");
 
 	for (long moves = 1; moves <= monte_step; moves++)
     {
@@ -123,11 +123,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//Therefore, all energy evaluation program should be careful with chain segment 
 		//iteration due to wrapping problem.
 
-        double dE, cacheRE, cacheE_t, cacheWrithe;
+        double dE, cacheRE, cacheE_t, cacheWrithe, E=0;
 		long m,n;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		double info[3]={0,0,0},info_old[3]={0,0,0};
-
+		U.collect(RG.Q);
 		
 		if (drand(1.0)>=P_REPT){//==================================================================
 		//Crankshaft movement.
@@ -241,6 +241,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					RG.update_allrigid_and_E();
 					dnaChain->writhe=cacheWrithe;
 					dnaChain->E_t=cacheE_t;
+					dE=0;
 			}
 		}//End Crankshaft movement.
 		else{//==================================================================================
@@ -348,11 +349,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					RG.update_allrigid_and_E();
 					dnaChain->writhe=cacheWrithe;
 					dnaChain->E_t=cacheE_t;
+					dE=0;
 			}
 
 		}//End reptation movement.
+		
+		E+=dE;
 
-		U.collect(RG.r);
 
 		if (moves%SNAPSHOT_INTERVAL==0){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);

@@ -12,5 +12,5 @@ long reptation_maxlen;
 long reptation_minlen;
 long rept_move_range;
 long VolEx_cutoff_rigidbody;
-BiasingPotential U(0.,10.,100);
+BiasingPotential U(-10.0,-5.0,100);
 

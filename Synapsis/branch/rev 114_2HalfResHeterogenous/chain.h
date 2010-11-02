@@ -70,6 +70,8 @@ public:
 		double r;
 	};
 	double E;
+	double unbiasedE;
+	double Q;
 
 	//Site II and III comformation parameters
 	double AxisBeta;

@@ -999,30 +999,51 @@ double allrigid::update_allrigid_and_E(){
 			   dz0=z0-t1[2];
 		yangle2=3.14159-acos((Yx*dx0 + Yy*dy0 + Yz*dz0)/modu(Yx,Yy,Yz)/modu(dx0,dy0,dz0));
 	}
-	this->siteI_direction=yangle1+yangle2;
+	this->siteI_direction=fabs(yangle1+yangle2-0.67071509866412082);
 
 	//---------------Artificial Reaction Coordinate------------
-	double D1=digitalneg(r,3,4.4);
-	double D2=digitalneg(AxisBeta,50/180*3.14,10)
-		     *digitalneg(RadiusBeta,50/180*3.14,10);
-	double Q=r
-		+(-5)*exp(
-			-(AxisBeta*AxisBeta+RadiusBeta*RadiusBeta)/(2*4.0)
-		)*D1
-		+(-5)*exp(
-			-(siteI_direction*siteI_direction
-			  +r_siteI*r_siteI)/(2*4.0)
-		)*D1*D2;
+	double D1=digitalneg(r, 3.0, 2.3/1.);
+	double D2=digitalneg(r, 2.0, 2.3/1.)
+		     *digitalneg(AxisBeta, 60./180*3.14, 2.3/(10./180*3.14))
+		     *digitalneg(RadiusBeta, 60./180*3.14, 2.3/(10./180*3.14));
 
-	//---------------Reshape Biasing potential-----------------
-	this->E=U.getBiasingE(r);	
-
-	if (r<7){
-		double E11= (fabs(AxisBeta-0/180.0*3.14159) - 3)*10;
-		double E12= (fabs(RadiusBeta-0/180.0*3.14159)-3)*10;
-		this->E += (E11+E12)*digitalneg(r,5.0,2.2);
+	Q = r;
+	if (r<7.0){
+		Q = Q -
+			put(AxisBeta+RadiusBeta, 30./180*3.14 + 30./180*3.14, 5/(30./180*3.14 + 30./180*3.14))
+			*D1;
+		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
+			Q = Q -
+				(
+			    put(fabs(r_siteI-2.0), 10. , 2.5/10.)
+			   +put(siteI_direction, 90./180*3.14 , 2.5/(90./180*3.14))
+				)*D2; 
+		}
 	}
+	//---------------Reshape Biasing potential-----------------
+	this->unbiasedE = 0;
+	double E11,E12,E21,E22,Er;
+
+	E11=E12=E21=E22=0;
+
+	Er=(-10)*exp(-r*r/2/4.0/4.0);
+
+	if (r<7.0){
+		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 15/(180./180*3.14 + 180./180*3.14));
+		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
+		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
+
+		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
+			E21=-put(fabs(r_siteI-2.0), 10. , 10.0/10.);
+			E22=-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
+			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
+			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));
+
+		}
+	} 
 	
+	this->unbiasedE = Er+(E11+E12)*D1 + (E21+E22)*D2;
+	this->E = this->unbiasedE +  U.getBiasingE(Q);
 
 
 	
