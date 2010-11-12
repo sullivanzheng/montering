@@ -18,6 +18,7 @@ extern double specify_rigidity_list[maxa];
 extern long reptation_maxlen;
 extern long reptation_minlen;
 extern long rept_move_range;
+extern long rept_min_seglength;
 extern long VolEx_cutoff_rigidbody;
 extern BiasingPotential U;
 

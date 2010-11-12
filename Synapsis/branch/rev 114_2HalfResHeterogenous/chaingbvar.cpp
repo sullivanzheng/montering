@@ -11,6 +11,7 @@ double specify_rigidity_list[maxa];
 long reptation_maxlen;
 long reptation_minlen;
 long rept_move_range;
+long rept_min_seglength;
 long VolEx_cutoff_rigidbody;
-BiasingPotential U(-10.0,-5.0,100);
+BiasingPotential U(-10.0,30.0,100);
 

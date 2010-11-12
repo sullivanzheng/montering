@@ -208,6 +208,7 @@ public:
 	double dLk;
 
 	long productLk(long vertM, long vertN);
+	long overpassing(long vertM, long vertN);
 	
 	CircularChain();
 	CircularChain(char const *filename,long totsegnum);

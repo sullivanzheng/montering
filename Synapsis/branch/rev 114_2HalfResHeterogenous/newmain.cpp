@@ -16,14 +16,14 @@ inline double tempE(double x){
 }
 int maindo1(){
 	MTRand53 mt(1234);
-	BiasingPotential U(-5,5,100);
+	BiasingPotential Ut(-5,5,100);
 	unsigned long n=0;
 	double x=0;
-	double E=tempE(x)+U.getBiasingE(x);
+	double E=tempE(x)+ Ut.getBiasingE(x);
 	for (n=0;n<1000000;n++){
 		double dx=(mt()-.5)*2.*0.1;
 		double newx=x+dx;
-		double newE=tempE(newx)+U.getBiasingE(newx);
+		double newE=tempE(newx)+ Ut.getBiasingE(newx);
 		if (newE<E){
 			x=newx;E=newE;
 		}
@@ -34,9 +34,9 @@ int maindo1(){
 				E=newE;
 			}
 		}
-		U.collect(x);
+		Ut.collect(x);
 		if (n % 100000==0)
-			U.pickle("testAF.txt");
+			Ut.pickle("testAF.txt");
 	}
 	return 0;
 }

@@ -4,6 +4,42 @@
 #include "chain.h"
 using namespace std;
 
+long CircularChain::overpassing(long vertM, long vertN){
+//Exam if two vectors form overpassing (return 1) or underpassing (0)
+//vector a=C[vertM], vector b=C[vertM];
+	double a[3],b[3],r[3];
+	a[0]=C[vertN].x-C[vertM-1].x;
+	a[1]=C[vertN].y-C[vertM-1].y;
+	a[2]=C[vertN].z-C[vertM-1].z;
+
+	b[0]=C[vertM].x-C[vertN-1].x;
+	b[1]=C[vertM].y-C[vertN-1].y;
+	b[2]=C[vertM].z-C[vertN-1].z;
+
+	r[0]=C[vertM-1].x-C[vertN-1].x;
+	r[1]=C[vertM-1].y-C[vertN-1].y;
+	r[2]=C[vertM-1].z-C[vertN-1].z;
+
+	norm(r);
+	double a2[3],b2[3];
+	
+	//project a to null(r)
+	scalarMulVec(dot_product(a,r),r,a2); //a2=(a*r)*r
+	subvec(a,a2,a2);//a2=a-a2;
+
+	//project b to null(r)
+	scalarMulVec(dot_product(b,r),r,b2); //b2=(b*r)*r
+	subvec(b,b2,b2);//b2=b-b2;
+	
+	//judge if b2->a2 is right handed rotation. (axis long +r);
+	Xprod(a2,b2,a2);// a2 = a2 x b2;
+
+	double temp=dot_product(a2,r);
+
+	if (temp > 0.00001) return 1; //long +r is overpassing otherwise underpassing.
+	else return 0;
+}
+
 long CircularChain::productLk(long vertM, long vertN)
 {	
 	if ((vertM<0||vertN<0)||(vertN>maxnum || vertM>maxnum))

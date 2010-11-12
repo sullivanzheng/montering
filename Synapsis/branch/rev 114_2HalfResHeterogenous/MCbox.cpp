@@ -24,6 +24,7 @@ MCbox_circular::MCbox_circular(char const *configFile){
 	stringstream(config[string("reptation_maxlen")])>>reptation_maxlen;
 	stringstream(config[string("reptation_minlen")])>>reptation_minlen;
 	stringstream(config[string("rept_move_range")])>>rept_move_range;
+	stringstream(config[string("rept_min_seglength")])>>rept_min_seglength;
 
 	stringstream(config[string("VolEx_cutoff_rigidbody")])>>VolEx_cutoff_rigidbody;
 
@@ -103,6 +104,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	long STAT_INTERVAL;
 	std::stringstream(config["STAT_INTERVAL"])>>STAT_INTERVAL;
 
+    long RBAUS_PICKLE_INTERVAL;
+	std::stringstream(config["RBAUS_PICKLE_INTERVAL"])>>RBAUS_PICKLE_INTERVAL;
+
 	long EXOTIC_LK_SNAPSHOT;
 	std::stringstream(config["EXOTIC_LK_SNAPSHOT"])>>EXOTIC_LK_SNAPSHOT;
 
@@ -110,7 +114,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
-	//U.load("ArtificialPotential.txt");
+	U.load("ArtificialPotential.txt");
 
 	for (long moves = 1; moves <= monte_step; moves++)
     {
@@ -127,7 +131,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		long m,n;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		double info[3]={0,0,0},info_old[3]={0,0,0};
-		U.collect(RG.Q);
+		//U.collect(RG.Q);
 		
 		if (drand(1.0)>=P_REPT){//==================================================================
 		//Crankshaft movement.
@@ -253,10 +257,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			do{
 				m=irand(maxnum+1);
 				n=wrap(m+irand(reptation_minlen,reptation_maxlen+1),totsegnum);
-				//Check if containting any rigid body segments.
+				//Check if containting any rigid body segments or connecting segments whose length is smaller than 3.0.
 				testp=m;testflag=0;
 				while (testp!=wrap(n+1,totsegnum)){
-					if (protect_list[testp]==1){
+					if (dnaChain->C[testp].l < rept_min_seglength){
 						testflag=1;
 						break;
 					}
@@ -361,12 +365,17 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			cout <<buf<<endl;
 			dnaChain->snapshot(buf);
-			U.pickle("ArtificialPotential.txt");
 		}
+
+		/*if (moves%RBAUS_PICKLE_INTERVAL==0){
+			sprintf(buf,"[%09d]Potential profile updated.",moves);
+			cout <<buf<<endl;
+			U.pickle("ArtificialPotential.txt");
+		}*/
 
 		if (moves%STAT_INTERVAL==0){
 			(*fp_log).precision(5);
-/*			(*fp_log)<<"accepted:"<<dnaChain->stats.crk_accepts()
+			(*fp_log)<<"crk_accepted:"<<dnaChain->stats.crk_accepts()
 				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()
 				<<" in moves "<<dnaChain->stats.auto_moves()
 				<<'['
@@ -377,46 +386,51 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
 			(*fp_log)<<endl;
-*/
+
 
 //----------Log acceptance and rigid body statistics.------------
-/*			long ial[2],ierr=0;
-			this->dnaChain->kpoly(ial,ierr);
+			long ial[2],ierr=0;
+		this->dnaChain->kpoly(ial,ierr);
 			(*fp_log)<<"["<<moves<<"]";
-			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
+			(*fp_log)<<" Q "<<RG.Q;
+			(*fp_log)<<" + "<<dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+			(*fp_log)<<" Lk_re "<<dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+//			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
-			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
-			(*fp_log)<<" Flags(E,rigidIEV,IEV,topo)"<<"["
-				<<E_condition<<"(dE="<<dE<<"),"
-				<<rigid_IEV_condition<<","
-				<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')'
-				<<","<<topo_condition<<".topl:"<<dnaChain->topl
-				<<"KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
+//			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
+
+//			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"["
+//			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),"
+//			(*fp_log)	<<rigid_IEV_condition<<","
+//			(*fp_log)	<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')'
+//			(*fp_log)	<<","<<topo_condition<<".topl:"<<dnaChain->topl
+			(*fp_log)	<<" KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[1],RG.R[1].protect[1]);
+/*			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 			(*fp_log)<<" Lk_recomb="<<Lk_recomb;
 			if ( EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 ){
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
-			}
-*/
+			}*/
+
 
 //			Log Rigidbody status
-		    (*fp_log)<<" "<<RG.r
+			(*fp_log)
+/*				<<" "<<RG.r
 				<<" "<<RG.AxisBeta/PI*180
 				<<" "<<RG.RadiusBeta/PI*180
 				<<" "<<RG.r_siteI
 				<<" "<<RG.siteI_direction
-				<<" "<<RG.E;
-				/*
+				<<" "<<RG.E
+				<<" "<<RG.Q;*/
 				<<" r "<<RG.r
 				<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180
 				<<" | r_siteI "<<RG.r_siteI
 				<<" SiteIDir "<<RG.siteI_direction
-				<<" E "<<RG.E;*/
+				<<" E "<<RG.E;
 
 //			Log Gyration Radius
 /*			double gyration_ratio=this->calcGyration();

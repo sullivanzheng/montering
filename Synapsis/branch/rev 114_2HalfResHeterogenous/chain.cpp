@@ -20,6 +20,7 @@ void Chain::initializeCircle(long numofseg)
         C[i].dx=result[0];C[i].dy=result[1];C[i].dz=result[2];
     }
 }
+
 long Chain::readIniFile(char const *filename)
 {
 	ifstream file_st (filename);
@@ -76,6 +77,7 @@ long Chain::readIniFile(char const *filename)
 	
 	return 0;
 }
+
 
 void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 {
@@ -231,7 +233,7 @@ void Chain::snapshot(char *filename)
 	sprintf(buf, "%6d %20s", maxnum + 1, "[General Chain Snapshot, treat as Linear]");
 	fh << buf << endl;
 
-    long	i=0;
+    long i=0;
 	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
         i + 1, "F", C[i].x, C[i].y, C[i].z, 1, 1);
 	fh << buf << endl;

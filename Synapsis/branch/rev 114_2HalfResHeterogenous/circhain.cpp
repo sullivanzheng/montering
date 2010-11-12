@@ -932,6 +932,7 @@ double allrigid::update_allrigid_and_E(){
 
 
 	this->E = 0; //TODO: disabled.
+	this->unbiasedE = 0;
 	//return 0;
 	//This section can be customized for different rigid body set.
 	if (R.size()==0) {
@@ -971,7 +972,7 @@ double allrigid::update_allrigid_and_E(){
 			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
 
 	//Calcuate if site I's are all aligned to the -y direction.
-	double yangle1=0,yangle2=0;
+	/*double yangle1=0,yangle2=0;
 	{
 		double Yx=R[0].ref_v_xyz[2][0],
 			   Yy=R[0].ref_v_xyz[2][1],
@@ -1000,12 +1001,12 @@ double allrigid::update_allrigid_and_E(){
 		yangle2=3.14159-acos((Yx*dx0 + Yy*dy0 + Yz*dz0)/modu(Yx,Yy,Yz)/modu(dx0,dy0,dz0));
 	}
 	this->siteI_direction=fabs(yangle1+yangle2-0.67071509866412082);
-
+*/
 	//---------------Artificial Reaction Coordinate------------
 	double D1=digitalneg(r, 3.0, 2.3/1.);
-	double D2=digitalneg(r, 2.0, 2.3/1.)
-		     *digitalneg(AxisBeta, 60./180*3.14, 2.3/(10./180*3.14))
-		     *digitalneg(RadiusBeta, 60./180*3.14, 2.3/(10./180*3.14));
+	double D2=digitalneg(r, 1.0, 2.3/0.2)
+		     *digitalneg(AxisBeta, 40./180*3.14, 2.3/(10./180*3.14))
+		     *digitalneg(RadiusBeta, 40./180*3.14, 2.3/(10./180*3.14));
 
 	Q = r;
 	if (r<7.0){
@@ -1015,8 +1016,8 @@ double allrigid::update_allrigid_and_E(){
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
 			Q = Q -
 				(
-			    put(fabs(r_siteI-2.0), 10. , 2.5/10.)
-			   +put(siteI_direction, 90./180*3.14 , 2.5/(90./180*3.14))
+			    put(fabs(r_siteI-2.0), 2. , 5./2.)
+//			   +put(siteI_direction, 90./180*3.14 , 2.5/(90./180*3.14))
 				)*D2; 
 		}
 	}
@@ -1026,16 +1027,16 @@ double allrigid::update_allrigid_and_E(){
 
 	E11=E12=E21=E22=0;
 
-	Er=(-10)*exp(-r*r/2/4.0/4.0);
+	Er=(-0.0)*exp(-r*r/2/8.0/8.0);
 
 	if (r<7.0){
-		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 15/(180./180*3.14 + 180./180*3.14));
+		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 2/(180./180*3.14 + 180./180*3.14));
 		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			E21=-put(fabs(r_siteI-2.0), 10. , 10.0/10.);
-			E22=-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
+			E21=-put(fabs(r_siteI-2.0), 2. , 2.0/2.);
+			E22=0;//-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
 			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
 			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));
 
@@ -1120,11 +1121,12 @@ target(r_target),protect(r_protect),ref_v(r_ref_v), ref_vec_basis(r_ref_vec_basi
 		std::cout<<ref_v_xyz[i][1]<<" ";
 		std::cout<<ref_v_xyz[i][2]<<" "<<std::endl;
 	}
-
+	
 	//Initialize or append the global protection list for rigid bodies.
 	for (long i=0;i<this->protect.size();i++){
 		protect_list[this->protect[i]]=1;
 	}
+
 //	protect_list.push_back(this->protect.back + 1);
 
 	std::cout<<"Constructing rigid body is over. The current status of global protect_list is:"<<endl;

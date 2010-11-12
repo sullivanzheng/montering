@@ -50,9 +50,9 @@ private:
 	double updateRepository_HHRc(){
 		unsigned long HSmin=HS[1],HSmax=HS[1];
 		for (int i=0; i<=binnum+1;i++){
-			ff<<f[i]<<' ';
+			//ff<<f[i]<<' ';
 		}
-		ff<<std::endl;
+		//ff<<std::endl;
 
 		for (int i=0; i<=binnum+1;i++){
 			HS[i]+=f[i];
@@ -73,9 +73,9 @@ private:
 
 	double updateall(){
 		for (double x=0;x<=55;x+=0.1){
-			fG<<-getBiasingE(x)<<' ';
+			//fG<<-getBiasingE(x)<<' ';
 		}
-		fG<<std::endl;
+		//fG<<std::endl;
 
 		double HHRc=this->updateRepository_HHRc();
 		if (HHRc>10 || HHRc > 1.10 * this->HHR){
@@ -91,12 +91,12 @@ private:
 
 		for (int i=0; i<=binnum+1;i++){
 			
-			fHS<<HS[i]<<' ';
-			fK<<K[i]<<' ';
+			//fHS<<HS[i]<<' ';
+			//fK<<K[i]<<' ';
 		}
 
-		fHS<<std::endl;
-		fK<<std::endl;
+		//fHS<<std::endl;
+		//fK<<std::endl;
 		return this->HHR;
 	}
 
@@ -125,7 +125,7 @@ public:
 		
 		counter++;
 		if (counter%1==0){
-			f[index(a)]++;//fx<<a<<' ';
+			f[index(a)]++;//fx<<a<<std::endl;
 		}
 		if (counter==1000){
 			//fx<<std::endl;
@@ -259,9 +259,9 @@ private:
 	double updateRepository_HHRc(){
 		unsigned long HSmin=HS[1],HSmax=HS[1];
 		for (int i=0; i<=binnum+1;i++){
-			ff<<f[i]<<' ';
+			//ff<<f[i]<<' ';
 		}
-		ff<<std::endl;
+		//ff<<std::endl;
 
 		for (int i=0; i<=binnum+1;i++){
 			HS[i]+=f[i];
