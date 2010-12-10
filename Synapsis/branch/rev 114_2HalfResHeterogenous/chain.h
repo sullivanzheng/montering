@@ -80,6 +80,7 @@ public:
 
 	//Site I comformation parameters
 	double r_siteI;
+	double r_siteI_deviation;
 	double siteI_direction;
 
 	std::vector<cls_rigid> R;

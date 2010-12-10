@@ -971,6 +971,22 @@ double allrigid::update_allrigid_and_E(){
 			 R[0].target->C[R[0].protect[0]].y-R[1].target->C[R[1].protect[0]].y,
 			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
 
+	double tempa,tempb;
+	{
+	double X,Y,Z;
+	X=R[0].target->C[R[0].protect[0]].x-(R[0].ref_v_xyz[4][0]+t0[0]);
+	Y=R[0].target->C[R[0].protect[0]].y-(R[0].ref_v_xyz[4][1]+t0[1]);
+	Z=R[0].target->C[R[0].protect[0]].z-(R[0].ref_v_xyz[4][2]+t0[2]);
+	tempa=modu(X,Y,Z);
+	}
+	{
+	 double X,Y,Z;
+	 X=R[1].target->C[R[1].protect[0]].x-(R[1].ref_v_xyz[4][0]+t1[0]);
+	 Y=R[1].target->C[R[1].protect[0]].y-(R[1].ref_v_xyz[4][1]+t1[1]);
+	 Z=R[1].target->C[R[1].protect[0]].z-(R[1].ref_v_xyz[4][2]+t1[2]);
+	 tempb=modu(X,Y,Z);
+	}
+	this->r_siteI_deviation= tempa + tempb;
 	//Calcuate if site I's are all aligned to the -y direction.
 	/*double yangle1=0,yangle2=0;
 	{
@@ -1002,6 +1018,7 @@ double allrigid::update_allrigid_and_E(){
 	}
 	this->siteI_direction=fabs(yangle1+yangle2-0.67071509866412082);
 */
+	
 	//---------------Artificial Reaction Coordinate------------
 	double D1=digitalneg(r, 3.0, 2.3/1.);
 	double D2=digitalneg(r, 1.0, 2.3/0.2)
@@ -1016,7 +1033,7 @@ double allrigid::update_allrigid_and_E(){
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
 			Q = Q -
 				(
-			    put(fabs(r_siteI-2.0), 2. , 5./2.)
+			    put(r_siteI_deviation, 2. , 5./2.)
 //			   +put(siteI_direction, 90./180*3.14 , 2.5/(90./180*3.14))
 				)*D2; 
 		}
@@ -1030,12 +1047,12 @@ double allrigid::update_allrigid_and_E(){
 	Er=(-0.0)*exp(-r*r/2/8.0/8.0);
 
 	if (r<7.0){
-		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 2/(180./180*3.14 + 180./180*3.14));
+		//E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 2/(180./180*3.14 + 180./180*3.14));
 		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			E21=-put(fabs(r_siteI-2.0), 2. , 2.0/2.);
+			E21=-put(r_siteI_deviation, 2. , 2.0/2.);
 			E22=0;//-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
 			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
 			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));

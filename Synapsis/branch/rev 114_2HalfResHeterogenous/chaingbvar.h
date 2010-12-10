@@ -22,4 +22,7 @@ extern long rept_min_seglength;
 extern long VolEx_cutoff_rigidbody;
 extern BiasingPotential U;
 
+extern long RBAUS_COLLECT_ENABLED;
+extern long RBAUS_LOAD_LAST;
+
 #endif /* CHAINGBVARH */

@@ -13,5 +13,8 @@ long reptation_minlen;
 long rept_move_range;
 long rept_min_seglength;
 long VolEx_cutoff_rigidbody;
-BiasingPotential U(-10.0,30.0,100);
 
+
+long RBAUS_COLLECT_ENABLED;
+long RBAUS_LOAD_LAST;
+BiasingPotential U(-10.0,30.0,100);

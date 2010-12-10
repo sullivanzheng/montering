@@ -26,6 +26,10 @@ MCbox_circular::MCbox_circular(char const *configFile){
 	stringstream(config[string("rept_move_range")])>>rept_move_range;
 	stringstream(config[string("rept_min_seglength")])>>rept_min_seglength;
 
+	stringstream(config[string("RBAUS_LOAD_LAST")])>>RBAUS_LOAD_LAST;
+	stringstream(config[string("RBAUS_COLLECT_ENABLED")])>>RBAUS_COLLECT_ENABLED;
+
+
 	stringstream(config[string("VolEx_cutoff_rigidbody")])>>VolEx_cutoff_rigidbody;
 
 	//#############################MCBox Variables#####################
@@ -114,7 +118,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
-	U.load("ArtificialPotential.txt");
+	if (RBAUS_LOAD_LAST) U.load("ArtificialPotential.txt");
 
 	for (long moves = 1; moves <= monte_step; moves++)
     {
@@ -131,7 +135,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		long m,n;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		double info[3]={0,0,0},info_old[3]={0,0,0};
-		//U.collect(RG.Q);
+		if (RBAUS_COLLECT_ENABLED) U.collect(RG.Q);
 		
 		if (drand(1.0)>=P_REPT){//==================================================================
 		//Crankshaft movement.
@@ -367,11 +371,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->snapshot(buf);
 		}
 
-		/*if (moves%RBAUS_PICKLE_INTERVAL==0){
+		if (RBAUS_COLLECT_ENABLED && moves%RBAUS_PICKLE_INTERVAL==0){
 			sprintf(buf,"[%09d]Potential profile updated.",moves);
 			cout <<buf<<endl;
 			U.pickle("ArtificialPotential.txt");
-		}*/
+		}
 
 		if (moves%STAT_INTERVAL==0){
 			(*fp_log).precision(5);
@@ -385,36 +389,38 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			dnaChain->stats.crk_accepts.lap();
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.auto_moves.lap();
-			(*fp_log)<<endl;
+//			(*fp_log)<<endl;
 
 
 //----------Log acceptance and rigid body statistics.------------
-			long ial[2],ierr=0;
-		this->dnaChain->kpoly(ial,ierr);
+			
+
 			(*fp_log)<<"["<<moves<<"]";
 			(*fp_log)<<" Q "<<RG.Q;
-			(*fp_log)<<" + "<<dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-			(*fp_log)<<" Lk_re "<<dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+			long overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+			(*fp_log)<<" + "<< overpass;
+			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+			(*fp_log)<<" Lk_re "<< Lk_recomb;
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
 //			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 
-//			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"["
-//			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),"
-//			(*fp_log)	<<rigid_IEV_condition<<","
-//			(*fp_log)	<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')'
-//			(*fp_log)	<<","<<topo_condition<<".topl:"<<dnaChain->topl
+//			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"[";
+//			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),";
+//			(*fp_log)	<<rigid_IEV_condition<<",";
+//			(*fp_log)	<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')';
+//			(*fp_log)	<<","<<topo_condition<<".topl:"<<dnaChain->topl;
+
+			long ial[2],ierr=0;
+			this->dnaChain->kpoly(ial,ierr);
 			(*fp_log)	<<" KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-/*			long Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-			(*fp_log)<<" Lk_recomb="<<Lk_recomb;
-			if ( EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 ){
+			if ( EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 && overpass==+1 && RG.Q < -5.0 ){
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
-			}*/
-
+			}
 
 //			Log Rigidbody status
 			(*fp_log)
@@ -428,8 +434,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				<<" r "<<RG.r
 				<<" Ax "<<180-RG.AxisBeta/PI*180
 				<<" Ra "<<180-RG.RadiusBeta/PI*180
-				<<" | r_siteI "<<RG.r_siteI
-				<<" SiteIDir "<<RG.siteI_direction
+				<<" r_siteI "<<RG.r_siteI
+//				<<" SiteIDir "<<RG.siteI_direction
 				<<" E "<<RG.E;
 
 //			Log Gyration Radius
