@@ -16,7 +16,7 @@ inline double tempE(double x){
 }
 int maindo1(){
 	MTRand53 mt(1234);
-	BiasingPotential Ut(-5,5,100);
+	BiasingPotential Ut(-5,5,100,1000);
 	unsigned long n=0;
 	double x=0;
 	double E=tempE(x)+ Ut.getBiasingE(x);

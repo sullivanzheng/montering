@@ -19,6 +19,8 @@ public:
 	int binnum;
 	unsigned long counter;
 
+	long energy_update_cycle;
+
 	double HHR;
 
 private:
@@ -101,8 +103,8 @@ private:
 	}
 
 public:
-	BiasingPotential(double rbinstart, double rbinend, double rbinnum):
-	binstart(rbinstart),binend(rbinend),binnum(rbinnum),HHR(1e5),counter(0),
+	BiasingPotential(double rbinstart, double rbinend, double rbinnum, long renergy_update_cycle):
+	binstart(rbinstart),binend(rbinend),binnum(rbinnum),HHR(1e5),counter(0),energy_update_cycle(renergy_update_cycle),
 	fG("fG.txt"), fK("fK.txt"), fHS("fHS.txt"), ff("ff.txt"),fx("fx.txt"){
 		if (rbinnum>MAXBIN){
 			std::cout<<"Exceed the maximum number of bins"<<std::endl;
@@ -127,7 +129,7 @@ public:
 		if (counter%1==0){
 			f[index(a)]++;//fx<<a<<std::endl;
 		}
-		if (counter==1000){
+		if (counter==energy_update_cycle){
 			//fx<<std::endl;
 			this->updateall();
 			counter=0;
@@ -210,6 +212,8 @@ public:
 
 		binsize=(binend-binstart)/binnum;
 		fp.close();
+
+		return 0;
 	}
 };
 

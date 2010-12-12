@@ -17,4 +17,4 @@ long VolEx_cutoff_rigidbody;
 
 long RBAUS_COLLECT_ENABLED;
 long RBAUS_LOAD_LAST;
-BiasingPotential U(-10.0,30.0,100);
+BiasingPotential U(-10.0,30.0,100,1000);

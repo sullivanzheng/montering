@@ -31,6 +31,19 @@ double CircularChain::updateBangle(long i)
 	return C[i].bangle;		
 }
 
+long CircularChain::checkBangleConsistency(){
+	long flag=0;
+	for (int i=0;i<=maxnum;i++){
+		double b = calAngle(C[wrap(i-1,totsegnum)], C[i]);
+		if (fabs(b-C[i].bangle)>1e-5){
+			flag=1;
+			cout<< "[Bangle inconsistency] #"<<i<<": "
+				<<"b_calculated="<<b<<" C[i].bangle="<<C[i].bangle<<endl;
+		}
+	}
+	if (flag==1) return 1;
+	else return 0;
+}
 void CircularChain::driftProof()
 {
 	for (long i = 1; i < maxnum + 1; i++)
@@ -121,7 +134,387 @@ long CircularChain::crankshaft(long m, long n, double a)
 	return 0;
 }
 
-double CircularChain::dE_reptation(long m, long n, long move){
+// Bangle and energy changes for repatation movement:
+//                                                                                                           
+//        * *                             * * *            *-bangle updated (bangle+=deltabangle)            
+//-----|->->->-------------------------|->->->->----------------------------                                 
+//     |    |                          |      |                                                              
+//     m1   m1+dm1                     m2     m2+dm2                                                         
+//
+//     +  * * * +                        +  * * +          +-bangle needed to be recalculated.               
+//-----|->->->->-------------------------|->->->-----------------------------                                
+//     |      |                          |    |                                                              
+//     m1     m1+dm2                     |    m2+dm2                                                         
+//                                       m2+dm2-dm1                                                          
+
+
+double CircularChain::_adjustBangle(long m, long dm, double dBangle, 
+									segment const C2[maxa], segment Ctemp[maxa]){
+	//adjustBangle for m+1 m+2 ... m+dm, and return the length of final vector.
+	//Ctemp is the array to hold the conformation after adjustion.
+
+	//copy C2 to Ctemp;
+	for (int i=0;i<=dm;i++){
+		long p=wrap(m+i,totsegnum);
+		Ctemp[p]=C2[p];
+	}
+
+	long p = wrap(m+ 1, totsegnum);
+	long n = wrap(m+dm, totsegnum);
+	do{
+		long s=wrap(p-1,totsegnum);
+		double v1[3]={	Ctemp[s].dx,Ctemp[s].dy,Ctemp[s].dz}, 
+			v2[3]={ Ctemp[p].dx,Ctemp[p].dy,Ctemp[p].dz};
+		double rt[3];
+		Xprod(v1,v2,rt);
+		norm(rt);
+		double M[3][3];
+		this->SetRotM_halfchain(M,rt,dBangle);
+
+		for (long ss=p;ss!=wrap(n+1,totsegnum);ss=wrap(ss+1,totsegnum)){
+			double vv[3]={Ctemp[ss].dx,Ctemp[ss].dy,Ctemp[ss].dz},
+				vvo[3];
+			mat33mulvec3(M,vv,vvo);
+			Ctemp[ss].dx=vvo[0];
+			Ctemp[ss].dy=vvo[1];
+			Ctemp[ss].dz=vvo[2];
+		}
+
+		if (p==n) break;
+		else p=wrap(p+1,totsegnum);
+	}while (1);
+	
+	double X[3]={0};
+	for(p=m;;){
+		X[0]+=Ctemp[p].dx;
+		X[1]+=Ctemp[p].dy;
+		X[2]+=Ctemp[p].dz;
+		
+		if (p==n) break;
+		else p=wrap(p+1,totsegnum);
+	}
+
+	return moduV(X);
+}
+
+double CircularChain::_bisectBangle(long m, long dm, 
+       double a1, double f1, double a2, double f2, double length,
+	   segment const C2[maxa], segment Ctemp[maxa], double eps){
+    f1-=length; f2-=length;
+	double a0,f0=f1;
+	long count=0;
+	while ( fabs(f0) > eps){
+		count++;
+		a0=(a1+a2)/2;
+		f0=this->_adjustBangle(m,dm,a0,C2,Ctemp)-length;
+		if (f0*f1<0){
+			a2=a0;
+			f2=f0;
+		}
+		else{
+			a1=a0;
+			f1=f0;
+		}
+	}
+	return a0;
+	
+}
+
+int CircularChain::_deformReptSegments_updateInternalBangles(long m, long dm, 
+									  double length, double Lnow, segment C2[maxa]){
+	//Solve reptation adaptation problem for vector m, m+1 ... m+dm.
+    //Segments in C2 will be deformed to appropriate conformation for the V1, V2 exchange.
+
+    const int ERROR=-1;
+	const double eps=1e-7;
+	double minA=10,maxA=0;
+	for (long i=0;i<=dm;i++){
+		long p=wrap(m+i,totsegnum);	
+		if (C[p].bangle<minA) minA=C[p].bangle;
+		if (C[p].bangle>maxA) maxA=C[p].bangle;
+		C2[p]=C[p];
+	}
+	
+	double A0,f;
+	static const int tryL=10;
+	if (fabs(Lnow-length)<eps){
+		A0=0;
+	}
+	else if (Lnow<length){
+		double An=-maxA*0.9, Ap=0.9*PI-maxA>0?0.9*PI-maxA:0;
+		double Atry[tryL]={An*0.2, An*0.4, An*0.6, An*0.8, An, Ap*0.2, Ap* 0.4, Ap*0.6, Ap*0.8, Ap};//{An,Ap,An/2,Ap/2};
+		for (int t=0; t<tryL; t++){
+			A0=Atry[t];
+			static segment Ctemp[maxa];
+			f=this->_adjustBangle(m,dm,A0,C2,Ctemp);
+			if (f>length) goto bisect;
+		}
+		return ERROR;
+	}else if(Lnow>length){
+		double An=-maxA*0.9, Ap=0.9*PI-maxA>0?0.9*PI-maxA:0;
+		double Atry[tryL]={Ap*0.2, Ap* 0.4, Ap*0.6, Ap*0.8, Ap, An*0.2, An*0.4, An*0.6, An*0.8, An};//{Ap,An,Ap/2,An/2};
+		for (int t=0; t<tryL; t++){
+			A0=Atry[t];
+			static segment Ctemp[maxa];
+			f=this->_adjustBangle(m,dm,A0,C2,Ctemp);
+			if (f<length) goto bisect;
+		}
+		return ERROR;
+	}else{
+		cout<<"CircularChain::_deformReptSegments_updateInternalBangles Problem";
+		exit(EXIT_FAILURE);
+	}
+	
+bisect:
+	static segment Ctemp[maxa];
+	if (A0!=0){
+		A0=this->_bisectBangle(m,dm,A0,f,0,Lnow,length,C2,Ctemp,eps);
+
+		//Copy Ctemp to C2
+		for (long i=0;i<=dm;i++){
+			long p=wrap(m+i,totsegnum);
+			C2[p]=Ctemp[p];
+		}
+		
+		//update bangle within V1 and V2;
+		for (long i=1;i<=dm;i++){
+			long p=wrap(m+i,totsegnum);
+			C2[p].bangle += A0;
+		}
+	}
+	return 0;
+}
+
+double CircularChain::dE_reptation_3_4(long m1, long dm1, 
+									   long m2, long dm2, int& rejection_sign){
+	//exchange vectors of m1~m1+dm1 with m2~m2+dm2, assuming m2 is at the positive direction of m1.
+	//In this case, dm1, dm2 = 2,3 or 3,2 respectively.
+    //rejection_sign=0  successfully exchanged segments.
+	//rejection_sign=1	unsuccessful deformation.
+	//rejection_sign=2	shortcut of unsuccess: the contour of the shorter is shorter than the head-tail vector of the longer.
+	static segment C2[maxa];
+
+	rejection_sign=0;
+	long m1lastV=wrap(m1+dm1,totsegnum),m2lastV=wrap(m2+dm2,totsegnum);
+	long m1end=wrap(m1+dm1+1,totsegnum),m2end=wrap(m2+dm2+1,totsegnum);
+
+	//cal v1 and v2 length
+
+	double V1[3]={
+		C[m1end].x - C[m1].x,
+		C[m1end].y - C[m1].y,
+		C[m1end].z - C[m1].z
+	};
+
+	double V2[3]={
+		C[m2end].x - C[m2].x,
+		C[m2end].y - C[m2].y,
+		C[m2end].z - C[m2].z
+	};
+	
+	double L1=moduV(V1), L2=moduV(V2);
+	int flag;
+	//Try to fit shorter segment to longer segment
+	if (dm1>dm2){
+
+		if (C[m2].l*(dm2+1) < L1 ){
+			rejection_sign=2;
+			return 99999;
+		}
+
+		flag=this->_deformReptSegments_updateInternalBangles(m2, dm2, L1, L2, C2);
+		if (flag==-1) {
+			rejection_sign=1; 
+			//char buf[200]; 
+			//sprintf(buf,"tttmove_%05d_43exchange_rej3to4before.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m1,wrap(m1+dm1,totsegnum));
+			//sprintf(buf,"tttmove_%05d_43exchange_rej3to4trailends.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m2,wrap(m2+dm2,totsegnum));
+			return 99999;
+		}
+
+		flag=this->_deformReptSegments_updateInternalBangles(m1, dm1, L2, L1, C2);
+		if (flag==-1) {
+			rejection_sign=1; 
+			//char buf[200]; 
+			//sprintf(buf,"tttmove_%05d_43exchange_rej4to3before.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m2,wrap(m2+dm2,totsegnum));
+			//sprintf(buf,"tttmove_%05d_43exchange_rej4to3trailends.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m1,wrap(m1+dm1,totsegnum));
+			return 99999;
+		}
+	}else{
+
+		if (C[m1].l*(dm1+1) < L2 ){
+			rejection_sign=2;
+			return 99999;
+		}
+
+		flag=this->_deformReptSegments_updateInternalBangles(m1, dm1, L2, L1, C2);
+		if (flag==-1) {
+			rejection_sign=1; 
+			//char buf[200]; 
+			//sprintf(buf,"tttmove_%05d_34exchange_rej3to4before.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m1,wrap(m1+dm1,totsegnum));
+			//sprintf(buf,"tttmove_%05d_34exchange_rej3to4trailends.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m2,wrap(m2+dm2,totsegnum));
+			return 99999;
+		}
+		flag=this->_deformReptSegments_updateInternalBangles(m2, dm2, L1, L2, C2);
+		if (flag==-1) {
+			rejection_sign=1; 
+			//char buf[200]; 
+			//sprintf(buf,"tttmove_%05d_34exchange_rej4to3before.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m2,wrap(m2+dm2,totsegnum));
+			//sprintf(buf,"tttmove_%05d_34exchange_rej4to3trailends.txt",this->stats.auto_moves.getTotCounts()); 
+			//this->snapshotseg(buf,C,m1,wrap(m1+dm1,totsegnum));
+			return 99999;
+		}
+	}
+
+	//Rotate V1 to V2, V2 to V1.
+	double V1new[3]={0},V2new[3]={0};
+	for (int i=0;i<=dm1;i++){
+		long p=wrap(m1+i,totsegnum);
+		V1new[0]+=C2[p].dx;
+		V1new[1]+=C2[p].dy;
+		V1new[2]+=C2[p].dz;
+	}
+	for (int i=0;i<=dm2;i++){
+		long p=wrap(m2+i,totsegnum);
+		V2new[0]+=C2[p].dx;
+		V2new[1]+=C2[p].dy;
+		V2new[2]+=C2[p].dz;
+	}
+
+		double rt[3], M[3][3],rotAngle;
+		//rotate v1 to v2's position
+		Xprod(V1new,V2,rt);
+		norm(rt);
+		rotAngle=betaArray12(V1new,V2);
+		this->SetRotM_halfchain(M,rt,rotAngle);	
+
+		for (long i=0;i<=dm1;i++){
+			long p=wrap(m1+i,totsegnum);
+			double vi[3]={C2[p].dx,C2[p].dy,C2[p].dz},vo[3];
+			mat33mulvec3(M,vi,vo);
+			C2[p].dx=vo[0];	C2[p].dy=vo[1];	C2[p].dz=vo[2];
+		}
+
+		//rotate v2 to v1's position
+		Xprod(V2new,V1,rt);
+		norm(rt);
+		rotAngle=betaArray12(V2new,V1);
+		this->SetRotM_halfchain(M,rt,rotAngle);	
+
+		for (long i=0;i<=dm2;i++){
+			long p=wrap(m2+i,totsegnum);
+			double vi[3]={C2[p].dx,C2[p].dy,C2[p].dz},vo[3];
+			mat33mulvec3(M,vi,vo);
+			C2[p].dx=vo[0];	C2[p].dy=vo[1];	C2[p].dz=vo[2];
+		}
+/*
+		V1new[0]=V1new[1]=V1new[2]=0;
+		V2new[0]=V2new[1]=V2new[2]=0;
+		for (int i=0;i<=dm1;i++){
+			long p=wrap(m1+i,totsegnum);
+			V1new[0]+=C2[p].dx;
+			V1new[1]+=C2[p].dy;
+			V1new[2]+=C2[p].dz;
+		}
+		for (int i=0;i<=dm2;i++){
+			long p=wrap(m2+i,totsegnum);
+			V2new[0]+=C2[p].dx;
+			V2new[1]+=C2[p].dy;
+			V2new[2]+=C2[p].dz;
+		}
+*/
+	//Calcualte initial energy:
+		double E0=0;
+		for (long p=m1;;){
+			E0+=this->G_b(p);
+
+			if (p==wrap(m2+dm2+1,totsegnum)) break;
+			p = wrap(p+1,totsegnum);
+		}
+		
+	//Incorporate C2 into C.
+
+		//shift segments between V1 and V2.
+		if (wrap(m1+dm1+1,totsegnum)!=m2) {//V1 and V2 are not connected.
+			long shift=dm2-dm1;
+			if (shift>0){//shift rightward
+				long p=wrap(m2-1,totsegnum);
+				do{
+					C[wrap(p+shift,totsegnum)]=C[p];
+
+					if (p==wrap(m1+dm1+1,totsegnum)) break;
+					p=wrap(p-1,totsegnum);
+				}while(1);
+			}else if (shift<0){
+				shift=-shift;
+				long p=wrap(m1+dm1+1,totsegnum);
+				do{
+					C[wrap(p-shift,totsegnum)]=C[p];
+
+					if (p==wrap(m2-1,totsegnum)) break;
+					p=wrap(p+1,totsegnum);
+				}while(1);
+			}else{
+				cout<<"CircularChain::dE_reptation_3_4: dm1 should not be equal to dm2"<<endl;
+				exit(EXIT_FAILURE);
+			}
+		}
+		//Incorporation of V2 and V1.
+		for (long i=0;i<=dm2;i++){
+			long p=wrap(m1+i,totsegnum),q=wrap(m2+i,totsegnum);
+			C[p]=C2[q];
+		}
+
+		for (long i=0;i<=dm1;i++){
+			long p=wrap(m2+dm2-dm1+i,totsegnum),q=wrap(m1+i,totsegnum);
+			C[p]=C2[q];
+		}
+
+	//recalculate X
+		for (long p=m1;;){ //Note that C[m1].x is trash information, even though C[m1].X is not moved.
+			long last=wrap(p-1,totsegnum);
+			C[p].x=C[last].x+C[last].dx;
+			C[p].y=C[last].y+C[last].dy;
+			C[p].z=C[last].z+C[last].dz;
+
+			if (p==wrap(m2+dm2,totsegnum)) break;
+			p = wrap(p+1,totsegnum);
+		}
+
+	//recalculate angles
+
+
+// Chart of angle updates
+//     +  * * * +                        +  * * +          +-bangle needed to be recalculated.               
+//-----|->->->->-------------------------|->->->-----------------------------                                
+//     |      |                          |    |                                                              
+//     m1     m1+dm2                     |    m2+dm2                                                         
+//                                       m2+dm2-dm1       
+// recalculate: m1 m1+dm2+1 m2+dm2-dm1 m2+dm2+1
+	this->updateBangle(m1);
+	this->updateBangle(wrap(m1+dm2+1,totsegnum));
+	this->updateBangle(wrap(m2+dm2-dm1,totsegnum));
+	this->updateBangle(wrap(m2+dm2+1,totsegnum));
+
+	//recalculate energy and find the difference:
+	double E1=0;
+	for (long p=m1;;){
+		E1+=this->G_b(p);
+
+		if (p==wrap(m2+dm2+1,totsegnum)) break;
+		p = wrap(p+1,totsegnum);
+	}
+	//snapshot("test.txt");
+	return E1-E0;
+}
+
+double CircularChain::dE_reptation_simple(long m, long n, long move){
 	//this operation will make the reptation movement between node m  to n-1
 	//in the clockwise fashion, ie, the arc: m m+1 m+2 ...[maxnum 0 1]...n-2
 	//n-1. Therefore, n is not included.
@@ -268,6 +661,70 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 	temp=4.0*pi*pi*140/2/N+C_/N*(d_Lk+bt_angle*0+bpo_angle)^2;
 	*/
 	return dE;
+}
+
+int CircularChain::snapshotseg(char *filename, segment const * Ct, int start, int end){
+	//This subroutine will display segments (vectors) from start to end.
+	ofstream fh (filename);
+	char buf[300];
+	long i;
+
+	if (!fh.good())
+	{
+		cout << filename << " file not writable" << endl;
+		getchar();
+		exit(EXIT_FAILURE);
+	}
+
+	long dm=0;//count number of segments (vectors). Total nubmer of atoms displayed is dm+1.
+	for (long p=start;;) {
+		dm++;
+		if (p==end) break;
+		p=wrap(p+1,totsegnum);
+	}
+	sprintf(buf, "%6d %20s", dm + 1, "[Snapshot of segments from i_start to i_end]");
+	fh << buf << endl;
+
+	//Draw starting atom
+	i=start;
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
+        1, "F", Ct[i].x, Ct[i].y, Ct[i].z, 1, 2);
+	fh << buf << endl;
+
+	//Draw inside atom
+	for ( long p = 1; p <= dm - 1 ; p++)
+	{	
+		i=wrap(start+p,totsegnum);
+		long mark=protect_list[i];
+		sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d%6d", 
+			p + 1, mark?"Cl":"C", Ct[i].x, Ct[i].y, Ct[i].z, 1, p , p + 2);
+		fh << buf << endl;
+	}
+
+	//Draw tailing atom
+	i=wrap(end+1,totsegnum);
+	long mark=protect_list[i];
+	sprintf(buf, "%6d%4s%12.6f%12.6f%12.6f%6d%6d", 
+			dm + 1, mark?"Cl":"C", Ct[i].x, Ct[i].y, Ct[i].z, 1, dm);
+		fh << buf << endl;
+
+
+    fh << endl << "Detailed Info" << endl;
+	for ( long p = 0; p <= dm - 1; p++)
+	{
+		i=wrap(start+p,totsegnum);
+		sprintf(buf, "seg %d (realseg) %d |dX(%15.13f %15.13f %15.13f)| %15.10f X[i+1]-X %15.10f %15.10f", 
+            p+1, i , Ct[i].dx,Ct[i].dy,Ct[i].dz,
+            modu(Ct[i].dx, Ct[i].dy, Ct[i].dz), 
+            modu(Ct[i + 1].x - Ct[i].x, 
+                 Ct[i + 1].y - Ct[i].y, 
+                 Ct[i + 1].z - Ct[i].z), 
+            Ct[i].bangle);
+		fh << buf << endl;
+	}
+	fh.close();
+
+	return 0;
 }
 
 void CircularChain::snapshot(char *filename)
@@ -745,7 +1202,7 @@ double CircularChain::_fastWr_topl_update(){
 	return double(kndwr)+bwr;
 }
 
-long CircularChain::checkConsistancy(){
+long CircularChain::checkConsistency(){
 	//return 1 if inconsistent.
 	static const double eps=1e-5;
 	long flag=0;
@@ -753,11 +1210,27 @@ long CircularChain::checkConsistancy(){
 		if (fabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz) > eps ){
-				cout<<"[Inconsistant]"<<i
-					<<"("
+				double m=modu(
+					C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx,
+					C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy,
+					C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz);
+				double dm=modu(C[i].dy,C[i].dy,C[i].dz);
+				cout<<"[Inconsistant]"<<i<<endl
+					<<"X-X modu("
+					<<C[wrap(i+1,totsegnum)].x-C[i].x<<","
+					<<C[wrap(i+1,totsegnum)].y-C[i].y<<","
+					<<C[wrap(i+1,totsegnum)].z-C[i].z<<")="
+					<<m<<endl
+					<<"dX  modu("
+					<<C[i].dx<<","
+					<<C[i].dy<<","
+					<<C[i].dz<<")="
+					<<dm<<endl
+					<<"diff    ("
 					<<C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx<<","
 					<<C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy<<","
-					<<C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz<<")"<<endl;
+					<<C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz<<")="
+					<<endl;
 				flag=1;
 		}
 	}

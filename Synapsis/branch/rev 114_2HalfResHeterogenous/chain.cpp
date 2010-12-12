@@ -82,8 +82,10 @@ long Chain::readIniFile(char const *filename)
 void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 {
 	//M[3][3]: the output rotation matrix
-	//rv[3]: rotation vector (rotation axis determined by right hand rule)
+	//rv[3]: normalized rotation vector (rotation axis determined by right hand rule)
 	//a: angle of rotation in radian
+	//The formula is based on: http://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+	// and http://en.wikipedia.org/wiki/Rotation_matrix
 	double cosa;
 	double sina;
 	cosa = cos(a);
@@ -100,14 +102,9 @@ void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 	mat33mulscalOW(M2, (1 - cosa));
 	double M3[3][3] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 	/// <>/////////////</>
-	/*0*/
-	M3[0][1] = rv[2];
-	M3[0][2] = -rv[1];
-	M3[1][0] = -rv[2] /*0*/;
-	M3[1][2] = rv[0];
-	M3[2][0] = rv[1];
-	M3[2][1] = -rv[0];
-	/*0*/
+	/*0*/				M3[0][1] = -rv[2];	M3[0][2] =  rv[1];
+	M3[1][0] =  rv[2]	/*0*/;				M3[1][2] = -rv[0];
+	M3[2][0] = -rv[1];	M3[2][1] =  rv[0];	/*0*/
 	/// <>/////////////</>
 	mat33mulscalOW(M3, sina);
 	mat33addOW(M, M2);

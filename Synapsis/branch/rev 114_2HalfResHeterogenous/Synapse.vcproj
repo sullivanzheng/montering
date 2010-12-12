@@ -152,7 +152,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\$(ConfigurationName)\bin"
+			OutputDirectory=".\$(ConfigurationName)\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			>
@@ -173,6 +173,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="D:\_rch\GradProg\smalllib\"
 			/>
 			<Tool

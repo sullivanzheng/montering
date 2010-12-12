@@ -92,6 +92,13 @@ public:
 	int IEV_spheres(long m, long n);
 };
 
+struct segment{
+		double x,y,z;
+		double dx,dy,dz;
+		double l; //segment length
+		double bangle;
+};
+
 class Chain {
 public:
 	struct stct_stat
@@ -108,7 +115,11 @@ public:
 		  This number can be decided by defaultSampleCycle and
 		  passed to endToEndSampleCycle. */
 		counter crk_accepts;
+		counter crk_counts;
 		counter rpt_accepts;
+		counter rpt_counts;
+		counter rpt_rejection_count;
+		counter rpt_rejection_quickrej;
 		counter auto_moves;
         statqueue <double> auto_prd_endToEndDistance2;
         statqueue <double> auto_prd_endToEndAngle;
@@ -117,7 +128,11 @@ public:
 
         void resetStat(){
             crk_accepts.lap();
+			crk_counts.lap();
 			rpt_accepts.lap();
+			rpt_counts.lap();
+			rpt_rejection_count.lap();
+			rpt_rejection_quickrej.lap();
             auto_moves.lap();
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
@@ -126,12 +141,7 @@ public:
 		}        
 	}stats;
 
-	struct segment{
-		double x,y,z;
-		double dx,dy,dz;
-		double l; //segment length
-		double bangle;
-    }C[maxa];//C stands for "Chain"
+segment C[maxa];//C stands for "Chain"
 
 protected:
     long totsegnum;
@@ -154,11 +164,11 @@ public:
 	double VolEx_R;
 	void auto_updt_stats(){
         stats.auto_moves++;
-		if (stats.auto_moves() % endToEndSampleCycle==0) {
+		/*if (stats.auto_moves() % endToEndSampleCycle==0) {
             double temp=this->getEndToEndDistance();
             stats.auto_prd_endToEndDistance2.push(temp*temp);
             stats.auto_prd_endToEndAngle.push(this->getEndToEndAngle());
-        }
+        }*/
         if (stats.auto_moves() % NORMALIZE_PERIOD == 0){
             this->normalize();
         }
@@ -201,6 +211,12 @@ protected:
 	void driftProof();
 	virtual long updateAllBangle();
 	virtual double updateBangle(long i);
+	double _adjustBangle(long m, long dm, double newBangle, 
+		segment const C2[maxa], segment Ctemp[maxa]);
+	double _bisectBangle(long m, long dm, 
+		double a1, double f1, double a2, double f2, double length,
+		segment const C2[maxa], segment Ctemp[maxa], double eps);
+	int _deformReptSegments_updateInternalBangles(long m, long dm, double length, double Lnow, segment C2[maxa]);
 public:
 	double writhe;
 	double topl;
@@ -217,15 +233,18 @@ public:
 	virtual double getg(long n);
 	virtual double calG_bSum();
 	virtual long crankshaft(long m, long n, double a);
-	virtual double dE_reptation(long m, long n, long move);
+	virtual double dE_reptation_simple(long m, long n, long move);
+	virtual double dE_reptation_3_4(long m1, long dm1, long m2, long dm2, int& rejection_sign);
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	int kpoly(long ial[2],long ierr);
+	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
 	virtual void snapshot(char *filename);
 	long IEV_closeboundary(long in, long ik);
 	long IEV_Alex_closeboundary(long in, long ik, double info[3]);
 	long IEV_with_rigidbody_closeboundary( long in,  long ik, double info[3]);
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
-	long checkConsistancy();
+	long checkConsistency();
+    long checkBangleConsistency();
 	long getBranchNumber();
 	long scanBranch(char* filename);
 private:
