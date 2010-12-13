@@ -217,6 +217,7 @@ public:
 	}
 };
 
+#if 0
 class BiasingPotentialE{
 public:
 	static const int MAXBIN=500;
@@ -414,5 +415,7 @@ public:
 		fp.close();
 	}
 };
+#endif
+
 
 #endif /* BIAS_H */

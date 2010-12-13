@@ -670,6 +670,95 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 	return dE;
 }
 
+
+double CircularChain::dE_treadmill(double direction){
+	//snapshot("before.txt");//DEBUG
+	vector<int> updateBangleList;
+	static int const stepforward=3;
+	if (direction>0){ //positive shift.
+		segment C0=this->C[maxnum];
+		int nextp;
+		for (int p=maxnum;;){
+			nextp=p-1;
+			if (nextp<0) break;
+			if (this->C[wrap(nextp-stepforward,totsegnum)].l>rept_min_seglength && 
+				this->C[wrap(nextp+stepforward,totsegnum)].l>rept_min_seglength ){
+				this->C[p]=this->C[nextp];
+				p--;
+			}else{
+				//            nextp                  p   p+1
+				//            |                      |   |
+				//--->--->#-->*-->==>==>==>==>....==>@-->--->--->
+				//--->--->--->#-->==>==>==>==>....==>*-->@-->--->
+				//                ^                  ^   ^
+				//                |                  |   |
+				//                -----BangleChange===----
+				while(this->C[wrap(nextp+stepforward,totsegnum)].l<rept_min_seglength || 
+					this->C[wrap(nextp-stepforward,totsegnum)].l<rept_min_seglength) nextp--;
+				this->C[p]=this->C[nextp];
+				updateBangleList.push_back(nextp+1);
+				updateBangleList.push_back(p);
+				updateBangleList.push_back(p+1);
+				p=nextp;
+			}
+		}
+		this->C[0]=C0;
+
+	}else{//negative shift.
+		segment C0=this->C[0];
+		int nextp;
+		for (int p=0;;){
+			nextp=p+1;
+			if (nextp>maxnum) break;
+			if (this->C[wrap(nextp-stepforward,totsegnum)].l>rept_min_seglength && 
+				this->C[wrap(nextp+stepforward,totsegnum)].l>rept_min_seglength ){
+				this->C[p]=this->C[nextp];
+				p++;
+			}else{
+				//            p                      nextp
+				//            |                      |   
+				//--->--->--->#-->==>==>==>==>....==>*-->@-->--->
+				//--->--->#-->*-->==>==>==>==>....==>@-->--->--->
+				//            ^   ^                  ^    
+				//            |   |                  |    
+				//            ---------BangleChange---    
+				while(this->C[wrap(nextp+stepforward,totsegnum)].l<rept_min_seglength || 
+					this->C[wrap(nextp-stepforward,totsegnum)].l<rept_min_seglength) nextp++;
+				this->C[p]=this->C[nextp];
+				updateBangleList.push_back(nextp);
+				updateBangleList.push_back(p);
+				updateBangleList.push_back(p+1);
+				p=nextp;
+			}
+		}
+		this->C[maxnum]=C0;
+	}
+
+	double oldE=0,newE=0,oldEt,newEt;
+//	oldEt=this->calG_bSum();//DEBUG
+	for (vector<int>::iterator it=updateBangleList.begin();it!=updateBangleList.end();it++){
+		oldE+=this->G_b(*it);
+		this->updateBangle(*it);
+		newE+=this->G_b(*it);
+	}
+//	newEt=this->calG_bSum();//DEBUG
+
+
+	//update x,y,z
+	for (int i=1;i<=maxnum;i++){
+		C[i].x=C[i-1].x+C[i-1].dx;
+		C[i].y=C[i-1].y+C[i-1].dy;
+		C[i].z=C[i-1].z+C[i-1].dz;
+	}
+#if 0
+	if (newE-oldE>10) {
+		char buf[200];
+		sprintf(buf,"after[%05d]%5.2f-(%6.2f,%6.2f).txt",this->stats.auto_moves(),newE-oldE,oldEt,newEt);
+		snapshot(buf);
+	}//DEBUG
+#endif
+	return newE-oldE;
+}
 int CircularChain::snapshotseg(char *filename, segment const * Ct, int start, int end){
 	//This subroutine will display segments (vectors) from start to end.
 	ofstream fh (filename);

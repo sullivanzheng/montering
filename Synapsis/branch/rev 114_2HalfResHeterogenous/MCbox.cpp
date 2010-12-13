@@ -26,6 +26,8 @@ MCbox_circular::MCbox_circular(char const *configFile){
 	stringstream(config[string("rept_move_range")])>>rept_move_range;
 	stringstream(config[string("rept_min_seglength")])>>rept_min_seglength;
 
+	stringstream(config[string("P_TREADMILL")])>>P_TREADMILL;
+
 	stringstream(config[string("RBAUS_LOAD_LAST")])>>RBAUS_LOAD_LAST;
 	stringstream(config[string("RBAUS_COLLECT_ENABLED")])>>RBAUS_COLLECT_ENABLED;
 
@@ -147,8 +149,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//Artificial potential U changes, and RE.E should be updated.
 			if (flag>0) RG.update_allrigid_and_E(); 
 		}
-		
-		if (drand(1.0)>=P_REPT){//==================================================================
+		double selection=drand(1.0);
+
+		if (selection > P_REPT + P_TREADMILL){//==================================================================
 		//Crankshaft movement.
 			//generate rotation axis, avoiding rigid body.
 			long testp;long testflag;
@@ -165,11 +168,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			selection = drand(1.0);
 			if (selection > P_SMALLROTATION)
 			{
-				rotAng = drand(-maxRotAng, maxRotAng);
-				if (rotAng <= 0)
-					rotAng -= maxRotAng;
-				else
-					rotAng += maxRotAng;
+				rotAng = drand(-maxRotAng, maxRotAng)*4;
+				//if (rotAng <= 0)
+				//	rotAng -= maxRotAng;
+				//else
+				//	rotAng += maxRotAng;
 			}
 			else
 				rotAng = drand(-maxRotAng, maxRotAng);
@@ -261,10 +264,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					RG.update_allrigid_and_E();
 					dnaChain->writhe=cacheWrithe;
 					dnaChain->E_t=cacheE_t;
-					dE=0;
 			}
 		}//End Crankshaft movement.
-		else{//==================================================================================
+		else if(selection<P_REPT){//==================================================================================
 		//Reptation movement.
 
 /*			if (dnaChain->checkConsistency()==1){
@@ -273,16 +275,17 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 */
 			long testp;long testflag1, testflag2;
 			long m3,n3,m4,n4;
+			static long const mm3=3,mm4=4;
 			do{
 				m3=irand(maxnum+1); //3-segment
-				n3=wrap(m3+2,totsegnum);
+				n3=wrap(m3+mm3-1,totsegnum);
 
 
 				//m3~m3+2 m3+3~~~~~~~~~~~~|-----4---|
 				//|--3----|<--max+1-3-4-->|-----4---|
 				//        +0             +max+1-3-4
-				m4=wrap( (m3+3)+irand((maxnum+1)-3-4+1), totsegnum );//4-segment
-				n4=wrap( m4+3, totsegnum);
+				m4=wrap( (m3+mm3)+irand((maxnum+1)-mm3-mm4 +1), totsegnum );//4-segment
+				n4=wrap( m4+mm4-1, totsegnum);
 
 				//Check if containting any rigid body segments or connecting segments whose length is smaller than 3.0.
 				testflag1=0, testflag2=0;
@@ -336,11 +339,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//m2 should be at the positive direction of m1.
 			long m1,dm1,m2,dm2;
 			if (testflag1==2) {
-				m1=m3;dm1=2;
-				m2=m4;dm2=3;
+				m1=m3;dm1=mm3-1;
+				m2=m4;dm2=mm4-1;
 			}else if (testflag2==2){
-				m1=m4;dm1=3;
-				m2=m3;dm2=2;
+				m1=m4;dm1=mm4-1;
+				m2=m3;dm2=mm3-1;
 			}else{
 				cout<<"testflag error at performMetropolisCircularCrankRept:Reptation movement."<<endl;
 				exit(EXIT_FAILURE);
@@ -424,13 +427,103 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				RG.update_allrigid_and_E();
 				dnaChain->writhe=cacheWrithe;
 				dnaChain->E_t=cacheE_t;
-				dE=0;
 			}
 
 		}//End reptation movement.
-		
+		else if(selection < P_REPT + P_TREADMILL && selection>=P_REPT){
+			//==============================Treadmill movement==================================
+			//Stats:
+			this->dnaChain->auto_updt_stats();
+			this->dnaChain->stats.tdm_counts++;
 
-goon:	E+=dE;
+     		//old rigid body energy.
+			cacheRE=RG.E;
+
+			//old writhe energy;
+			cacheE_t=dnaChain->E_t;
+			cacheWrithe=dnaChain->writhe;
+
+			//old conformation stored.
+		    static segment backC[maxa];
+			for (int i=0;i<=maxnum;i++)
+				backC[i]=dnaChain->C[i];
+
+			int direction=drand(1.0)-0.5;
+			//direction>0 positive shift else negative shift.
+			dE=dnaChain->dE_treadmill(direction);
+
+			//update energies.
+			RG.update_allrigid_and_E();
+			this->dnaChain->E_t_updateWrithe_E_t();
+
+			//total energy change.
+			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
+			
+			//Flags: 0 - uninitialized -1 - not satisfied +1 - satisfied
+			E_condition=0;
+			IEV_condition=0;
+    		topo_condition=0;
+			rigid_IEV_condition=0;
+
+			if (dE < 0){
+				E_condition=1;
+			}
+			else
+			{
+				double exp_E;
+				double r;
+				exp_E = exp(-dE);
+				r = mt();
+				if (r < exp_E){
+					 E_condition=1;
+				}
+				else{
+					 E_condition=-1;
+				}
+			}
+			
+			if (E_condition==1){
+				if (RG.IEV_spheres(m,n)==1){
+					rigid_IEV_condition=1;
+				}
+				else{
+					rigid_IEV_condition=-1;
+				}
+			} 
+			
+			if (rigid_IEV_condition==1){//rigid_IEV_condition
+				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
+						IEV_condition=1;
+					}
+					else{
+						IEV_condition=-1;
+				}
+			}
+
+			if (IEV_condition==1){
+				if (this->dnaChain->topl<1.5){ 
+					topo_condition=1;
+				}
+				else{
+					topo_condition=-1;
+				}
+			}
+
+			if (E_condition==1 && rigid_IEV_condition==1 
+				&& IEV_condition==1  && topo_condition==1){
+					dnaChain->stats.tdm_accepts++;
+			}
+			else{
+				for (int i=0;i<=maxnum;i++)	dnaChain->C[i]=backC[i];
+				RG.update_allrigid_and_E();
+				dnaChain->writhe=cacheWrithe;
+				dnaChain->E_t=cacheE_t;
+			}
+		}
+
+goon:	if (E_condition==1 && rigid_IEV_condition==1 
+				&& IEV_condition==1  && topo_condition==1)
+				E+=dE;
 
 		// length and bangle consistency check.
 		/*
@@ -469,19 +562,24 @@ goon:	E+=dE;
 
 		if (moves%STAT_INTERVAL==0){
 			(*fp_log).precision(5);
-			(*fp_log)<<"crk_accepted:"<<dnaChain->stats.crk_accepts()<<"/"<<dnaChain->stats.crk_counts ()
-				<<'['<<float(dnaChain->stats.crk_accepts())/dnaChain->stats.crk_counts()*100<<"%] "
-				<<" rpt_accepted:"<<dnaChain->stats.rpt_accepts()<<"/"<<dnaChain->stats.rpt_counts()
-				<<'['<<float(dnaChain->stats.rpt_accepts())/dnaChain->stats.rpt_counts()*100<<"%,"
-				<<"NoSolRej: "<<float(dnaChain->stats.rpt_rejection_count())/dnaChain->stats.rpt_counts()*100<<"% "
-				<<"QuickRej: "<<float(dnaChain->stats.rpt_rejection_quickrej())/dnaChain->stats.rpt_counts()*100<<"% "
-				<<"] in "<<dnaChain->stats.auto_moves()<< " moves ";
+			char buf[400];
+			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%]  tdm_actp:%3d/%3d[%5.2f%%] rpt_acpt:%3d/%3d[%5.2f%%, NoSol:%5.2f%% Short:%5.2f%%] in %4d moves ",
+					dnaChain->stats.crk_accepts(),dnaChain->stats.crk_counts(),float(dnaChain->stats.crk_accepts())/dnaChain->stats.crk_counts()*100,
+					dnaChain->stats.tdm_accepts(),dnaChain->stats.tdm_counts(),float(dnaChain->stats.tdm_accepts())/dnaChain->stats.tdm_counts()*100,
+					dnaChain->stats.rpt_accepts(),dnaChain->stats.rpt_counts(),float(dnaChain->stats.rpt_accepts())/dnaChain->stats.rpt_counts()*100,
+					float(dnaChain->stats.rpt_rejection_count())/dnaChain->stats.rpt_counts()*100,
+					float(dnaChain->stats.rpt_rejection_quickrej())/dnaChain->stats.rpt_counts()*100,
+					dnaChain->stats.auto_moves()
+				);
+			(*fp_log)<<buf;
 			dnaChain->stats.crk_accepts.lap();
 			dnaChain->stats.crk_counts.lap();
 			dnaChain->stats.rpt_accepts.lap();
 			dnaChain->stats.rpt_counts.lap();
 			dnaChain->stats.rpt_rejection_count.lap();
 			dnaChain->stats.rpt_rejection_quickrej.lap();
+			dnaChain->stats.tdm_accepts.lap();
+			dnaChain->stats.tdm_counts.lap();
 			dnaChain->stats.auto_moves.lap();
 //			(*fp_log)<<endl;
 
@@ -489,7 +587,7 @@ goon:	E+=dE;
 //----------Log acceptance and rigid body statistics.------------
 			
 
-			(*fp_log)<<"["<<moves<<"]";
+			(*fp_log)<<"["<<moves<<"] NOW:"<<((selection<P_REPT)?"REP":(selection<(P_REPT+P_TREADMILL)?"TDM":"CRK"));
 			(*fp_log)<<" Q "<<RG.Q;
 			long overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 			(*fp_log)<<" + "<< overpass;
@@ -499,11 +597,11 @@ goon:	E+=dE;
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
 //			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 
-//			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"[";
-//			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),";
-//			(*fp_log)	<<rigid_IEV_condition<<",";
-//			(*fp_log)	<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')';
-//			(*fp_log)	<<","<<topo_condition<<".topl:"<<dnaChain->topl;
+			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"[";
+			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),";
+			(*fp_log)	<<rigid_IEV_condition<<",";
+			(*fp_log)	<<IEV_condition<<'('<<info[0]<<','<<info[1]<<')';
+			(*fp_log)	<<","<<topo_condition<<".topl:"<<dnaChain->topl;
 
 			long ial[2],ierr=0;
 			this->dnaChain->kpoly(ial,ierr);

@@ -6,6 +6,7 @@ double bpperunit;
 double maxRotAng;//crankshaft
 double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 double P_REPT;
+double P_TREADMILL;
 long protect_list[maxa];
 double specify_rigidity_list[maxa];
 long reptation_maxlen;

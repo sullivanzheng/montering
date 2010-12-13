@@ -120,6 +120,8 @@ public:
 		counter rpt_counts;
 		counter rpt_rejection_count;
 		counter rpt_rejection_quickrej;
+		counter tdm_counts;
+		counter tdm_accepts;
 		counter auto_moves;
         statqueue <double> auto_prd_endToEndDistance2;
         statqueue <double> auto_prd_endToEndAngle;
@@ -133,6 +135,8 @@ public:
 			rpt_counts.lap();
 			rpt_rejection_count.lap();
 			rpt_rejection_quickrej.lap();
+			tdm_counts.lap();
+			tdm_accepts.lap();
             auto_moves.lap();
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
@@ -236,6 +240,7 @@ public:
 	virtual double dE_reptation_simple(long m, long n, long move);
 	virtual double dE_reptation_3_4(long m1, long dm1, long m2, long dm2, int& rejection_sign);
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
+	virtual double dE_treadmill(double direction);
 	int kpoly(long ial[2],long ierr);
 	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
 	virtual void snapshot(char *filename);
