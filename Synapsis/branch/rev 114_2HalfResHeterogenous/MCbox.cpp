@@ -287,12 +287,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				//Check if containting any rigid body segments or connecting segments whose length is smaller than 3.0.
 				testflag1=0, testflag2=0;
 
-				testp=m3;
-				while (testp!=wrap(n4+1,totsegnum)){
+				
+				for (testp=m3;;){
 					if (dnaChain->C[testp].l < rept_min_seglength){
 						testflag1=1;
 						break;
 					}
+					if (testp==n4) break;
 					testp=wrap(testp+1,totsegnum);
 				}
 				if (testflag1==0){
@@ -300,12 +301,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					break;
 				}
 
-				testp=m4;
-				while (testp!=wrap(n3+1,totsegnum)){
+				
+				for (testp=m4;;){
 					if (dnaChain->C[testp].l < rept_min_seglength){
 						testflag2=1;
 						break;
 					}
+					if (testp==n3) break;
 					testp=wrap(testp+1,totsegnum);
 				}
 				if (testflag2==0) {

@@ -171,6 +171,13 @@ double CircularChain::_adjustBangle(long m, long dm, double dBangle,
 		double M[3][3];
 		this->SetRotM_halfchain(M,rt,dBangle);
 
+		//repation segments length check: shold always close to 3.
+		if (C[s].l<rept_min_seglength || C[p].l<rept_min_seglength) {
+			cout<<"Repation segment selection mistake! The segment involved in a repation movement is shorter than rept_min_seglength";
+			cout<<endl;
+		}
+
+
 		for (long ss=p;ss!=wrap(n+1,totsegnum);ss=wrap(ss+1,totsegnum)){
 			double vv[3]={Ctemp[ss].dx,Ctemp[ss].dy,Ctemp[ss].dz},
 				vvo[3];

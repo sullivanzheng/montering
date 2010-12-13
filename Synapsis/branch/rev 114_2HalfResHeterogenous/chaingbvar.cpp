@@ -11,7 +11,7 @@ double specify_rigidity_list[maxa];
 long reptation_maxlen;
 long reptation_minlen;
 long rept_move_range;
-long rept_min_seglength;
+double rept_min_seglength;
 long VolEx_cutoff_rigidbody;
 
 
