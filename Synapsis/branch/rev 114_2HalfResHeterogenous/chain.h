@@ -120,6 +120,8 @@ public:
 		counter rpt_counts;
 		counter rpt_rejection_count;
 		counter rpt_rejection_quickrej;
+		counter rptsimp_accepts;
+		counter rptsimp_counts;
 		counter tdm_counts;
 		counter tdm_accepts;
 		counter auto_moves;
@@ -135,6 +137,8 @@ public:
 			rpt_counts.lap();
 			rpt_rejection_count.lap();
 			rpt_rejection_quickrej.lap();
+			rptsimp_accepts.lap();
+			rptsimp_counts.lap();
 			tdm_counts.lap();
 			tdm_accepts.lap();
             auto_moves.lap();
