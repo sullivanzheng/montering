@@ -727,7 +727,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			(*fp_log)<<" Lk_re "<< Lk_recomb;
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();
-//			(*fp_log)<<" Winding[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
+			(*fp_log)<<" Writhe[Wr,E_t]"<<dnaChain->writhe<<","<<dnaChain->E_t;
 
 			(*fp_log)	<<" Flags(E,rigidIEV,IEV,topo)"<<"[";
 			(*fp_log)	<<E_condition<<"(dE="<<dE<<"),";
