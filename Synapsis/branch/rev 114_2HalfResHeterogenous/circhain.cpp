@@ -522,7 +522,7 @@ double CircularChain::dE_reptation_3_4(long m1, long dm1,
 }
 
 double CircularChain::dE_reptation_simple(long m, long n, long move){
-	//this operation will make the reptation movement between node m  to n-1
+	//this operation will make the reptation movement from vector m  to n-1
 	//in the clockwise fashion, ie, the arc: m m+1 m+2 ...[maxnum 0 1]...n-2
 	//n-1. Therefore, n is not included.
 
@@ -674,7 +674,7 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 double CircularChain::dE_treadmill(double direction){
 	//snapshot("before.txt");//DEBUG
 	vector<int> updateBangleList;
-	static int const stepforward=3;
+	static int const stepforward=0;
 	if (direction>0){ //positive shift.
 		segment C0=this->C[maxnum];
 		int nextp;
@@ -1103,8 +1103,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 // ER is volume exclusion DIAMETER.
 
 // info will be used to passback the first i,j segment pair that collides.
-
-
+	
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
@@ -1179,8 +1178,133 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			wz = C[i].z-C[j].z;
 			//if far far away
 			w2 = wx*wx + wy*wy + wz*wz;
-//			if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
-//Should use a faster version:
+
+//This slow cutoff:	if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+// has been replaced by a faster verson:
+			if (w2 > cutoff2) continue;
+
+			float a,b,c,d,e,D;
+			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
+			b = C[i].dx * C[j].dx + C[i].dy * C[j].dy + C[i].dz * C[j].dz;
+			c = C[j].dx * C[j].dx + C[j].dy * C[j].dy + C[j].dz * C[j].dz;
+
+			d = C[i].dx * wx + C[i].dy * wy + C[i].dz * wz;
+			e = C[j].dx * wx + C[j].dy * wy + C[j].dz * wz;
+
+			D = a * c - b * b;
+			
+			float    sc, sN, sD = D;      // sc = sN / sD, default sD = D >= 0
+			float    tc, tN, tD = D;      // tc = tN / tD, default tD = D >= 0
+
+			// compute the line parameters of the two closest points
+			if (D < eps) { // the lines are almost parallel
+				sN = 0.0;        // force using point P0 on segment S1
+				sD = 1.0;        // to prevent possible division by 0.0 later
+				tN = e;
+				tD = c;
+			}
+			else {                // get the closest points on the infinite lines
+				sN = (b*e - c*d);
+				tN = (a*e - b*d);
+				if (sN < 0.0) {       // sc < 0 => the s=0 edge is visible
+					sN = 0.0;
+					tN = e;
+					tD = c;
+				}
+				else if (sN > sD) {  // sc > 1 => the s=1 edge is visible
+					sN = sD;
+					tN = e + b;
+					tD = c;
+				}
+			}
+
+			if (tN < 0.0) {           // tc < 0 => the t=0 edge is visible
+				tN = 0.0;
+				// recompute sc for this edge
+				if (-d < 0.0)
+					sN = 0.0;
+				else if (-d > a)
+					sN = sD;
+				else {
+					sN = -d;
+					sD = a;
+				}
+			}
+			else if (tN > tD) {      // tc > 1 => the t=1 edge is visible
+				tN = tD;
+				// recompute sc for this edge
+				if ((-d + b) < 0.0)
+					sN = 0;
+				else if ((-d + b) > a)
+					sN = sD;
+				else {
+					sN = (-d + b);
+					sD = a;
+				}
+			}
+			// finally do the division to get sc and tc
+			sc = (abs(sN) < eps ? 0.0 : sN / sD);
+			tc = (abs(tN) < eps ? 0.0 : tN / tD);
+
+			//get the difference of the two closest points
+			//Vector   dP = w + (sc * u) - (tc * v); 
+			float dPx,dPy,dPz;
+			dPx = wx + (sc * C[i].dx) - (tc * C[j].dx);
+			dPy = wy + (sc * C[i].dy) - (tc * C[j].dy);
+			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
+			
+			//Collision detected, subroutine returns with 0;
+			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) {
+				info[0]=i;
+				info[1]=j;
+				return 0;
+			}
+		}
+	}
+	//No collision detected
+	return 1;
+}
+
+long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
+// Check the entire chain for any collision.
+// iev=0 corresponds to intersection
+// iev=1 corresponds to no intersection
+// This subroutine is adapted from:
+//       http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm.
+// ER is volume exclusion DIAMETER.
+
+// info will be used to passback the first i,j segment pair that collides.
+	
+	const float eps = 2e-7;
+    
+	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
+	static float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
+	static float cutoff2=(this->max_seglength+er)*(this->max_seglength+er);
+
+	for (long i=0;i<=maxnum-1;i++){		
+		for (long j=i+1;j<=maxnum;j++){
+
+			if (j-i <= VEcutoff || i+totsegnum-j <= VEcutoff) continue;
+
+			//IEV Waiver for regions near rigidbody.
+			if ((protect_list[i-VolEx_cutoff_rigidbody]==1
+				||
+				protect_list[i+VolEx_cutoff_rigidbody+1]==1)
+				&&
+				(protect_list[j-VolEx_cutoff_rigidbody]==1
+				||
+				protect_list[j+VolEx_cutoff_rigidbody+1]==1)) continue;
+
+			float wx,wy,wz,w2;
+			//wji=Xi-Xj
+			wx = C[i].x-C[j].x;
+			wy = C[i].y-C[j].y;
+			wz = C[i].z-C[j].z;
+			//if far far away
+			w2 = wx*wx + wy*wy + wz*wz;
+
+//This slow cutoff:	if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
+// has been replaced by a faster verson:
 			if (w2 > cutoff2) continue;
 
 

@@ -251,6 +251,7 @@ public:
 	long IEV_closeboundary(long in, long ik);
 	long IEV_Alex_closeboundary(long in, long ik, double info[3]);
 	long IEV_with_rigidbody_closeboundary( long in,  long ik, double info[3]);
+	long IEV_with_rigidbody_closeboundary_fullChain(double info[3]);
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	long checkConsistency();
     long checkBangleConsistency();
