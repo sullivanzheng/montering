@@ -128,6 +128,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 
 	double E=dnaChain->calG_bSum()+RG.E+dnaChain->E_t;
 
+	int debugsignal=0;
+
 	for (long moves = 1; moves <= monte_step; moves++)
     {
 		//MAKE MOVES
@@ -139,8 +141,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//Therefore, all energy evaluation program should be careful with chain segment 
 		//iteration due to wrapping problem.
 
-		double dE, cacheRE, cacheE_t, cacheWrithe, WrChangeTreadmill;
-		long m,n;
+		double dE, cacheRE, cacheE_t, cacheWrithe, WrChangeInTrialMove,E_tChangeInTrialMove;
+		long m,n; double rotAng;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		double info[3]={0,0,0},info_old[3]={0,0,0};
 		if (RBAUS_COLLECT_ENABLED) {
@@ -172,7 +174,6 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//(*this->fp_log)<<m<<' '<<n<<endl;
 
 			//generate rotation angle.
-			double rotAng;
 			double selection;
 			selection = drand(1.0);
 			if (selection > P_SMALLROTATION)
@@ -203,6 +204,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//update energies.
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
+
+			WrChangeInTrialMove=dnaChain->writhe - cacheWrithe;
+			E_tChangeInTrialMove=dnaChain->E_t - cacheE_t;
+
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
@@ -377,6 +382,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
 
+			WrChangeInTrialMove=dnaChain->writhe - cacheWrithe;
+			E_tChangeInTrialMove=dnaChain->E_t - cacheE_t;
+
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
 			
@@ -413,10 +421,12 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			} 
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
-				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m1,wrap(m1+dm2+1,totsegnum),info)==1
-					&&this->dnaChain->IEV_with_rigidbody_closeboundary(wrap(m1+dm2+1,totsegnum),wrap(m2+dm2-dm1,totsegnum),info)==1
-					&&this->dnaChain->IEV_with_rigidbody_closeboundary(wrap(m2+dm2-dm1,totsegnum),wrap(m2+dm2+1,totsegnum),info)==1
-					){
+				if (/*this->dnaChain->IEV_with_rigidbody_closeboundary(m1,wrap(m1+dm2+1,totsegnum),info)==1
+					&& this->dnaChain->IEV_with_rigidbody_closeboundary(wrap(m1+dm2+1,totsegnum),wrap(m2+dm2-dm1,totsegnum),info)==1
+					&& this->dnaChain->IEV_with_rigidbody_closeboundary(wrap(m2+dm2-dm1,totsegnum),wrap(m2+dm2+1,totsegnum),info)==1*/
+					this->dnaChain->IEV_with_rigidbody_closeboundary_fullChain(info)==1
+					)
+				{
 						IEV_condition=1;
 					}
 					else{
@@ -488,6 +498,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
             //update energies.
             RG.update_allrigid_and_E();
             this->dnaChain->E_t_updateWrithe_E_t();
+
+			WrChangeInTrialMove=dnaChain->writhe - cacheWrithe;
+			E_tChangeInTrialMove=dnaChain->E_t - cacheE_t;
 
             //total energy change.
             dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
@@ -579,7 +592,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			RG.update_allrigid_and_E();
 			this->dnaChain->E_t_updateWrithe_E_t();
 
-			WrChangeTreadmill=dnaChain->writhe - cacheWrithe;
+			WrChangeInTrialMove=dnaChain->writhe - cacheWrithe;
+			E_tChangeInTrialMove=dnaChain->E_t - cacheE_t;
 
 			//total energy change.
 			dE= dE + (RG.E - cacheRE) + (dnaChain->E_t - cacheE_t);
@@ -650,8 +664,13 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 				&& IEV_condition==1  && topo_condition==1)
 				E+=dE;
 
+		
+
+		//if (moves>1399000 && moves<1700000)	debugsignal=1;
+
+
 		static unsigned long const CONSISTENCY_CHECK=7312;
-		if (moves%CONSISTENCY_CHECK==0){
+		if (moves%CONSISTENCY_CHECK==0 || debugsignal==1){
 			// length and bangle consistency check.
 			if (dnaChain->checkConsistency()==1){
 				cout<<moves<<" dX and X[i+1]-X[i] inconsistency, probably caused by reptation";
@@ -681,7 +700,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			}
 		}
 
-		if (moves%SNAPSHOT_INTERVAL==0){
+		if (moves%SNAPSHOT_INTERVAL==0 ){
 			sprintf(buf,"%s%09d.txt",filePrefix,moves);
 			cout <<buf<<endl;
 			dnaChain->snapshot(buf);
@@ -696,12 +715,13 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 		if (moves%STAT_INTERVAL==0){
 			(*fp_log).precision(5);
 			char buf[400];
-			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%] "
+			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%] NOW:m,n,beta(%3d,%3d),%5.1f "
 						"rpt_acpt:%3d/%3d[%5.2f%%, NoSol:%5.2f%% Short:%5.2f%%] "
 						"rpt_simp_actp:%3d/%3d[%5.2f%%] "
-						"tdm_actp:%3d/%3d[%5.2f%% now:dWr:%5.2f] in %4d moves ",
+						"tdm_actp:%3d/%3d[%5.2f%%] dWr_try=%5.2f dE_t=%7.2f in %4d moves ",
 					dnaChain->stats.crk_accepts(),dnaChain->stats.crk_counts(),
 					float(dnaChain->stats.crk_accepts())/dnaChain->stats.crk_counts()*100,
+					m,n,rotAng*180.0/PI,
 
 					dnaChain->stats.rpt_accepts(),dnaChain->stats.rpt_counts(),
 					float(dnaChain->stats.rpt_accepts())/dnaChain->stats.rpt_counts()*100,
@@ -713,7 +733,9 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 
 					dnaChain->stats.tdm_accepts(),dnaChain->stats.tdm_counts(),
 					float(dnaChain->stats.tdm_accepts())/dnaChain->stats.tdm_counts()*100,
-					movement==3?WrChangeTreadmill:0,
+
+					WrChangeInTrialMove,
+					E_tChangeInTrialMove,
 
 					dnaChain->stats.auto_moves()
 				);

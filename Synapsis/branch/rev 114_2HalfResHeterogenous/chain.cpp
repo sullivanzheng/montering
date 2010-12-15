@@ -82,7 +82,7 @@ long Chain::readIniFile(char const *filename)
 void Chain::SetRotM_halfchain(double M[3][3], double rv[3], double a)
 {
 	//M[3][3]: the output rotation matrix
-	//rv[3]: normalized rotation vector (rotation axis determined by right hand rule)
+	//rv[3]: normalize rotation vector (rotation axis determined by right hand rule)
 	//a: angle of rotation in radian
 	//The formula is based on: http://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
 	// and http://en.wikipedia.org/wiki/Rotation_matrix
@@ -139,7 +139,7 @@ void Chain::SetRotM_crankshaft(double M[3][3],long m, long n, double a)
 	SetRotM_halfchain(M, rv, a);
 }
 
-void Chain::normalize(){
+void Chain::normalize_X_bangle(){
 	long i=0;
     for (i=0;i <= maxnum-1;i++){
         double temp=modu(C[i].dx,C[i].dy,C[i].dz);
@@ -156,6 +156,8 @@ void Chain::normalize(){
 	C[i].dx = C[i].dx / temp * C[i].l;
 	C[i].dy = C[i].dy / temp * C[i].l;
 	C[i].dz = C[i].dz / temp * C[i].l;
+
+	this->normalizeAllBangle();
 }
 
 double Chain::calAngle(segment &C1, segment &C2)
@@ -187,7 +189,7 @@ Chain::Chain(char const *filename, bool circular,long r_totsegnum)
 	this->totsegnum = r_totsegnum;
     maxnum = this->totsegnum -1;
 	readIniFile(filename);
-    //updateAllBangleKinkNum(); Calling virtual function is dangerous.		
+    //normalizeAllBangleKinkNum(); Calling virtual function is dangerous.		
 	updateAllBangle_Ini(circular);
     stats.resetStat();
 }

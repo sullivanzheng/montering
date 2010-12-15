@@ -1,18 +1,93 @@
 #include "chain.h"
 using namespace std;
 
-long CircularChain::updateAllBangle()		
+long CircularChain::normalizeAllBangle()		
 {		
-	C[0].bangle = calAngle(C[maxnum], C[0]);		
+	
+/*	
+    cout <<"============Circular Chain All Bangle normalized =============="<<endl;		
+	for (long i = 1; i < maxnum + 1; i++);		
+        //cout <<"|"<< C[i].bangle << endl;		
+    cout<<"------------------------------"<<endl;		
+*/
+	//deform last 4 segment to make perfect circle:
+	static segment C2[maxa];
+	int p=maxnum-3,flag;
+	double V[3]={C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z};
+	double length=moduV(V);
+	double Lnow,L[3]={0};
+	for (int i=p;i<=maxnum;i++){
+		L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
+	}
+	Lnow=moduV(L);
+
+	double diff=modu(C[0].x-C[p].x-L[0],
+			 C[0].y-C[p].y-L[1],
+			 C[0].z-C[p].z-L[2]);
+
+	cout <<"------Normalize the chain end------"<<endl;
+	cout <<"Before: X[maxnum-3]--->X[0]: Real:"<<length
+		<<"-sum(dx):"<<Lnow<<" =diff:"<<diff
+		<<endl;
+	
+
+	if (diff<1e-7){
+		cout <<"Difference ignorable."<<endl;
+		goto normang;
+	}
+	flag=this->_deformReptSegments_updateInternalBangles_Normalize(p,3,length,Lnow,C2);
+
+	if (flag==-1) {
+		cout<<"No solution."<<endl;
+	}
+	else{
+
+		L[0]=L[1]=L[2]=0;
+		for (int i=p;i<=maxnum;i++){
+			L[0]+=C2[i].dx; L[1]+=C2[i].dy; L[2]+=C2[i].dz;
+		}
+		//Rotate V1new to V1
+		double rt[3], M[3][3],rotAngle;
+		//rotate from L to V.
+		Xprod(L,V,rt);
+		norm(rt);
+		rotAngle=betaArray12(L,V);
+		this->SetRotM_halfchain(M,rt,rotAngle);	
+
+		for (long i=p;i<=maxnum;i++){
+			double vi[3]={C2[i].dx,C2[i].dy,C2[i].dz},vo[3];
+			mat33mulvec3(M,vi,vo);
+			C2[i].dx=vo[0];	C2[i].dy=vo[1];	C2[i].dz=vo[2];
+		}
+
+		//copy C2 to C1.
+		for (int i=p;i<=maxnum;i++){
+			C[i]=C2[i];
+		}
+
+		//Print the result
+		length=modu(C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z);
+		L[0]=L[1]=L[2]=0;
+		for (int i=p;i<=maxnum;i++){
+			L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
+		}
+		Lnow=moduV(L);
+		cout <<"After : X[maxnum-3]--->X[0]: Real:"<<length
+		<<"-sum(dx):"<<Lnow<<" =diff:"<<
+		modu(C[0].x-C[p].x-L[0],
+			 C[0].y-C[p].y-L[1],
+			 C[0].z-C[p].z-L[2])
+		<<endl;
+	}
+
+
+normang:	C[0].bangle = calAngle(C[maxnum], C[0]);		
 	for (long i = 1; i < maxnum + 1; i++)		
 	{		
 		C[i].bangle = calAngle(C[i - 1], C[i]);		
-	}		
-    cout <<"============Bangle Updated=============="<<endl;		
-	for (long i = 1; i < maxnum + 1; i++)		
-        cout <<"|"<< C[i].bangle << endl;		
-    cout<<"------------------------------"<<endl;		
-    return 0;	
+	}	
+
+    return 0;
 }		
 
 double CircularChain::updateBangle(long i)		
@@ -35,10 +110,11 @@ long CircularChain::checkBangleConsistency(){
 	long flag=0;
 	for (int i=0;i<=maxnum;i++){
 		double b = calAngle(C[wrap(i-1,totsegnum)], C[i]);
-		if (fabs(b-C[i].bangle)>1e-5){
+		if (fabs(b-C[i].bangle)>1e-12){
 			flag=1;
 			cout<< "[Bangle inconsistency] #"<<i<<": "
-				<<"b_calculated="<<b<<" C[i].bangle="<<C[i].bangle<<endl;
+				<<"b_calculated="<<b<<" C[i].bangle="<<C[i].bangle
+				<<" diff="<<b-C[i].bangle<<endl;
 		}
 	}
 	if (flag==1) return 1;
@@ -167,6 +243,15 @@ double CircularChain::_adjustBangle(long m, long dm, double dBangle,
 			v2[3]={ Ctemp[p].dx,Ctemp[p].dy,Ctemp[p].dz};
 		double rt[3];
 		Xprod(v1,v2,rt);
+
+		//if v1 and v2 are co-linear, then take x-axis as rotation axis.
+		if (moduV(rt)<1e-12){
+			rt[0]=1.0;
+			cout<<"CircularChain::_adjustBangle-- Adjacent repation segments v1 and v2 almost co-linear."
+				" then take x-axis as rotation axis.";
+			cout<<endl;
+		}
+
 		norm(rt);
 		double M[3][3];
 		this->SetRotM_halfchain(M,rt,dBangle);
@@ -208,7 +293,7 @@ double CircularChain::_bisectBangle(long m, long dm,
        double a1, double f1, double a2, double f2, double length,
 	   segment const C2[maxa], segment Ctemp[maxa], double eps){
     f1-=length; f2-=length;
-	double a0,f0=f1;
+	double a0=a1,f0=f1;
 	long count=0;
 	while ( fabs(f0) > eps){
 		count++;
@@ -235,6 +320,8 @@ int CircularChain::_deformReptSegments_updateInternalBangles(long m, long dm,
     const int ERROR=-1;
 	const double eps=1e-7;
 	double minA=10,maxA=0;
+
+	//copy C to C2, the playfield.
 	for (long i=0;i<=dm;i++){
 		long p=wrap(m+i,totsegnum);	
 		if (C[p].bangle<minA) minA=C[p].bangle;
@@ -286,11 +373,80 @@ bisect:
 		//update bangle within V1 and V2;
 		for (long i=1;i<=dm;i++){
 			long p=wrap(m+i,totsegnum);
-			C2[p].bangle += A0;
+			C2[p].bangle = fabs(C2[p].bangle + A0);
 		}
 	}
 	return 0;
 }
+
+
+int CircularChain::_deformReptSegments_updateInternalBangles_Normalize(long m, long dm, 
+									  double length, double Lnow, segment C2[maxa]){
+
+	//SPEICIALLY CUSTOMIZED FOR END STITCHING OF A CIRCULAR CHAIN.
+	//Solve reptation adaptation problem for vector m, m+1 ... m+dm.
+    //Segments in C2 will be deformed to appropriate conformation for the V1, V2 exchange.
+
+    const int ERROR=-1;
+	const double eps=1e-9;
+	double minA=10,maxA=0;
+
+	//copy C to C2, the playfield.
+	for (long i=0;i<=dm;i++){
+		long p=wrap(m+i,totsegnum);	
+		if (C[p].bangle<minA) minA=C[p].bangle;
+		if (C[p].bangle>maxA) maxA=C[p].bangle;
+		C2[p]=C[p];
+	}
+	
+	double A0,f;
+	static const int tryL=2;
+	if (fabs(Lnow-length)<eps){
+		A0=0;
+	}
+	else if (Lnow<length){
+		double Atry[tryL]={-0.01,0.01};
+		for (int t=0; t<tryL; t++){
+			A0=Atry[t];
+			static segment Ctemp[maxa];
+			f=this->_adjustBangle(m,dm,A0,C2,Ctemp);
+			if (f>length) goto bisect;
+		}
+		return ERROR;
+	}else if(Lnow>length){
+		double Atry[tryL]={0.01,-0.01};
+		for (int t=0; t<tryL; t++){
+			A0=Atry[t];
+			static segment Ctemp[maxa];
+			f=this->_adjustBangle(m,dm,A0,C2,Ctemp);
+			if (f<length) goto bisect;
+		}
+		return ERROR;
+	}else{
+		cout<<"CircularChain::_deformReptSegments_updateInternalBangles Problem";
+		exit(EXIT_FAILURE);
+	}
+	
+bisect:
+	static segment Ctemp[maxa];
+	if (A0!=0){
+		A0=this->_bisectBangle(m,dm,A0,f,0,Lnow,length,C2,Ctemp,eps);
+
+		//Copy Ctemp to C2
+		for (long i=0;i<=dm;i++){
+			long p=wrap(m+i,totsegnum);
+			C2[p]=Ctemp[p];
+		}
+		
+		//update bangle within V1 and V2;
+		for (long i=1;i<=dm;i++){
+			long p=wrap(m+i,totsegnum);
+			C2[p].bangle = fabs(C2[p].bangle + A0);
+		}
+	}
+	return 0;
+}
+
 
 double CircularChain::dE_reptation_3_4(long m1, long dm1, 
 									   long m2, long dm2, int& rejection_sign){
@@ -1107,7 +1263,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	if ((in<0||ik<1)||(in>maxnum-1 || ik>maxnum))
+	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
 	{
 		cout<<"Illegal values of in and ik "
 			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
@@ -1424,17 +1580,21 @@ double CircularChain::_fastWr_topl_update(){
 
 long CircularChain::checkConsistency(){
 	//return 1 if inconsistent.
-	static const double eps=1e-5;
+	static const double eps=1e-9;
 	long flag=0;
 	for (long i=0;i<=maxnum;i++){
 		if (fabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy) > eps ||
 			fabs(C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz) > eps ){
 				double m=modu(
-					C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx,
-					C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy,
-					C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz);
-				double dm=modu(C[i].dy,C[i].dy,C[i].dz);
+					C[wrap(i+1,totsegnum)].x-C[i].x,
+					C[wrap(i+1,totsegnum)].y-C[i].y,
+					C[wrap(i+1,totsegnum)].z-C[i].z);
+				double dm=modu(C[i].dx,C[i].dy,C[i].dz);
+				double diff=modu(
+					C[wrap(i+1,totsegnum)].x - C[i].x - C[i].dx,
+					C[wrap(i+1,totsegnum)].y - C[i].y - C[i].dy,
+					C[wrap(i+1,totsegnum)].z - C[i].z - C[i].dz);
 				cout<<"[Inconsistant]"<<i<<endl
 					<<"X-X modu("
 					<<C[wrap(i+1,totsegnum)].x-C[i].x<<","
@@ -1450,7 +1610,7 @@ long CircularChain::checkConsistency(){
 					<<C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx<<","
 					<<C[wrap(i+1,totsegnum)].y-C[i].y-C[i].dy<<","
 					<<C[wrap(i+1,totsegnum)].z-C[i].z-C[i].dz<<")="
-					<<endl;
+					<<diff<<endl;
 				flag=1;
 		}
 	}

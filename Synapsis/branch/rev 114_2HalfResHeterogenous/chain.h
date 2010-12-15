@@ -163,10 +163,10 @@ protected:
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],long m, long n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
-	virtual long updateAllBangle() = 0;		
+	virtual long normalizeAllBangle() = 0;		
     void updateAllBangle_Ini(bool circular);		
 	virtual double updateBangle(long i) = 0;
-    void normalize();
+    void normalize_X_bangle();
 
 public:
 	double VolEx_R;
@@ -177,8 +177,8 @@ public:
             stats.auto_prd_endToEndDistance2.push(temp*temp);
             stats.auto_prd_endToEndAngle.push(this->getEndToEndAngle());
         }*/
-        if (stats.auto_moves() % NORMALIZE_PERIOD == 0){
-            this->normalize();
+		if (stats.auto_moves.getTotCounts() % NORMALIZE_PERIOD == 0){
+            this->normalize_X_bangle();
         }
     }
 private:
@@ -217,14 +217,16 @@ class CircularChain: public Chain{
 
 protected:
 	void driftProof();
-	virtual long updateAllBangle();
+	virtual long normalizeAllBangle();
 	virtual double updateBangle(long i);
 	double _adjustBangle(long m, long dm, double newBangle, 
 		segment const C2[maxa], segment Ctemp[maxa]);
 	double _bisectBangle(long m, long dm, 
 		double a1, double f1, double a2, double f2, double length,
 		segment const C2[maxa], segment Ctemp[maxa], double eps);
+
 	int _deformReptSegments_updateInternalBangles(long m, long dm, double length, double Lnow, segment C2[maxa]);
+	int _deformReptSegments_updateInternalBangles_Normalize(long m, long dm, double length, double Lnow, segment C2[maxa]);
 public:
 	double writhe;
 	double topl;
