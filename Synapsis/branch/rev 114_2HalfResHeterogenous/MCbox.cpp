@@ -742,23 +742,6 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 		}
 
 		if (moves%STAT_INTERVAL==0){
-			if (dnaChain->stats.crk_accepts()<5){
-				//DEBUG
-				cout<<"Crankshaft acceptance rate too low. Possible algorithmic trap."<<endl;
-				cout<<"program is halted for debug."<<endl;
-				long topo[2]={0},errorcode=0,topo2[2]={0},
-				errorcode2=0,errorcodeKNDWR=0;
-
-				double dtopo;
-
-				for(;;){//DEBUG
-					this->dnaChain->kpoly(topo,errorcode);
-					this->dnaChain->kpoly2(topo2,errorcode2);
-
-					this->dnaChain->_kndwr_topl_update_stable(dtopo, errorcodeKNDWR);
-				}
-			}
-
 			(*fp_log).precision(5);
 			char buf[400];
 			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%] NOW:m,n,beta(%3d,%3d),%5.1f "

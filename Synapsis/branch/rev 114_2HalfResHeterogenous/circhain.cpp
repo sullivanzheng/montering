@@ -25,20 +25,20 @@ long CircularChain::normalizeAllBangle()
 			 C[0].y-C[p].y-L[1],
 			 C[0].z-C[p].z-L[2]);
 
-	cout <<"------Normalize the chain end------"<<endl;
-	cout <<"Before: X[maxnum-3]--->X[0]: Real:"<<length
-		<<"-sum(dx):"<<Lnow<<" =diff:"<<diff
-		<<endl;
+	//cout <<"------Normalize the chain end------"<<endl;
+	//cout <<"Before: X[maxnum-3]--->X[0]: Real:"<<length
+	//	<<"-sum(dx):"<<Lnow<<" =diff:"<<diff
+	//	<<endl;
 	
 
 	if (diff<1e-7){
-		cout <<"Difference ignorable."<<endl;
+	//	cout <<"Difference ignorable."<<endl;
 		goto normang;
 	}
 	flag=this->_deformReptSegments_updateInternalBangles_Normalize(p,3,length,Lnow,C2);
 
 	if (flag==-1) {
-		cout<<"No solution."<<endl;
+	//	cout<<"No solution."<<endl;
 	}
 	else{
 
@@ -318,7 +318,7 @@ int CircularChain::_deformReptSegments_updateInternalBangles(long m, long dm,
     //Segments in C2 will be deformed to appropriate conformation for the V1, V2 exchange.
 
     const int ERROR=-1;
-	const double eps=1e-5;
+	const double eps=1e-8;
 	double minA=10,maxA=0;
 
 	//copy C to C2, the playfield.

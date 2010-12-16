@@ -157,7 +157,7 @@ protected:
 	double max_seglength;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
-	static const long NORMALIZE_PERIOD=100000000;
+	static const long NORMALIZE_PERIOD=1000;
 	long readIniFile(char const *filename);
     void initializeCircle(long num);
 	double calAngle(segment &C1, segment &C2);
