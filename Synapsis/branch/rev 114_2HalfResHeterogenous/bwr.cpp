@@ -48,7 +48,7 @@ double CircularChain::_bwr(long m,long n){
 /*      common /w/ w(maxa) */
 /* convert constants to variables and change them to const in C++. */
      static const double pi2 = PI * 2, pi12 = PI / 2;
-	 static const double eps = 1e-9, eps1 = 1e-11,  one = .99999999999900002;
+	 static const double eps = 1e-9, eps1 = 1e-11,  one = 1-eps1;
 /* ------------------------------------------------ */
 
 /* import C[i].dX to dX*///--------------------------------
