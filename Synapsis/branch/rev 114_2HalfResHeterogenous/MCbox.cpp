@@ -280,7 +280,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					
 					dnaChain->crankshaft(m,n,-rotAng);
 					dnaChain->E_t_updateWrithe_E_t();//DEBUG
-					if (fabs(dnaChain->writhe-cacheWrithe)>1e-5){
+					if (fabs(dnaChain->writhe-cacheWrithe)>1e-4){
 						cout<<"When reversely rotated, the chain exhibit dramatic change"
 							" of writhe. Possible caused by program instability. Deadlocked for debug."<<endl;
 						double dtopo;
