@@ -1,24 +1,26 @@
-#include "chain.h"
-//#include "f2c.h"
-
 /* subroutine from Alex V. */
 /* calculate I(-1) and I(-2) Alexander Polynomial--put at ial(1) ial(2) */
-int CircularChain::kpoly(long ial[2],long ierr)
+#include "chain.h"
+int CircularChain::kpoly2(long ial[2],long ierr)
 {
+    /* Initialized data */
+
+    static double const deps = 1.0000e-7;
+
     /* System generated locals */
     long i__1, i__2, i__3;
     double d__1, d__2;
 	const long isi=801;
     /* Local variables */
-    static double c, d;
-    static long i, j, k, l;
-    static double t, x[maxa], y[maxa], z[maxa], dx[maxa], dy[maxa], dz[maxa];
+    static double c__, d__;
+    static long i__, j, k, l;
+    static double t, x[maxa], y[maxa], z__[maxa];
     static long i1, i2, n1, n2, m4, n4;
-    static double r1, r2, da[isi * isi]	/* was [isi][isi] */;
+    static double r1, r2, da[isi*isi]	/* was [isi][isi] */;
     static long id[isi], n11, n21, n41, jj;
     static double dr;
     static long mj;
-    static double cx[isi];
+    static double cx[isi], dx[maxa], dy[maxa], dz[maxa];
     static long ir, ks, ix[isi], js, nv;
     static double rx, xr;
     static long ic1[isi], ic2[isi], jr1, jr2, jr3, jr4, n4m;
@@ -30,20 +32,20 @@ int CircularChain::kpoly(long ial[2],long ierr)
     static long jmin;
     static double pdx12;
     static long kmax;
-    static const double deps = 1.000e-7;
-	
+
+
 	jr1=totsegnum;
 	for(int iii=0;iii<=maxnum;iii++){
 		x[iii] =C[iii].x;
 		y[iii] =C[iii].y;
-		z[iii] =C[iii].z;
+		z__[iii] =C[iii].z;
 		dx[iii]=C[iii].dx;
 		dy[iii]=C[iii].dy;
 		dz[iii]=C[iii].dz;
 	}
 	x[maxnum+1]=C[0].x;
 	y[maxnum+1]=C[0].y;
-	z[maxnum+1]=C[0].z;
+	z__[maxnum+1]=C[0].z;
 	dx[maxnum+1]=C[0].dx;
 	dy[maxnum+1]=C[0].dy;
 	dz[maxnum+1]=C[0].dz;
@@ -84,13 +86,13 @@ int CircularChain::kpoly(long ial[2],long ierr)
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
 	    px21 = x[n21 - 1];
-	    d = pdx2 * pdy1 - pdx1 * pdy2;
-	    if (fabs(d) < deps) {
+	    d__ = pdx2 * pdy1 - pdx1 * pdy2;
+	    if (fabs(d__) < deps) {
 		goto L111;
 	    }
 	    pdx12 = pdx1 * pdx2;
 	    drx = (py2 * pdx12 - px2 * pdx1 * pdy2 - py1 * pdx12 + px1 * pdx2 
-		    * pdy1) / d;
+		    * pdy1) / d__;
 	    if (px1 <= px11) {
 		if (drx < px1 || drx >= px11) {
 		    goto L111;
@@ -113,8 +115,8 @@ int CircularChain::kpoly(long ial[2],long ierr)
 	    if (n4 > isi) {
 		goto L1002;
 	    }
-	    rz1 = (rx - x[n1 - 1]) / dx[n1 - 1] * dz[n1 - 1] + z[n1 - 1];
-	    rz2 = (rx - x[n2 - 1]) / dx[n2 - 1] * dz[n2 - 1] + z[n2 - 1];
+	    rz1 = (rx - x[n1 - 1]) / dx[n1 - 1] * dz[n1 - 1] + z__[n1 - 1];
+	    rz2 = (rx - x[n2 - 1]) / dx[n2 - 1] * dz[n2 - 1] + z__[n2 - 1];
 	    cx[n4 - 1] = rx;
 	    if (rz1 - rz2 >= 0.f) {
 		goto L401;
@@ -186,13 +188,13 @@ L403:
 L801:
     n4 = n4m;
     i__1 = n4;
-    for (i = 1; i <= i__1; ++i) {
-	i1 = ic1[i - 1];
-	i2 = ic2[i - 1];
+    for (i__ = 1; i__ <= i__1; ++i__) {
+	i1 = ic1[i__ - 1];
+	i2 = ic2[i__ - 1];
 	if (dx[i1 - 1] * dy[i2 - 1] - dx[i2 - 1] * dy[i1 - 1] > 0.f) {
-	    id[i - 1] = 1;
+	    id[i__ - 1] = 1;
 	} else {
-	    id[i - 1] = -1;
+	    id[i__ - 1] = -1;
 	}
 /* L59: */
     }
@@ -236,13 +238,13 @@ L19:
 /* attempts for some detanglement */
 L230:
     mj = 0;
-    i = 0;
+    i__ = 0;
 L231:
-    ++i;
-    if (i >= n4) {
+    ++i__;
+    if (i__ >= n4) {
 	goto L240;
     }
-    if (ix[i - 1] != i && ix[i - 1] != i + 1) {
+    if (ix[i__ - 1] != i__ && ix[i__ - 1] != i__ + 1) {
 	goto L231;
     }
     ++mj;
@@ -251,18 +253,18 @@ L231:
 	goto L31;
     }
     i__1 = n4;
-    for (k = i; k <= i__1; ++k) {
+    for (k = i__; k <= i__1; ++k) {
 	ix[k - 1] = ix[k];
 /* L233: */
     }
     i__1 = n4;
     for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > i) {
+	if (ix[k - 1] > i__) {
 	    --ix[k - 1];
 	}
 /* L234: */
     }
-    --i;
+    --i__;
     goto L231;
 L240:
     if (ix[n4 - 1] != n4 && ix[n4 - 1] != 1) {
@@ -284,16 +286,16 @@ L232:
     if (mj > 0) {
 	goto L230;
     }
-    i = 0;
+    i__ = 0;
 L235:
-    ++i;
-    if (i >= n4 - 1) {
+    ++i__;
+    if (i__ >= n4 - 1) {
 	goto L244;
     }
-    if (ix[i - 1] != ix[i]) {
+    if (ix[i__ - 1] != ix[i__]) {
 	goto L235;
     }
-    i1 = i + 1;
+    i1 = i__ + 1;
     i__1 = n4;
     for (k = 1; k <= i__1; ++k) {
 	if (ix[k - 1] == i1) {
@@ -307,13 +309,13 @@ L235:
 	goto L31;
     }
     i__1 = n4;
-    for (k = i; k <= i__1; ++k) {
+    for (k = i__; k <= i__1; ++k) {
 	ix[k - 1] = ix[k + 1];
 /* L238: */
     }
     i__1 = n4;
     for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > i) {
+	if (ix[k - 1] > i__) {
 	    ix[k - 1] += -2;
 	}
 /* L239: */
@@ -373,16 +375,16 @@ L802:
 /* L500: */
     }
 /* calculation of determinant */
-    c = 1.f;
+    c__ = 1.f;
     kmax = m4 - 1;
     i__1 = kmax;
     for (k = 1; k <= i__1; ++k) {
 	if ((d__1 = da[k + k * isi - (isi+1)], fabs(d__1)) < deps) {
 	    jj = k + 1;
-	    c = -c;
+	    c__ = -c__;
 L50:
 	    if (jj > m4) {
-		c = 0.f;
+		c__ = 0.f;
 		goto L90;
 	    }
 	    if ((d__1 = da[jj + k * isi - (isi+1)], fabs(d__1)) > deps) {
@@ -404,8 +406,8 @@ L50:
 	    if ((d__1 = da[k + j * isi - (isi+1)], fabs(d__1)) > deps) {
 		dr = da[k + j * isi - (isi+1)] / da[k + k * isi - (isi+1)];
 		i__3 = m4;
-		for (i = k; i <= i__3; ++i) {
-		    da[i + j * isi - (isi+1)] -= dr * da[i + k * isi - 
+		for (i__ = k; i__ <= i__3; ++i__) {
+		    da[i__ + j * isi - (isi+1)] -= dr * da[i__ + k * isi - 
 			    (isi+1)];
 /* L22: */
 		}
@@ -415,19 +417,19 @@ L50:
 /* L20: */
     }
     i__1 = m4;
-    for (i = 1; i <= i__1; ++i) {
+    for (i__ = 1; i__ <= i__1; ++i__) {
 /* L30: */
-	c *= da[i + i * isi - (isi+1)];
+	c__ *= da[i__ + i__ * isi - (isi+1)];
     }
 L90:
-    c = fabs(c);
+    c__ = fabs(c__);
 L790:
-    if (c > 1e7) {
-	c /= 2.f;
+    if (c__ > 1e7) {
+	c__ /= 2.f;
 	goto L790;
     }
-    ikn = (long) (c + .1f);
-	if (t == -2.f) {
+    ikn = (long) (c__ + .1f);
+    if (t == -2.f) {
 L789:
 	if (ikn / 2 << 1 < ikn) {
 	    goto L788;

@@ -157,7 +157,7 @@ protected:
 	double max_seglength;
     static const long defaultSampleCycle=100;
     long endToEndSampleCycle;
-	static const long NORMALIZE_PERIOD=100000;
+	static const long NORMALIZE_PERIOD=100000000;
 	long readIniFile(char const *filename);
     void initializeCircle(long num);
 	double calAngle(segment &C1, segment &C2);
@@ -248,6 +248,7 @@ public:
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	virtual double dE_treadmill(double direction);
 	int kpoly(long ial[2],long ierr);
+	int kpoly2(long ial[2],long ierr);
 	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
 	virtual void snapshot(char *filename);
 	long IEV_closeboundary(long in, long ik);
@@ -261,7 +262,10 @@ public:
 	long scanBranch(char* filename);
 private:
 	double _bwr(long m, long n);
+
+public:
 	long _kndwr_topl_update(double & topl, long & ierr);
+private:
 	long _kndwr(long &ierr);
 	double _fastWr_topl_update();
 	double _det(long n, double da[MAXMatrixDet*MAXMatrixDet]);

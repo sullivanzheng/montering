@@ -1,5 +1,4 @@
 #include "chain.h"
-#include "f2c.h"
 
 //Calculate integer part of writhe and AlexPoly(-1)
 long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
@@ -48,6 +47,7 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 	}
 	jr1=maxnum+1;
 	x[maxnum+1]=C[0].x;y[maxnum+1]=C[0].y;z[maxnum+1]=C[0].z;
+	dx[maxnum+1]=C[0].dx;dy[maxnum+1]=C[0].dy;dz[maxnum+1]=C[0].dz;
 	ierr=0;
 //_________________________________________________________
 
@@ -56,7 +56,7 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 /* cx(i) - x-value of i-th intersection */
 /* ic1(i) - number of undergoing segment for i-th intersection */
 /* ic2(i) - number of overgoing segment for i-th intersection */
-	static double cutoff=this->max_seglength * 2;
+	static double cutoff=this->max_seglength * 2+0.1;
 
 
     jr2 = jr1 - 2;
@@ -79,8 +79,8 @@ long CircularChain::_kndwr_topl_update(double &topl,long &ierr){
 	    px2 = x[n2 - 1];
 	    py2 = y[n2 - 1];
 		//This waiver is no more valid for heterogenous segmentation.
-	    /*if ((d__1 = px1 - px2, abs(d__1)) > 2.01) continue;
-		else if ((d__2 = py1 - py2, abs(d__2)) > 2.01) continue;*/
+	    /*if ((d__1 = px1 - px2, fabs(d__1)) > 2.01) continue;
+		else if ((d__2 = py1 - py2, fabs(d__2)) > 2.01) continue;*/
 
 		//Accelarated version of waiver.
 		d__1 = px1 - px2;
@@ -180,8 +180,8 @@ L405:
 	    nv1 = n2;
 	    goto L404;
 L406:
-	    rl1 = (d__1 = x[i1 - 1] - cx[nv1 - 1], abs(d__1));
-	    rl2 = (d__1 = x[i1 - 1] - cx[n2 - 1], abs(d__1));
+	    rl1 = (d__1 = x[i1 - 1] - cx[nv1 - 1], fabs(d__1));
+	    rl2 = (d__1 = x[i1 - 1] - cx[n2 - 1], fabs(d__1));
 	    if (rl1 < rl2) {
 		goto L404;
 	    }
@@ -223,9 +223,9 @@ L72:
 	    goto L71;
 	}
 L73:
-	r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
+	r1 = (d__1 = x[nv - 1] - cx[n1 - 1], fabs(d__1));
 /* L74: */
-	r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
+	r2 = (d__1 = x[nv - 1] - cx[n2 - 1], fabs(d__1));
 	if (r1 < r2) {
 	    goto L71;
 	}
@@ -374,7 +374,7 @@ L236:
     kmax = m4 - 1;
     i__1 = kmax;
     for (k = 1; k <= i__1; ++k) {
-	if ((r__1 = da[k + k * isi - (isi+1)], dabs(r__1)) < eps) {
+	if ((r__1 = da[k + k * isi - (isi+1)], fabs(r__1)) < eps) {
 	    jj = k + 1;
 	    c__ = -c__;
 L50:
@@ -382,7 +382,7 @@ L50:
 		c__ = 0.0;
 		goto L90;
 	    }
-	    if ((r__1 = da[jj + k * isi - (isi+1)], dabs(r__1)) > eps) {
+	    if ((r__1 = da[jj + k * isi - (isi+1)], fabs(r__1)) > eps) {
 		i__2 = m4;
 		for (l = 1; l <= i__2; ++l) {
 		    dr = da[k + l * isi - (isi+1)];
@@ -398,7 +398,7 @@ L50:
 	jmin = k + 1;
 	i__2 = m4;
 	for (j = jmin; j <= i__2; ++j) {
-	    if ((r__1 = da[k + j * isi - (isi+1)], dabs(r__1)) > eps) {
+	    if ((r__1 = da[k + j * isi - (isi+1)], fabs(r__1)) > eps) {
 		dr = da[k + j * isi - (isi+1)] / da[k + k * isi - (isi+1)];
 		i__3 = m4;
 		for (i__ = k; i__ <= i__3; ++i__) {
@@ -416,9 +416,9 @@ L50:
 	c__ *= da[i__ + i__ * isi - (isi+1)];
     }
 L90:
-    c__ = dabs(c__);
+    c__ = fabs(c__);
 /* last assignments */
-    topl = dabs(c__) + .1f;
+    topl = fabs(c__) + .1f;
     goto L6;
 L31:
     topl = 1;
@@ -483,6 +483,9 @@ long CircularChain::_kndwr(long &ierr){
 	}
 	jr1=maxnum+1;
 	x[maxnum+1]=C[0].x;y[maxnum+1]=C[0].y;z[maxnum+1]=C[0].z;
+	dx[maxnum+1]=C[0].dx;dy[maxnum+1]=C[0].dy;dz[maxnum+1]=C[0].dz;
+	ierr=0;
+
 
 //_________________________________________________________
 
@@ -510,14 +513,14 @@ long CircularChain::_kndwr(long &ierr){
 	for (n2 = jr4; n2 <= i__2; ++n2) {
 	    px2 = x[n2 - 1];
 	    py2 = y[n2 - 1];
-		if ((d__1 = px1 - px2, abs(d__1)) > 2.01 || (d__2 = py1 - py2, abs(
+		if ((d__1 = px1 - px2, fabs(d__1)) > 2.01 || (d__2 = py1 - py2, fabs(
 			d__2)) > 2.01) goto L111;
 	    pdx2 = dx[n2 - 1];
 	    pdy2 = dy[n2 - 1];
 	    n21 = n2 + 1;
 	    px21 = x[n21 - 1];
 	    d__ = pdx2 * pdy1 - pdx1 * pdy2;
-	    if (abs(d__) < deps) {
+	    if (fabs(d__) < deps) {
 		goto L111;
 	    }
 	    pdx12 = pdx1 * pdx2;

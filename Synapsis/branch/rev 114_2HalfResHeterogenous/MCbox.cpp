@@ -669,18 +669,10 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 		//if (moves>1399000 && moves<1700000)	debugsignal=1;
 
 
-		static unsigned long const CONSISTENCY_CHECK=7312;
-		if (moves%CONSISTENCY_CHECK==0 || debugsignal==1){
-			// length and bangle consistency check.
-			if (dnaChain->checkConsistency()==1){
-				cout<<moves<<" dX and X[i+1]-X[i] inconsistency, probably caused by reptation";
-				cout<<endl;
-			}
+		debugsignal=0;
 
-			if (dnaChain->checkBangleConsistency()==1){
-				cout<<moves<<" Bangle inconsistency, probably caused by reptation";
-				cout<<endl;
-			}
+		static unsigned long const CONSISTENCY_CHECK=7321;
+		if (moves%CONSISTENCY_CHECK==0 || debugsignal==1){
 
 			//Engergy tracking check.
 			/*
@@ -693,10 +685,48 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			}
 			*/
 
+			// length and bangle consistency check.
+			if (dnaChain->checkConsistency()==1){
+				cout<<"--"<<moves<<" dX and X[i+1]-X[i] inconsistency, probably caused by reptation";
+				cout<<endl<<endl;
+			}
+
+			if (dnaChain->checkBangleConsistency()==1){
+				cout<<"--"<<moves<<" Bangle inconsistency, probably caused by reptation";
+				cout<<endl<<endl;
+			}
 			//IEV full-check.
 			if(this->dnaChain->IEV_with_rigidbody_closeboundary_fullChain(info)!=1){
-					cout<<"moves (before rep move)"<<moves<<" IEV error,"<<info[0]<<','<<info[1];
+					cout<<"--"<<moves<<" IEV error,"<<info[0]<<','<<info[1];
 					cout<<endl;
+			}
+
+			//Topology consistency
+			long topo[2]={0},errorcode=0,topo2[2]={0},
+	        		errorcode2=0,errorcodeKNDWR=0;
+
+			this->dnaChain->kpoly(topo,errorcode);
+			this->dnaChain->kpoly2(topo2,errorcode2);
+
+			double dtopo;
+			this->dnaChain->_kndwr_topl_update(dtopo, errorcodeKNDWR);
+
+			if (topo[0]!=int(dtopo) || topo2[0]!=topo[0]){
+				cout<<moves<<": topology inconsistency";
+				cout<<endl;
+
+				char filebuf[200];
+				sprintf(buf,"topo%08d_%2d,%2d_ERR%2d _%2d,%2d_ERR%2d.txt",
+					moves,topo[0],topo[1],errorcode,
+					      topo2[0],topo[1],errorcode2);
+				this->dnaChain->snapshot(buf);
+
+				//Repeat error:
+				for (;;){
+					this->dnaChain->_kndwr_topl_update(dtopo, errorcodeKNDWR);
+					this->dnaChain->kpoly(topo,errorcode);
+					this->dnaChain->kpoly2(topo2,errorcode2);
+				}
 			}
 		}
 
