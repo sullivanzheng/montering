@@ -197,6 +197,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			cacheE_t=dnaChain->E_t;
 			cacheWrithe=dnaChain->writhe;
 
+			//old Conformation
+			CircularChain back_dnaChain(*dnaChain);//DEBUG
+
 			//bend energy change and movement.
 			dE=dnaChain->dE_TrialCrankshaft(m, n, rotAng);
 			dnaChain->crankshaft(m,n,rotAng);
@@ -274,7 +277,19 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					this->dnaChain->stats.crk_accepts++;		
 			}
 			else{
+					
 					dnaChain->crankshaft(m,n,-rotAng);
+					dnaChain->E_t_updateWrithe_E_t();//DEBUG
+					if (fabs(dnaChain->writhe-cacheWrithe)>1e-5){
+						cout<<"When reversely rotated, the chain exhibit dramatic change"
+							" of writhe. Possible caused by program instability. Deadlocked for debug."<<endl;
+						double dtopo;
+						long errorcodeKNDWR=0;
+						for (;;){
+							dnaChain->E_t_updateWrithe_E_t();
+							back_dnaChain.E_t_updateWrithe_E_t();//DEBUG
+						}
+					};
 					RG.update_allrigid_and_E();
 					dnaChain->writhe=cacheWrithe;
 					dnaChain->E_t=cacheE_t;
@@ -664,7 +679,6 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 				&& IEV_condition==1  && topo_condition==1)
 				E+=dE;
 
-		
 
 		//if (moves>1399000 && moves<1700000)	debugsignal=1;
 
@@ -709,10 +723,10 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			this->dnaChain->kpoly2(topo2,errorcode2);
 
 			double dtopo;
-			this->dnaChain->_kndwr_topl_update(dtopo, errorcodeKNDWR);
+			this->dnaChain->_kndwr_topl_update_stable(dtopo, errorcodeKNDWR);
 
 			if (topo[0]!=int(dtopo) || topo2[0]!=topo[0]){
-				cout<<moves<<": topology inconsistency";
+				cout<<moves<<": topology inconsistency. Deadlock triggerred for debug";
 				cout<<endl;
 
 				char filebuf[200];
@@ -722,8 +736,8 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 				this->dnaChain->snapshot(buf);
 
 				//Repeat error:
-				for (;;){
-					this->dnaChain->_kndwr_topl_update(dtopo, errorcodeKNDWR);
+				for (;;){//DEBUG
+					this->dnaChain->_kndwr_topl_update_stable(dtopo, errorcodeKNDWR);
 					this->dnaChain->kpoly(topo,errorcode);
 					this->dnaChain->kpoly2(topo2,errorcode2);
 				}
@@ -743,6 +757,23 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 		}
 
 		if (moves%STAT_INTERVAL==0){
+			if (dnaChain->stats.crk_accepts()<5){
+				//DEBUG
+				cout<<"Crankshaft acceptance rate too low. Possible algorithmic trap."<<endl;
+				cout<<"program is halted for debug."<<endl;
+				long topo[2]={0},errorcode=0,topo2[2]={0},
+				errorcode2=0,errorcodeKNDWR=0;
+
+				double dtopo;
+
+				for(;;){//DEBUG
+					this->dnaChain->kpoly(topo,errorcode);
+					this->dnaChain->kpoly2(topo2,errorcode2);
+
+					this->dnaChain->_kndwr_topl_update_stable(dtopo, errorcodeKNDWR);
+				}
+			}
+
 			(*fp_log).precision(5);
 			char buf[400];
 			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%] NOW:m,n,beta(%3d,%3d),%5.1f "

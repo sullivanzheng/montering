@@ -265,6 +265,7 @@ private:
 
 public:
 	long _kndwr_topl_update(double & topl, long & ierr);
+	long _kndwr_topl_update_stable(double & topl, long & ierr);
 private:
 	long _kndwr(long &ierr);
 	double _fastWr_topl_update();

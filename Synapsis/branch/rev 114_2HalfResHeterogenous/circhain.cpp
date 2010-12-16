@@ -318,7 +318,7 @@ int CircularChain::_deformReptSegments_updateInternalBangles(long m, long dm,
     //Segments in C2 will be deformed to appropriate conformation for the V1, V2 exchange.
 
     const int ERROR=-1;
-	const double eps=1e-6;
+	const double eps=1e-5;
 	double minA=10,maxA=0;
 
 	//copy C to C2, the playfield.
@@ -1566,7 +1566,7 @@ double CircularChain::_fastWr_topl_update(){
 	*/	
 
 	long kndwr,ierr=0;
-	kndwr=this->_kndwr_topl_update(this->topl,ierr);
+	kndwr=this->_kndwr_topl_update_stable(this->topl,ierr);
 	if (ierr!=0){
 		cout<<"[In CircularChain::_fastWr()] ierr!=0"<<endl;
 		exit(EXIT_FAILURE);
@@ -1580,7 +1580,7 @@ double CircularChain::_fastWr_topl_update(){
 
 long CircularChain::checkConsistency(){
 	//return 1 if inconsistent.
-	static const double eps=1e-7;
+	static const double eps=1e-10;
 	long flag=0;
 	for (long i=0;i<=maxnum;i++){
 		if (fabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||
