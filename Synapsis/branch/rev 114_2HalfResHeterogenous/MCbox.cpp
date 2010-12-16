@@ -198,7 +198,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			cacheWrithe=dnaChain->writhe;
 
 			//old Conformation
-			CircularChain back_dnaChain(*dnaChain);//DEBUG
+			CircularChain back_dnaChain(*dnaChain);
 
 			//bend energy change and movement.
 			dE=dnaChain->dE_TrialCrankshaft(m, n, rotAng);
@@ -247,14 +247,16 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			} 
 			
 			if (rigid_IEV_condition==1){//rigid_IEV_condition
-				/*int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
+				/*
+				int IEVflag=this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info);
 				int IEVflag_old=this->dnaChain->IEV_Alex_closeboundary(m,n,info_old);
 				if (IEVflag!=IEVflag_old){
 					char filebuf[100];
 					sprintf(filebuf,"IEVerr_c%d,%d_%010d_(new %d[%3.0f,%3.0f],old %d[%3.0f,%3.0f]).txt",
 						m,n,moves,IEVflag,info[0],info[1],IEVflag_old,info_old[0],info_old[1]);
 					this->dnaChain->snapshot(filebuf);
-				}*/
+				}
+				*/
 				if (this->dnaChain->IEV_with_rigidbody_closeboundary(m,n,info)==1){
 						IEV_condition=1;
 					}
@@ -276,23 +278,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				&& IEV_condition==1  && topo_condition==1){
 					this->dnaChain->stats.crk_accepts++;		
 			}
-			else{
-					
-					dnaChain->crankshaft(m,n,-rotAng);
-					dnaChain->E_t_updateWrithe_E_t();//DEBUG
-					if (fabs(dnaChain->writhe-cacheWrithe)>1e-4){
-						cout<<"When reversely rotated, the chain exhibit dramatic change"
-							" of writhe. Possible caused by program instability. Deadlocked for debug."<<endl;
-						double dtopo;
-						long errorcodeKNDWR=0;
-						for (;;){
-							dnaChain->E_t_updateWrithe_E_t();
-							back_dnaChain.E_t_updateWrithe_E_t();//DEBUG
-						}
-					};
+			else{					
+					*dnaChain=back_dnaChain;
 					RG.update_allrigid_and_E();
-					dnaChain->writhe=cacheWrithe;
-					dnaChain->E_t=cacheE_t;
 			}
 		}//End Crankshaft movement.
 		else if(movement==1){//==================================================================================
@@ -681,10 +669,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 
 
 		//if (moves>1399000 && moves<1700000)	debugsignal=1;
-
-
 		debugsignal=0;
-
 		static unsigned long const CONSISTENCY_CHECK=7321;
 		if (moves%CONSISTENCY_CHECK==0 || debugsignal==1){
 
