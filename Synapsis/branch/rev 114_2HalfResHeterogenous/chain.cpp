@@ -169,7 +169,7 @@ double Chain::calAngle(segment &C1, segment &C2)
     //temp = temp/(modu(C1.dx,C1.dy,C1.dz)*modu(C2.dx,C2.dy,C2.dz));
 	if (temp > 1 || temp < -1)
 	{
-		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.auto_moves, temp);
+		printf("Step# %d: Warning, cos(bangle)=%5.3f is larger than 1\n", stats.auto_moves.getTotCounts(), temp);
 		angle = 0.0;
 	}
 	else

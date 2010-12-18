@@ -884,6 +884,7 @@ long CircularChain::_kndwr(long &ierr){
     const double eps = 1e-4f;
 
 	ierr=0;
+	std::cout<<"Not used for heterogenous segmentation!"<<std::endl;
 /* import C[i].dX to dX*///--------------------------------
 	for (long tempi=0;tempi<=maxnum;tempi++){
 		x[tempi]=C[tempi].x; y[tempi]=C[tempi].y; z[tempi]=C[tempi].z;		

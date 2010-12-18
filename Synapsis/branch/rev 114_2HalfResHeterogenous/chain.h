@@ -166,7 +166,9 @@ protected:
 	virtual long normalizeAllBangle() = 0;		
     void updateAllBangle_Ini(bool circular);		
 	virtual double updateBangle(long i) = 0;
-    void normalize_X_bangle();
+
+public:
+	void normalize_X_bangle();
 
 public:
 	double VolEx_R;
@@ -256,7 +258,7 @@ public:
 	long IEV_with_rigidbody_closeboundary( long in,  long ik, double info[3]);
 	long IEV_with_rigidbody_closeboundary_fullChain(double info[3]);
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
-	long checkConsistency();
+	long checkConsistency(double eps=1e-10);
     long checkBangleConsistency();
 	long getBranchNumber();
 	long scanBranch(char* filename);

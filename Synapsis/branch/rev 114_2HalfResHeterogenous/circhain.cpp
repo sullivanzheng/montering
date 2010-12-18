@@ -72,7 +72,8 @@ long CircularChain::normalizeAllBangle()
 			L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
 		}
 		Lnow=moduV(L);
-		cout <<"After : X[maxnum-3]--->X[0]: Real:"<<length
+		cout <<"Normalize chain end."<<endl
+			<<"After : X[maxnum-3]--->X[0]: Real:"<<length
 		<<"-sum(dx):"<<Lnow<<" =diff:"<<
 		modu(C[0].x-C[p].x-L[0],
 			 C[0].y-C[p].y-L[1],
@@ -593,13 +594,30 @@ double CircularChain::dE_reptation_3_4(long m1, long dm1,
 		}
 */
 	//Calcualte initial energy:
-		double E0=0;
-		for (long p=m1;;){
-			E0+=this->G_b(p);
+	//Bangle will be changed will be quite complicated.
+// Bangle and energy changes for repatation movement:
+//                                                                                                           
+//        * *                             * * *            *-bangle updated (bangle+=deltabangle)            
+//-----|->->->-------------------------|->->->->----------------------------                                 
+//     |    |                          |      |                                                              
+//     m1   m1+dm1                     m2     m2+dm2                                                         
+//
+//     +  * * * +                        +  * * +          +-bangle needed to be recalculated.               
+//-----|->->->->-------------------------|->->->-----------------------------                                
+//     |      |                          |    |                                                              
+//     m1     m1+dm2                     |    m2+dm2                                               
+//                                       m2+dm2-dm1                                                          
 
-			if (p==wrap(m2+dm2+1,totsegnum)) break;
-			p = wrap(p+1,totsegnum);
-		}
+		double E0=0;
+		//* angle of V1
+		for (long i=1;i<=dm1;i++) E0+=this->G_b(wrap(m1+i,totsegnum));
+		//* angle of V2
+		for (long i=1;i<=dm2;i++) E0+=this->G_b(wrap(m2+i,totsegnum));
+		if (m1==m2end) E0+=G_b(m1); //in case m1 and m2end meets
+		else E0+=(G_b(m1)+G_b(m2end));
+		if (m1end==m2) E0+=G_b(m2); //in case m1end and m2 meets
+		else E0+=(G_b(m1end)+G_b(m2));
+
 		
 	//Incorporate C2 into C.
 
@@ -660,20 +678,23 @@ double CircularChain::dE_reptation_3_4(long m1, long dm1,
 //     m1     m1+dm2                     |    m2+dm2                                                         
 //                                       m2+dm2-dm1       
 // recalculate: m1 m1+dm2+1 m2+dm2-dm1 m2+dm2+1
-	this->updateBangle(m1);
-	this->updateBangle(wrap(m1+dm2+1,totsegnum));
-	this->updateBangle(wrap(m2+dm2-dm1,totsegnum));
-	this->updateBangle(wrap(m2+dm2+1,totsegnum));
+	long m1_=m1,m2_=wrap(m2+dm2-dm1,totsegnum);
+	long dm1_=dm2,dm2_=dm1,m1end_=wrap(m1+dm2+1,totsegnum),m2end_=m2end;
+	this->updateBangle(m1_);
+	this->updateBangle(m1end_);
+	this->updateBangle(m2_);
+	this->updateBangle(m2end_);
 
 	//recalculate energy and find the difference:
 	double E1=0;
-	for (long p=m1;;){
-		E1+=this->G_b(p);
-
-		if (p==wrap(m2+dm2+1,totsegnum)) break;
-		p = wrap(p+1,totsegnum);
-	}
-	//snapshot("test.txt");
+	//* angle of V1
+	for (long i=1;i<=dm1_;i++) E1+=this->G_b(wrap(m1_+i,totsegnum));
+	//* angle of V2
+	for (long i=1;i<=dm2_;i++) E1+=this->G_b(wrap(m2_+i,totsegnum));
+	if (m1_==m2end_) E1+=G_b(m1_); //in case m1_ and m2end_ meets
+	else E1+=(G_b(m1_)+G_b(m2end_));
+	if (m1end_==m2_) E1+=G_b(m2_); //in case m1end_ and m2_ meets
+	else E1+=(G_b(m1end_)+G_b(m2_));
 	return E1-E0;
 }
 
@@ -1276,6 +1297,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
 	static float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 	static float cutoff2=(this->max_seglength+er)*(this->max_seglength+er);
+	float ernow;
 
 	for (long i=in;i<=ik-1;i++){		
 		for (long j=0;j<=maxnum;j++){
@@ -1318,15 +1340,6 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			)continue;	
 			*/
 
-			//Loose check
-			if ((protect_list[i-VolEx_cutoff_rigidbody]==1
-				||
-				protect_list[i+VolEx_cutoff_rigidbody+1]==1)
-				&&
-				(protect_list[j-VolEx_cutoff_rigidbody]==1
-				||
-				protect_list[j+VolEx_cutoff_rigidbody+1]==1)) continue;
-
 			float wx,wy,wz,w2;
 			//wji=Xi-Xj
 			wx = C[i].x-C[j].x;
@@ -1338,6 +1351,11 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 //This slow cutoff:	if (w2 >= (C[i].l + C[j].l + er)*(C[i].l + C[j].l + er)) continue;
 // has been replaced by a faster verson:
 			if (w2 > cutoff2) continue;
+			
+			ernow=er;
+			//if segments include rigidbody segments, er will be reducted.
+			if (C[i].l<rept_min_seglength) ernow-=0.8*this->VolEx_R;
+			if (C[j].l<rept_min_seglength) ernow-=0.8*this->VolEx_R;
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
@@ -1410,7 +1428,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
 			
 			//Collision detected, subroutine returns with 0;
-			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) {
+			if (dPx * dPx + dPy * dPy + dPz * dPz < ernow * ernow ) {
 				info[0]=i;
 				info[1]=j;
 				return 0;
@@ -1442,7 +1460,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 
 			if (j-i <= VEcutoff || i+totsegnum-j <= VEcutoff) continue;
 
-			//IEV Waiver for regions near rigidbody.
+			
 			if ((protect_list[i-VolEx_cutoff_rigidbody]==1
 				||
 				protect_list[i+VolEx_cutoff_rigidbody+1]==1)
@@ -1578,9 +1596,9 @@ double CircularChain::_fastWr_topl_update(){
 	return double(kndwr)+bwr;
 }
 
-long CircularChain::checkConsistency(){
+long CircularChain::checkConsistency(double eps){
+	
 	//return 1 if inconsistent.
-	static const double eps=1e-10;
 	long flag=0;
 	for (long i=0;i<=maxnum;i++){
 		if (fabs(C[wrap(i+1,totsegnum)].x-C[i].x-C[i].dx) > eps ||

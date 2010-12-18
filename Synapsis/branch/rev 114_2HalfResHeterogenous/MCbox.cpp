@@ -49,6 +49,14 @@ MCbox_circular::MCbox_circular(char const *configFile){
 	stringstream(config[string("VolEx_R")])>>this->dnaChain->VolEx_R;
 	stringstream(config[string("dLk")])>>this->dnaChain->dLk;
 
+	if (dnaChain->checkConsistency(5e-5)==1){
+		cout<<"Chain inconsistency occurs. In most cases this is caused by inconsistency "
+			"between alleged number of segment in _config file and the actual number of "
+			"segments."<<endl;
+		exit(EXIT_FAILURE);
+	}
+	dnaChain->normalize_X_bangle();
+
 	//-------Initialize dnaChain writhe info--------
 	dnaChain->E_t_updateWrithe_E_t();
 
@@ -59,12 +67,6 @@ MCbox_circular::MCbox_circular(char const *configFile){
     //dnaChain->snapshot(strcat_noOW(buf, strBufSize, filePrefix, "_ini.txt"));
     logParameters();
 
-	if (dnaChain->checkConsistency()==1){
-		cout<<"Chain inconsistency occurs. In most cases this is caused by inconsistency"
-			"between alleged number of segment in _config file and the actual number of"
-			" segments."<<endl;
-		exit(EXIT_FAILURE);
-	}
 }
 
 void MCbox_circular::logAngleDist(char *suffix)
@@ -141,7 +143,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		//Therefore, all energy evaluation program should be careful with chain segment 
 		//iteration due to wrapping problem.
 
-		double dE, cacheRE, cacheE_t, cacheWrithe, WrChangeInTrialMove,E_tChangeInTrialMove;
+		double dE, cacheRE, cacheE_t, cacheWrithe, cacheTopl, WrChangeInTrialMove,E_tChangeInTrialMove;
 		long m,n; double rotAng;
 		long E_condition=0,IEV_condition=0,topo_condition=0,rigid_IEV_condition=0;
 		double info[3]={0,0,0},info_old[3]={0,0,0};
@@ -196,9 +198,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//old writhe energy;
 			cacheE_t=dnaChain->E_t;
 			cacheWrithe=dnaChain->writhe;
+			cacheTopl=dnaChain->topl;
 
 			//old Conformation
-			CircularChain back_dnaChain(*dnaChain);
+			static segment backC[maxa];
+			for (int i=0;i<=maxnum;i++)	backC[i]=dnaChain->C[i];
 
 			//bend energy change and movement.
 			dE=dnaChain->dE_TrialCrankshaft(m, n, rotAng);
@@ -279,7 +283,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 					this->dnaChain->stats.crk_accepts++;		
 			}
 			else{					
-					*dnaChain=back_dnaChain;
+					for (int i=0;i<=maxnum;i++) dnaChain->C[i]=backC[i];
+					dnaChain->writhe=cacheWrithe;
+					dnaChain->E_t=cacheE_t;
+					dnaChain->topl=cacheTopl;
 					RG.update_allrigid_and_E();
 			}
 		}//End Crankshaft movement.
@@ -348,6 +355,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//old writhe energy;
 			cacheE_t=dnaChain->E_t;
 			cacheWrithe=dnaChain->writhe;
+			cacheTopl=dnaChain->topl;
 
 			//old conformation stored.
 		    static segment backC[maxa];
@@ -452,9 +460,10 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 			else{
 				for (int i=0;i<=maxnum;i++)	dnaChain->C[i]=backC[i];
-				RG.update_allrigid_and_E();
 				dnaChain->writhe=cacheWrithe;
 				dnaChain->E_t=cacheE_t;
+				dnaChain->topl=cacheTopl;
+				RG.update_allrigid_and_E();
 			}
 
 		}//End reptation movement.
@@ -488,12 +497,13 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
             this->dnaChain->auto_updt_stats();
 			this->dnaChain->stats.rptsimp_counts++;
 
-    //old rigid body energy.
+			//old rigid body energy.
             cacheRE=RG.E;
 
-            //old writhe energy;
-            cacheE_t=dnaChain->E_t;
-            cacheWrithe=dnaChain->writhe;
+			//old writhe energy;
+			cacheE_t=dnaChain->E_t;
+			cacheWrithe=dnaChain->writhe;
+			cacheTopl=dnaChain->topl;
 
             //bend energy change and movement.
             dE=dnaChain->dE_reptation_simple(m,n,rept_move);
@@ -563,10 +573,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
                     dnaChain->stats.rptsimp_accepts++;
             }
             else{
-                            dnaChain->dE_reptation_simple(m,n,-rept_move);
-                            RG.update_allrigid_and_E();
-                            dnaChain->writhe=cacheWrithe;
-                            dnaChain->E_t=cacheE_t;
+				dnaChain->dE_reptation_simple(m,n,-rept_move);
+				dnaChain->writhe=cacheWrithe;
+				dnaChain->E_t=cacheE_t;
+				dnaChain->topl=cacheTopl;
+				RG.update_allrigid_and_E();
             }			
 		}//End simplified reptation movement.
 		else if(movement==3){
@@ -581,11 +592,11 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			//old writhe energy;
 			cacheE_t=dnaChain->E_t;
 			cacheWrithe=dnaChain->writhe;
+			cacheTopl=dnaChain->topl;
 
-			//old conformation stored.
-		    static segment backC[maxa];
-			for (int i=0;i<=maxnum;i++)
-				backC[i]=dnaChain->C[i];
+			//old Conformation
+			static segment backC[maxa];
+			for (int i=0;i<=maxnum;i++)	backC[i]=dnaChain->C[i];
 
 			int direction=drand(1.0)-0.5;
 			//direction>0 positive shift else negative shift.
@@ -660,6 +671,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 				RG.update_allrigid_and_E();
 				dnaChain->writhe=cacheWrithe;
 				dnaChain->E_t=cacheE_t;
+				dnaChain->topl=cacheTopl;
 			}
 		}
 
