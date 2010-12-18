@@ -1805,18 +1805,22 @@ double allrigid::update_allrigid_and_E(){
 		this->E = 0;
 		return 0.;
 	}
+	/*
 	for (long i=0;i<this->R.size();i++){
 		R[i].update_ref_v_xyz();
 	}
+	*/
+
 	this->E = 0;
 
 	//Axis Orientation. ref_v_xyz[3]=z
-	this->AxisBeta=3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[3],this->R[1].ref_v_xyz[3]); //z
+	this->AxisBeta = 0; //3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[3],this->R[1].ref_v_xyz[3]); //z
 
 	//Curvature radius direction orientation. ref_v_xyz[1]=x
-	this->RadiusBeta =3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1]);//x
+	this->RadiusBeta = 0; //3.14159-betaVec1Vec2(this->R[0].ref_v_xyz[1],this->R[1].ref_v_xyz[1]);//x
 
 	//Center point of each rigid body. ref_v_xyz[0]+anchor segment coordinate
+	/*
 	double t0[3],t1[3];
 	t0[0]=R[0].ref_v_xyz[0][0] + R[0].target->C[R[0].protect[R[0].anchor] ].x;
 	t0[1]=R[0].ref_v_xyz[0][1] + R[0].target->C[R[0].protect[R[0].anchor] ].y;
@@ -1827,6 +1831,7 @@ double allrigid::update_allrigid_and_E(){
 	t1[2]=R[1].ref_v_xyz[0][2] + R[1].target->C[R[1].protect[R[1].anchor] ].z;
 	
 	this->r=modu(t1[0]-t0[0],t1[1]-t0[1],t1[2]-t0[2]);
+	*/
 
 	//Res Site I distance. 
 	//
@@ -1836,23 +1841,43 @@ double allrigid::update_allrigid_and_E(){
 		modu(R[0].target->C[R[0].protect[0]].x-R[1].target->C[R[1].protect[0]].x,
 			 R[0].target->C[R[0].protect[0]].y-R[1].target->C[R[1].protect[0]].y,
 			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
+	
+	//X[i-1] x X[i] pointing direction. When synapsis, they should be antiparallel.
+	double dir1[3],dir2[3];
+	double temp11[3] = {R[0].target ->C[ R[0].protect[0]-1 ].dx,
+					    R[0].target ->C[ R[0].protect[0]-1 ].dy,
+					    R[0].target ->C[ R[0].protect[0]-1 ].dz},
+		   temp12[3]=  {R[0].target ->C[ R[0].protect[0]   ].dx,
+						R[0].target ->C[ R[0].protect[0]   ].dy,
+						R[0].target ->C[ R[0].protect[0]   ].dz};
+	double temp21[3] = {R[1].target ->C[ R[1].protect[0]-1 ].dx,
+					    R[1].target ->C[ R[1].protect[0]-1 ].dy,
+					    R[1].target ->C[ R[1].protect[0]-1 ].dz},
+		   temp22[3]=  {R[1].target ->C[ R[1].protect[0]   ].dx,
+						R[1].target ->C[ R[1].protect[0]   ].dy,
+						R[1].target ->C[ R[1].protect[0]   ].dz};
+	
+	Xprod(temp11,temp12,dir1);
+	Xprod(temp21,temp22,dir2);
 
-	double tempa,tempb;
+	this->siteI_direction = PI - betaArray12(dir1,dir2);
+	/*double tempa,tempb;
 	{
-	double X,Y,Z;
-	X=R[0].target->C[R[0].protect[0]].x-(R[0].ref_v_xyz[4][0]+t0[0]);
-	Y=R[0].target->C[R[0].protect[0]].y-(R[0].ref_v_xyz[4][1]+t0[1]);
-	Z=R[0].target->C[R[0].protect[0]].z-(R[0].ref_v_xyz[4][2]+t0[2]);
-	tempa=modu(X,Y,Z);
+		double X,Y,Z;
+		X=R[0].target->C[R[0].protect[0]].x-(R[0].ref_v_xyz[4][0]+t0[0]);
+		Y=R[0].target->C[R[0].protect[0]].y-(R[0].ref_v_xyz[4][1]+t0[1]);
+		Z=R[0].target->C[R[0].protect[0]].z-(R[0].ref_v_xyz[4][2]+t0[2]);
+		tempa=modu(X,Y,Z);
 	}
 	{
-	 double X,Y,Z;
-	 X=R[1].target->C[R[1].protect[0]].x-(R[1].ref_v_xyz[4][0]+t1[0]);
-	 Y=R[1].target->C[R[1].protect[0]].y-(R[1].ref_v_xyz[4][1]+t1[1]);
-	 Z=R[1].target->C[R[1].protect[0]].z-(R[1].ref_v_xyz[4][2]+t1[2]);
-	 tempb=modu(X,Y,Z);
+		 double X,Y,Z;
+		 X=R[1].target->C[R[1].protect[0]].x-(R[1].ref_v_xyz[4][0]+t1[0]);
+		 Y=R[1].target->C[R[1].protect[0]].y-(R[1].ref_v_xyz[4][1]+t1[1]);
+		 Z=R[1].target->C[R[1].protect[0]].z-(R[1].ref_v_xyz[4][2]+t1[2]);
+		 tempb=modu(X,Y,Z);
 	}
-	this->r_siteI_deviation= tempa + tempb;
+	this->r_siteI_deviation= tempa + tempb;*/
+
 	//Calcuate if site I's are all aligned to the -y direction.
 	/*double yangle1=0,yangle2=0;
 	{
@@ -1886,78 +1911,17 @@ double allrigid::update_allrigid_and_E(){
 */
 	
 	//---------------Artificial Reaction Coordinate------------
-	double D1=digitalneg(r, 3.0, 2.3/1.);
-	double D2=digitalneg(r, 1.0, 2.3/0.2)
-		     *digitalneg(AxisBeta, 40./180*3.14, 2.3/(10./180*3.14))
-		     *digitalneg(RadiusBeta, 40./180*3.14, 2.3/(10./180*3.14));
+	double D1=digitalneg(r_siteI, 3.0, 2.3/1.);
 
-	Q = r;
-	if (r<7.0){
+	Q = this->r_siteI;
+	if (r_siteI<7.0){
 		Q = Q -
-			put(AxisBeta+RadiusBeta, 30./180*3.14 + 30./180*3.14, 5/(30./180*3.14 + 30./180*3.14))
-			*D1;
-		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			Q = Q -
-				(
-			    put(r_siteI_deviation, 2. , 5./2.)
-//			   +put(siteI_direction, 90./180*3.14 , 2.5/(90./180*3.14))
-				)*D2; 
-		}
+			put(this->siteI_direction, 90./180*3.14, 5/(90./180*3.14))*D1;
 	}
 	//---------------Reshape Biasing potential-----------------
 	this->unbiasedE = 0;
-	double E11,E12,E21,E22,Er;
 
-	E11=E12=E21=E22=0;
-
-	Er=(-0.0)*exp(-r*r/2/8.0/8.0);
-
-	if (r<7.0){
-		//E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 2/(180./180*3.14 + 180./180*3.14));
-		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
-		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
-
-		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			E21=-put(r_siteI_deviation, 2. , 2.0/2.);
-			E22=0;//-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
-			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
-			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));
-
-		}
-	} 
-	
-	this->unbiasedE = Er+(E11+E12)*D1 + (E21+E22)*D2;
 	this->E = this->unbiasedE +  U.getBiasingE(Q);
-
-
-	
-//	A potential from Quan Du and A. Vologodskii.
-/*	double sigma2=1;
-	double r0=0.1,q=0.8;
-	double A=17;
-
-	this->E=
-	A*exp(-((AxisBeta-PI)*(AxisBeta-PI)+(RadiusBeta-PI)*(RadiusBeta-PI))/2/sigma2)
-	*(pow(r0/r,q*2)-2*pow(r0/r,q));
-
-
-
-	double r0=0,r0std=11.0,a0=10;
-	double E0=-a0*exp(-(r-r0)*(r-r0)/2/r0std);
-	//double E11= fabs(AxisBeta-50/180.0*3.14159) * (0);
-	//double E12= fabs(RadiusBeta-30/180.0*3.14159) * (0);
-
-	double E21= fabs(AxisBeta-0/180.0*3.14159) * (5);
-	double E22= fabs(RadiusBeta-0/180.0*3.14159) * (5);
-	double E4= r_siteI * 0;
-	double E5= siteI_direction * (0);
-
-	this->E=E0
-		//+(E11+E12)*digital(r,2.5,3)
-		+(E21+E22)*(1-digital(r,2.0,																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																						3))
-		+E4+E5;
-*/
-
 
     return this->E;
 }
@@ -1971,17 +1935,21 @@ target(r_target),protect(r_protect),ref_v(r_ref_v), ref_vec_basis(r_ref_vec_basi
 	// of cls_rigid's container class "all_rigid".
 	//This copy is made for better global access of protect list.
 	double Mv[3][3];
-	Mv[0][0]=target->C[protect[this->ref_vec_basis[0]]].dx;
-	Mv[1][0]=target->C[protect[this->ref_vec_basis[0]]].dy;
-	Mv[2][0]=target->C[protect[this->ref_vec_basis[0]]].dz;
+	
+	if (this->ref_vec_basis.size()>0){
 
-	Mv[0][1]=target->C[protect[this->ref_vec_basis[1]]].dx;
-	Mv[1][1]=target->C[protect[this->ref_vec_basis[1]]].dy;
-	Mv[2][1]=target->C[protect[this->ref_vec_basis[1]]].dz;
+		Mv[0][0]=target->C[protect[this->ref_vec_basis[0]]].dx;
+		Mv[1][0]=target->C[protect[this->ref_vec_basis[0]]].dy;
+		Mv[2][0]=target->C[protect[this->ref_vec_basis[0]]].dz;
 
-	Mv[0][2]=target->C[protect[this->ref_vec_basis[2]]].dx;
-	Mv[1][2]=target->C[protect[this->ref_vec_basis[2]]].dy;
-	Mv[2][2]=target->C[protect[this->ref_vec_basis[2]]].dz;
+		Mv[0][1]=target->C[protect[this->ref_vec_basis[1]]].dx;
+		Mv[1][1]=target->C[protect[this->ref_vec_basis[1]]].dy;
+		Mv[2][1]=target->C[protect[this->ref_vec_basis[1]]].dz;
+
+		Mv[0][2]=target->C[protect[this->ref_vec_basis[2]]].dx;
+		Mv[1][2]=target->C[protect[this->ref_vec_basis[2]]].dy;
+		Mv[2][2]=target->C[protect[this->ref_vec_basis[2]]].dz;
+	}
 
 	for (long i=0;i<this->ref_v.size();i++){
 		vector<double> a(3,0);
