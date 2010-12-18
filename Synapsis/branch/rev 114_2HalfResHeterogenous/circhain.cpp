@@ -1354,8 +1354,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			
 			ernow=er;
 			//if segments include rigidbody segments, er will be reducted.
-			if (C[i].l<rept_min_seglength) ernow-=0.8*this->VolEx_R;
-			if (C[j].l<rept_min_seglength) ernow-=0.8*this->VolEx_R;
+			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=2.0/5.0*er;
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
@@ -1454,6 +1453,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 	//PAY ATTENTION, ER HERE IS THE VOLUME EXCLUSION DIAMETER.
 	static float er = this->VolEx_R*2.0;		//That is why we need to time this->VolEx_R by 2.0
 	static float cutoff2=(this->max_seglength+er)*(this->max_seglength+er);
+	float ernow;
 
 	for (long i=0;i<=maxnum-1;i++){		
 		for (long j=i+1;j<=maxnum;j++){
@@ -1461,14 +1461,6 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 			if (j-i <= VEcutoff || i+totsegnum-j <= VEcutoff) continue;
 
 			
-			if ((protect_list[i-VolEx_cutoff_rigidbody]==1
-				||
-				protect_list[i+VolEx_cutoff_rigidbody+1]==1)
-				&&
-				(protect_list[j-VolEx_cutoff_rigidbody]==1
-				||
-				protect_list[j+VolEx_cutoff_rigidbody+1]==1)) continue;
-
 			float wx,wy,wz,w2;
 			//wji=Xi-Xj
 			wx = C[i].x-C[j].x;
@@ -1481,6 +1473,9 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 // has been replaced by a faster verson:
 			if (w2 > cutoff2) continue;
 
+			ernow=er;
+			//if segments include rigidbody segments, er will be reducted.
+			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=2.0/5.0*er;
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
@@ -1553,7 +1548,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 			dPz = wz + (sc * C[i].dz) - (tc * C[j].dz);
 			
 			//Collision detected, subroutine returns with 0;
-			if (dPx * dPx + dPy * dPy + dPz * dPz < er * er ) {
+			if (dPx * dPx + dPy * dPy + dPz * dPz < ernow * ernow ) {
 				info[0]=i;
 				info[1]=j;
 				return 0;
