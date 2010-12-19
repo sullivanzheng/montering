@@ -83,6 +83,9 @@ public:
 	double r_siteI_deviation;
 	double siteI_direction;
 
+	int IEV_spheres_effective;//turn IEV_spheres on and off;
+	double IEV_EFFECTIVE_THRESHOLD; //When reaction coordinate Q is smaller than IEV_EFFECTIVE_THRESHOLD IEV_sphere will be on.
+
 	std::vector<cls_rigid> R;
 	allrigid(char *configfile, CircularChain *target);
 	std::vector<long> protect;

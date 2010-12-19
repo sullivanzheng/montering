@@ -1678,16 +1678,32 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			r_ref_v.push_back(a);
 		}
 		else if (token==string("$")){ //protect
-			while (!sline.eof()){
+			int counter=0;
+			for(;;){
 				long temp;
 				sline>>temp;
+				counter++;
+				if (temp<0) break;
+				if (counter>300){
+					std::cout<<"allrigid::allrigid problem. ref_vec_basis token is followed by too many "
+						"basis. Usually, only 3 is necessary"<<endl;
+					exit(EXIT_FAILURE);
+				}
 				r_protect.push_back(temp);
 			}
 		}
 		else if (token==string("ref_vec_basis")){
-			while (!sline.eof()){
+			int counter=0;
+			for(;;){	
 				long temp;
-				sline>>temp;
+				sline >> temp;
+				counter++;
+				if (temp<0) break;
+				if (counter>300){
+					std::cout<<"allrigid::allrigid problem. ref_vec_basis token is followed by too many "
+						"basis. Usually, only 3 is necessary"<<endl;
+					exit(EXIT_FAILURE);
+				}
 				r_ref_vec_basis.push_back(temp);
 			}
 		}
@@ -1738,6 +1754,11 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 			sline>>s.x>>s.y>>s.z>>s.r;
 		}
 
+		else if (token==string("TURN_ON_IEV_WHEN_Q_SMALLER_THAN")){
+			sphere_simple s;
+			sline>>this->IEV_EFFECTIVE_THRESHOLD;
+		}
+
 		else if (token==string("[endoffile]")){
 			hard_eof=1;
 		}
@@ -1756,6 +1777,8 @@ int allrigid::IEV_spheres(long m, long n){
 
 	//For complicated spheres that locate the center by relative value of 
 	//return 0-intersetion 1-no intersection
+	if (this->IEV_spheres_effective==0) return 1;
+
 	vector<sphere>::iterator it;
 	for ( it=this->spheres.begin(); it < this->spheres.end() ; it++){
 
@@ -1779,8 +1802,7 @@ int allrigid::IEV_spheres(long m, long n){
 		//   |1 2 3 |-------rigid--------|1	2 3 |
 		//->: free vector; *>: vector with protected (fixed) starting point.
 		for (p=m; wrap(p+1,totsegnum)!=n ; p=wrap(p+1,totsegnum) ){
-			if (protect_list[p-VolEx_cutoff_rigidbody]==1 ||  
-				protect_list[p+VolEx_cutoff_rigidbody+1]==1) continue; 
+			if (t0->C[p].l < rept_min_seglength) continue; 
 
 			if (modu(t0->C[p].x - cx,t0->C[p].y - cy,t0->C[p].z - cz) < it->d/2.)
 						 return 0;
@@ -1904,6 +1926,13 @@ double allrigid::update_allrigid_and_E(){
 				)*D2; 
 		}
 	}
+
+	if (Q<IEV_EFFECTIVE_THRESHOLD){
+		this->IEV_spheres_effective = 1;
+	}else{
+		this->IEV_spheres_effective = 0;
+	}
+
 	//---------------Reshape Biasing potential-----------------
 	this->unbiasedE = 0;
 	double E11,E12,E21,E22,Er;
