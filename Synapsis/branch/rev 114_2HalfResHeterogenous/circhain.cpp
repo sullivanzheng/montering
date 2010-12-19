@@ -1770,6 +1770,7 @@ allrigid::allrigid(char *configfile,CircularChain * target){
 		for (long j=0;j<this->R[i].protect.size();j++)
 			this->protect.push_back(R[i].protect[j]);
 	this->update_allrigid_and_E();
+	this->IEV_spheres(0,0);
 }
 
 int allrigid::IEV_spheres(long m, long n){

@@ -123,6 +123,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
+	*fp_log<<"Initial Q (Reaction coordinate): "<<RG.Q<<endl;
+
 	if (RBAUS_LOAD_LAST) {
 		U.load("ArtificialPotential.txt");
 		RG.update_allrigid_and_E();
