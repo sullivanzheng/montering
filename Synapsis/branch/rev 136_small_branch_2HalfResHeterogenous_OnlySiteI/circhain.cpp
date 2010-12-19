@@ -1857,10 +1857,16 @@ double allrigid::update_allrigid_and_E(){
 						R[1].target ->C[ R[1].protect[0]   ].dy,
 						R[1].target ->C[ R[1].protect[0]   ].dz};
 	
-	Xprod(temp11,temp12,dir1);
-	Xprod(temp21,temp22,dir2);
+	addvec(temp11,temp12,dir1);
+	addvec(temp21,temp22,dir2);
 
 	this->siteI_direction = PI - betaArray12(dir1,dir2);
+
+
+	double vo1[3],vo2[3];
+	subvec(temp11,temp12,vo1);
+	subvec(temp21,temp22,vo2);
+	this->r_siteI_deviation = PI - betaArray12(vo1,vo2);
 	/*double tempa,tempb;
 	{
 		double X,Y,Z;
@@ -1911,12 +1917,13 @@ double allrigid::update_allrigid_and_E(){
 */
 	
 	//---------------Artificial Reaction Coordinate------------
-	double D1=digitalneg(r_siteI, 3.0, 2.3/1.);
+	double D1=digitalneg(r_siteI, 3.0, 2.3/1.), D2=digitalneg(this->siteI_direction,50./180.*PI,10./180*PI);
 
 	Q = this->r_siteI;
 	if (r_siteI<7.0){
 		Q = Q -
-			put(this->siteI_direction, 90./180*3.14, 5/(90./180*3.14))*D1;
+			put(this->siteI_direction, 90./180*PI, 5/(90./180*PI))*D1
+			-put(this->r_siteI_deviation,90./180*PI, 5/(90./180*PI))*D1*D2;
 	}
 	//---------------Reshape Biasing potential-----------------
 	this->unbiasedE = 0;
