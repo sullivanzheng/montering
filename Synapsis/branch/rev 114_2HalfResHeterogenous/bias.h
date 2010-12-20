@@ -409,18 +409,19 @@ public:
 			exit(3);
 		}
 		char buf[400];
-		sprintf(buf,"%4s %3s %8s %12s %12s %14s %10s","#","SYM","binstart","G","K","HS","f");
+		sprintf(buf,"%4s %4s %3s %8s %12s %12s %14s %10s","#m","#n","SYM","binstart","G","K","HS","f");
 		fp<<buf<<std::endl;
 		for (int j=0; j<=binnum_n+1;j++){
 			for (int i=0; i<=binnum_m+1; i++){
-				sprintf(buf,"%4d %3s %8.3f %8.3f %12g %12g %14d %10d",
-					i,i==0?"NEG":(i==binnum_m+1?"POS":"---"),
+				sprintf(buf,"%4d %4d %3s %8.3f %8.3f %12g %12g %14d %10d",
+					i,j,i==0?"NEG":(i==binnum_m+1?"POS":"---"),
 					binstart_m+(i-1)*binsize_m, binstart_n+(j-1)*binsize_n, 
 					G[i][j],K[i][j],HS[i][j],f[i][j]);
 				fp<<buf<<std::endl;
 			}
 			fp<<"---Column "<<j<<" end---"<<std::endl;
 		}
+		fp <<"===Table end==="<<std::endl;
 		fp <<"binstart_m "<<binstart_m<<std::endl;
 		fp <<"binend_m "<<binend_m<<std::endl;
 		fp <<"binnum_m "<<binnum_m<<std::endl;
@@ -432,13 +433,12 @@ public:
 		fp <<"counter "<<counter<<std::endl;
 		fp <<"HHR "<<HHR<<std::endl;
 
-		binsize_m=(binend_m-binstart_m)/binnum_m;
-		binsize_n=(binend_n-binstart_n)/binnum_n;
+
 
 		fp.close();
 		return 0;
 	}
-/*
+
 	int load(char* filename){
 		std::ifstream fp(filename);
 		if (!fp.good()){
@@ -448,32 +448,47 @@ public:
 		char buf[400];
 		fp.getline(buf,400);
 
-		int i=0;
+		int i=0,j=0;
 		while(!fp.eof()){
 			fp.getline(buf,400);
+			if (strcmp(buf, "===Table end===")==0) break;
 			std::stringstream s(buf);
-			s>>i>>buf>>buf;
-			s>>G[i]>>K[i]>>HS[i]>>f[i];
-			std::cout<<i<<" G= "<<G[i]<<std::endl;
+			s>>i>>j>>buf>>buf;
+			if (s.fail()) {
+				std::cout<<"Failed to read line:"<<s.str()<<std::endl;
+				continue;
+			}
+			s>>G[i][j]>>K[i][j]>>HS[i][j]>>f[i][j];
+			std::cout<<i<<' '<<j<<" G= "<<G[i][j]<<std::endl;
 		}
 
 		
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binstart;
+		std::stringstream(buf)>>buf>>binstart_m;
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binend;
+		std::stringstream(buf)>>buf>>binend_m;
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binnum;
+		std::stringstream(buf)>>buf>>binnum_m;
+		
+		fp.getline(buf,400);
+		std::stringstream(buf)>>buf>>binstart_n;
+		fp.getline(buf,400);
+		std::stringstream(buf)>>buf>>binend_n;
+		fp.getline(buf,400);
+		std::stringstream(buf)>>buf>>binnum_n;
+
 		fp.getline(buf,400);
 		std::stringstream(buf)>>buf>>counter;
 		fp.getline(buf,400);
 		std::stringstream(buf)>>buf>>HHR;
 
-		binsize=(binend-binstart)/binnum;
+		binsize_m=(binend_m-binstart_m)/binnum_m;
+		binsize_n=(binend_n-binstart_n)/binnum_n;
+
 		fp.close();
 
 		return 0;
-	}*/
+	}
 };
 
 #if 0
