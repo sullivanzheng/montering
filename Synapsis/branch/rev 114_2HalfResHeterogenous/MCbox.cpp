@@ -244,7 +244,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 			
 			if (E_condition==1){
-				if (RG.IEV_spheres(m,n)==1){
+				if (RG.IEV_spheres(0,0)==1){  //not if (RG.IEV_spheres(m,n)==1) spheres could be included in the moving segments.
 					rigid_IEV_condition=1;
 				}
 				else{
