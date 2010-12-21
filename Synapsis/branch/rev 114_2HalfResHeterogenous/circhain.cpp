@@ -1561,7 +1561,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 
 double CircularChain::E_t_updateWrithe_E_t(){
 	this->writhe = this->_fastWr_topl_update();
-	static double const C_contingent = C_t * 2.0/3.0;
+	static double const C_contingent = C_t;
 	this->E_t= 2 * PI * PI * C_contingent / (this->contour_length * bpperunit) *
 				(dLk - this->writhe)*(dLk - this->writhe);
 	return this->E_t;
@@ -1917,7 +1917,7 @@ double allrigid::update_allrigid_and_E(){
 	Q = r;
 	if (r<7.0){
 		Q = Q -
-			put(AxisBeta+RadiusBeta, 30./180*3.14 + 30./180*3.14, 5/(30./180*3.14 + 30./180*3.14))
+			put(AxisBeta+RadiusBeta, 30./180*3.14 + 30./180*3.14, 5.0/(30./180*3.14 + 30./180*3.14))
 			*D1;
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
 			Q = Q -
@@ -1943,12 +1943,12 @@ double allrigid::update_allrigid_and_E(){
 	Er=0; //(-0.0)*exp(-r*r/2/8.0/8.0);
 
 	if (r<7.0){
-		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 1./(180./180*3.14 + 180./180*3.14));
+		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 5./(180./180*3.14 + 180./180*3.14));
 		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			E21=-put(r_siteI_deviation, 6. , 3.0/2.);
+			E21=-put(r_siteI_deviation, 6. , 10.0/2.);
 			E22=0;//-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
 			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
 			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));
