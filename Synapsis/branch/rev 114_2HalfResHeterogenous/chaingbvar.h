@@ -22,6 +22,8 @@ extern long reptation_minlen;
 extern long rept_move_range;
 extern double rept_min_seglength;
 extern long VolEx_cutoff_rigidbody;
+extern double VolEx_R_rigid;
+
 extern BiasingPotential U;
 
 extern long RBAUS_COLLECT_ENABLED;

@@ -34,6 +34,7 @@ MCbox_circular::MCbox_circular(char const *configFile){
 
 
 	stringstream(config[string("VolEx_cutoff_rigidbody")])>>VolEx_cutoff_rigidbody;
+	stringstream(config[string("VolEx_R_rigid")])>>VolEx_R_rigid;
 
 	//#############################MCBox Variables#####################
 	strcpy(filePrefix,config[string("filePrefix")].c_str());

@@ -1354,7 +1354,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 			
 			ernow=er;
 			//if segments include rigidbody segments, er will be reducted.
-			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=2.0/5.0*er;
+			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=VolEx_R_rigid*2;
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
@@ -1475,7 +1475,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 
 			ernow=er;
 			//if segments include rigidbody segments, er will be reducted.
-			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=2.0/5.0*er;
+			if (C[i].l<rept_min_seglength || C[j].l<rept_min_seglength) ernow=VolEx_R_rigid*2;
 
 			float a,b,c,d,e,D;
 			a = C[i].dx * C[i].dx + C[i].dy * C[i].dy + C[i].dz * C[i].dz;
@@ -1561,7 +1561,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 
 double CircularChain::E_t_updateWrithe_E_t(){
 	this->writhe = this->_fastWr_topl_update();
-	static double const C_contingent = C_t;
+	static double const C_contingent = C_t /3.0 * 2.0;
 	this->E_t= 2 * PI * PI * C_contingent / (this->contour_length * bpperunit) *
 				(dLk - this->writhe)*(dLk - this->writhe);
 	return this->E_t;

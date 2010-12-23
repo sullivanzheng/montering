@@ -15,6 +15,7 @@ long reptation_minlen;
 long rept_move_range;
 double rept_min_seglength;
 long VolEx_cutoff_rigidbody;
+double VolEx_R_rigid;
 
 
 long RBAUS_COLLECT_ENABLED;
