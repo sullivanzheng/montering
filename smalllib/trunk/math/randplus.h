@@ -25,7 +25,7 @@ inline long irand(long i_floor, long i_ceiling){//integer random number [floor, 
 #define RANDRANGE (double(RAND_MAX)+1.0)
 
 
-extern MTRand53 mt_global;
+static MTRand53 mt_global(0);
 
 inline double drand(double d_ceiling){//[0,ceiling)
 	//return double(rand())/RANDRANGE*d_ceiling;
