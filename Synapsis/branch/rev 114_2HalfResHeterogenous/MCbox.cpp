@@ -36,6 +36,9 @@ MCbox_circular::MCbox_circular(char const *configFile){
 	stringstream(config[string("VolEx_cutoff_rigidbody")])>>VolEx_cutoff_rigidbody;
 	stringstream(config[string("VolEx_R_rigid")])>>VolEx_R_rigid;
 
+	stringstream(config[string("initial_guess_siteII_umbrella_energy")])>>initial_guess_siteII_umbrella_energy;
+	stringstream(config[string("initial_guess_siteI_umbrella_energy")])>>initial_guess_siteI_umbrella_energy;
+
 	//#############################MCBox Variables#####################
 	strcpy(filePrefix,config[string("filePrefix")].c_str());
 

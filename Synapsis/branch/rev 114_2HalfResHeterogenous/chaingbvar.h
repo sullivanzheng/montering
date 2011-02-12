@@ -29,4 +29,7 @@ extern BiasingPotential U;
 extern long RBAUS_COLLECT_ENABLED;
 extern long RBAUS_LOAD_LAST;
 
+extern double initial_guess_siteII_umbrella_energy;
+extern double initial_guess_siteI_umbrella_energy;
+
 #endif /* CHAINGBVARH */
