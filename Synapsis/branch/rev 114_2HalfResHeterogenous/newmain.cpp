@@ -1,6 +1,7 @@
 #include <iostream>
 #include "MCbox.h"
 #include <cmath>
+#include <string>
 
 
 long maindo(){
