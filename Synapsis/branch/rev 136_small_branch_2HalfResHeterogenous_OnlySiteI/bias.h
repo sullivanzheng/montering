@@ -199,16 +199,27 @@ public:
 		}
 
 		
+		std::stringstream streambuf;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binstart;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binstart;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binend;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binend;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binnum;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binnum;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>counter;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>counter;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>HHR;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>HHR;
 
 		binsize=(binend-binstart)/binnum;
 		fp.close();
