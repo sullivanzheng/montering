@@ -202,17 +202,27 @@ public:
 			std::cout<<i<<" G= "<<G[i]<<std::endl;
 		}
 
-		
+		std::stringstream streambuf;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binstart;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binstart;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binend;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binend;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>binnum;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>binnum;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>counter;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>counter;
+
 		fp.getline(buf,400);
-		std::stringstream(buf)>>buf>>HHR;
+		streambuf.str(std::string(buf));
+		streambuf>>buf>>HHR;
 
 		binsize=(binend-binstart)/binnum;
 		fp.close();
@@ -221,7 +231,7 @@ public:
 	}
 };
 
-
+#if 0
 class BiasingPotential2D{
 public:
 	static const int MAXBIN_m=500,MAXBIN_n=100;
@@ -490,6 +500,9 @@ public:
 		return 0;
 	}
 };
+#endif
+
+
 
 #if 0
 class BiasingPotentialE{

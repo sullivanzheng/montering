@@ -15,6 +15,7 @@ extern double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 extern double P_REPT; //Probability to make a reptation move.
 extern double P_REPT_SIMP;
 extern double P_TREADMILL;//Probability to make a treadmill move.
+extern double P_HALFCHAIN;
 extern long protect_list[maxa];
 extern double specify_rigidity_list[maxa];
 extern long reptation_maxlen;
@@ -28,5 +29,12 @@ extern BiasingPotential U;
 
 extern long RBAUS_COLLECT_ENABLED;
 extern long RBAUS_LOAD_LAST;
+
+extern double initial_guess_siteII_umbrella_energy;
+extern double initial_guess_siteI_umbrella_energy;
+
+extern double BREAKANGLE;
+extern long SPECIAL_ANGLE;
+extern double G2;
 
 #endif /* CHAINGBVARH */

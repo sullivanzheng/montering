@@ -1,11 +1,12 @@
 #include <iostream>
 #include "MCbox.h"
 #include <cmath>
+#include <string>
 
 
 long maindo(){
 	MCbox_circular sim("_config.cfg");
-	sim.performMetropolisCircularCrankRept(1e9);
+	sim.ligationP();
 	return 0;
 }
 
