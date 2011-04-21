@@ -139,7 +139,7 @@ void Chain::SetRotM_crankshaft(double M[3][3],long m, long n, double a)
 	SetRotM_halfchain(M, rv, a);
 }
 
-void Chain::normalize_X_bangle(){
+void Chain::normalize_X_bangle(bool circle_adjust){
 	long i=0;
     for (i=0;i <= maxnum-1;i++){
         double temp=modu(C[i].dx,C[i].dy,C[i].dz);
@@ -157,7 +157,7 @@ void Chain::normalize_X_bangle(){
 	C[i].dy = C[i].dy / temp * C[i].l;
 	C[i].dz = C[i].dz / temp * C[i].l;
 
-	this->normalizeAllBangle();
+	this->normalizeAllBangle(circle_adjust);
 }
 
 double Chain::calAngle(segment &C1, segment &C2)

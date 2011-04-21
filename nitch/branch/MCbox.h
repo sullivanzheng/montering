@@ -47,7 +47,12 @@ public:
 	double calcGyration(void);
 
 public:
-	void performMetropolisCircularCrankRept(long monte_step);
+	double performMetropolisCircularCrankRept(long monte_step,
+							  double endToEndDistanceThreshold,
+                              double endToEndAngleThreshold,
+                              double endToEndDistanceThreshold_ligate,
+                              double endToEndAngleThreshold_ligate);
+	double ligationP();
 };
 
 #endif /* MCBOX_H */

@@ -8,6 +8,7 @@ double P_SMALLROTATION;//Probability for small angle crankshaft rotation
 double P_REPT;
 double P_REPT_SIMP;
 double P_TREADMILL;
+double P_HALFCHAIN;
 long protect_list[maxa];
 double specify_rigidity_list[maxa];
 long reptation_maxlen;
@@ -21,3 +22,10 @@ double VolEx_R_rigid;
 long RBAUS_COLLECT_ENABLED;
 long RBAUS_LOAD_LAST;
 BiasingPotential U(-10.0,30.0,100,100000);
+
+double initial_guess_siteII_umbrella_energy;
+double initial_guess_siteI_umbrella_energy;
+
+double BREAKANGLE;
+long SPECIAL_ANGLE;
+double G2;

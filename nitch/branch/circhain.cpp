@@ -1,7 +1,8 @@
 #include "chain.h"
+#include <cassert>
 using namespace std;
 
-long CircularChain::normalizeAllBangle()		
+long CircularChain::normalizeAllBangle(bool circular_adjust)		
 {		
 	
 /*	
@@ -11,76 +12,77 @@ long CircularChain::normalizeAllBangle()
     cout<<"------------------------------"<<endl;		
 */
 	//deform last 4 segment to make perfect circle:
-	static segment C2[maxa];
-	int p=maxnum-3,flag;
-	double V[3]={C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z};
-	double length=moduV(V);
-	double Lnow,L[3]={0};
-	for (int i=p;i<=maxnum;i++){
-		L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
-	}
-	Lnow=moduV(L);
-
-	double diff=modu(C[0].x-C[p].x-L[0],
-			 C[0].y-C[p].y-L[1],
-			 C[0].z-C[p].z-L[2]);
-
-	//cout <<"------Normalize the chain end------"<<endl;
-	//cout <<"Before: X[maxnum-3]--->X[0]: Real:"<<length
-	//	<<"-sum(dx):"<<Lnow<<" =diff:"<<diff
-	//	<<endl;
-	
-
-	if (diff<1e-7){
-	//	cout <<"Difference ignorable."<<endl;
-		goto normang;
-	}
-	flag=this->_deformReptSegments_updateInternalBangles_Normalize(p,3,length,Lnow,C2);
-
-	if (flag==-1) {
-	//	cout<<"No solution."<<endl;
-	}
-	else{
-
-		L[0]=L[1]=L[2]=0;
-		for (int i=p;i<=maxnum;i++){
-			L[0]+=C2[i].dx; L[1]+=C2[i].dy; L[2]+=C2[i].dz;
-		}
-		//Rotate V1new to V1
-		double rt[3], M[3][3],rotAngle;
-		//rotate from L to V.
-		Xprod(L,V,rt);
-		norm(rt);
-		rotAngle=betaArray12(L,V);
-		this->SetRotM_halfchain(M,rt,rotAngle);	
-
-		for (long i=p;i<=maxnum;i++){
-			double vi[3]={C2[i].dx,C2[i].dy,C2[i].dz},vo[3];
-			mat33mulvec3(M,vi,vo);
-			C2[i].dx=vo[0];	C2[i].dy=vo[1];	C2[i].dz=vo[2];
-		}
-
-		//copy C2 to C1.
-		for (int i=p;i<=maxnum;i++){
-			C[i]=C2[i];
-		}
-
-		//Print the result
-		length=modu(C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z);
-		L[0]=L[1]=L[2]=0;
+	if (circular_adjust){
+		static segment C2[maxa];
+		int p=maxnum-3,flag;
+		double V[3]={C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z};
+		double length=moduV(V);
+		double Lnow,L[3]={0};
 		for (int i=p;i<=maxnum;i++){
 			L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
 		}
 		Lnow=moduV(L);
-		cout <<"Normalize chain end."<<endl
-			<<"After : X[maxnum-3]--->X[0]: Real:"<<length
-		<<"-sum(dx):"<<Lnow<<" =diff:"<<
-		modu(C[0].x-C[p].x-L[0],
-			 C[0].y-C[p].y-L[1],
-			 C[0].z-C[p].z-L[2])
-		<<endl;
-	}
 
+		double diff=modu(C[0].x-C[p].x-L[0],
+				 C[0].y-C[p].y-L[1],
+				 C[0].z-C[p].z-L[2]);
+
+		//cout <<"------Normalize the chain end------"<<endl;
+		//cout <<"Before: X[maxnum-3]--->X[0]: Real:"<<length
+		//	<<"-sum(dx):"<<Lnow<<" =diff:"<<diff
+		//	<<endl;
+		
+
+		if (diff<1e-7){
+		//	cout <<"Difference ignorable."<<endl;
+			goto normang;
+		}
+		flag=this->_deformReptSegments_updateInternalBangles_Normalize(p,3,length,Lnow,C2);
+
+		if (flag==-1) {
+		//	cout<<"No solution."<<endl;
+		}
+		else{
+
+			L[0]=L[1]=L[2]=0;
+			for (int i=p;i<=maxnum;i++){
+				L[0]+=C2[i].dx; L[1]+=C2[i].dy; L[2]+=C2[i].dz;
+			}
+			//Rotate V1new to V1
+			double rt[3], M[3][3],rotAngle;
+			//rotate from L to V.
+			Xprod(L,V,rt);
+			norm(rt);
+			rotAngle=betaArray12(L,V);
+			this->SetRotM_halfchain(M,rt,rotAngle);	
+
+			for (long i=p;i<=maxnum;i++){
+				double vi[3]={C2[i].dx,C2[i].dy,C2[i].dz},vo[3];
+				mat33mulvec3(M,vi,vo);
+				C2[i].dx=vo[0];	C2[i].dy=vo[1];	C2[i].dz=vo[2];
+			}
+
+			//copy C2 to C1.
+			for (int i=p;i<=maxnum;i++){
+				C[i]=C2[i];
+			}
+
+			//Print the result
+			length=modu(C[0].x-C[p].x,C[0].y-C[p].y,C[0].z-C[p].z);
+			L[0]=L[1]=L[2]=0;
+			for (int i=p;i<=maxnum;i++){
+				L[0]+=C[i].dx; L[1]+=C[i].dy; L[2]+=C[i].dz;
+			}
+			Lnow=moduV(L);
+			cout <<"Normalize chain end."<<endl
+				<<"After : X[maxnum-3]--->X[0]: Real:"<<length
+			<<"-sum(dx):"<<Lnow<<" =diff:"<<
+			modu(C[0].x-C[p].x-L[0],
+				 C[0].y-C[p].y-L[1],
+				 C[0].z-C[p].z-L[2])
+			<<endl;
+		}
+	}
 
 normang:	C[0].bangle = calAngle(C[maxnum], C[0]);		
 	for (long i = 1; i < maxnum + 1; i++)		
@@ -138,8 +140,22 @@ CircularChain::CircularChain(char const *filename,const long totsegnum)
 }
 
 double CircularChain::G_b(long n){
+	if ( n == SPECIAL_ANGLE && C[n].bangle > BREAKANGLE){
+		double excessangle = C[n].bangle - BREAKANGLE;
+		return excessangle * G2 + getg(n)*BREAKANGLE*BREAKANGLE;
+	}
 	return getg(n) * C[n].bangle * C[n].bangle ;
 }
+
+
+double CircularChain::G_b_angle(long n, double a){
+	if ( n == SPECIAL_ANGLE && a > BREAKANGLE){
+		double excessangle = a - BREAKANGLE;
+		return excessangle * G2 + getg(n)*BREAKANGLE*BREAKANGLE;
+	}
+	return getg(n) * a * a ;
+}
+
 
 double CircularChain::getg(long n){
 	if (specify_rigidity_list[n]<0){
@@ -175,10 +191,12 @@ long CircularChain::crankshaft(long m, long n, double a)
 		exit(EXIT_FAILURE);
 	}
 
+	if (n<m) {int temp=n;n=m;m=temp;}
+
 	//Anti-drift.
 	if (fabs(C[0].x) > (totsegnum) / 2 || fabs(C[0].y) > (totsegnum) / 2 || fabs(C[0].z) > (totsegnum) / 2)
 	{
-		cout << "Step #" << stats.auto_moves() << " Drift proof." << endl;
+		cout << "Step #" << stats.auto_moves.getTotCounts() << " Drift proof." << endl;
 		driftProof();
 	}
 
@@ -798,6 +816,140 @@ double CircularChain::dE_reptation_simple(long m, long n, long move){
 	return dE;
 }
 
+double CircularChain::deltaE_TrialHalfChain(int m, double rv[3],double a)
+{       
+        if (m<0||m>maxnum)
+        {
+                cout<<"Illegal values of m ("<<m<<')';
+                exit(EXIT_FAILURE);
+        }
+
+    if (m==0) return 0.0;
+        //how many steps of moves have been performed.
+        double M[3][3];
+        SetRotM_halfchain(M,rv,a);
+        //M is now the rotation matrix.
+        double dE;
+        double newA,oldA;
+        segment C_;
+        C_ = C[m];
+        double v[3];
+        double temp[3];
+        v[0] = C_.dx;
+        v[1] = C_.dy;
+        v[2] = C_.dz;
+        mat33mulvec3(M, v, temp);
+        C_.dx = temp[0];
+        C_.dy = temp[1];
+        C_.dz = temp[2];
+        newA = calAngle(C[m-1], C_);
+        oldA = C[m].bangle;
+        
+        /*int new_kink_num = stats.kink_num + 
+                (
+                -(oldA > KINKLOWERBOUND ? 1 : 0) 
+                + (newA > KINKLOWERBOUND ? 1 : 0));
+        double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
+        //C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength */
+        dE = (+G_b_angle(m,newA)- G_b_angle(m,oldA));
+                /* NO TORTIONAL STRESS TAKEN INTO CONSIDERATION 
+                + 2 * PI * PI * C / (totsegnum * bpperseg) * 
+                (
+                +(Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
+                * (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * new_kink_num) 
+                - (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num) 
+                * (Lk - totsegnum * bpperseg / 10.5 + DELTA_TW_K * stats.kink_num));*/
+#ifdef DEBUG
+    cout <<"trialHalfChain "<<m<<endl;
+#endif
+        return dE;
+}
+
+int CircularChain::halfChain(int m, double rv[3],double a)
+{
+        if (m<0||m>maxnum)
+        {
+                cout<<"Illegal values of m ("<<m<<')';
+                exit(EXIT_FAILURE);
+        }
+    //if (m==0) return 0;
+        double M[3][3];
+        SetRotM_halfchain(M,rv,a);
+        int i,j;
+        for (i=m;i<maxnum;i++)
+        {
+                double v[3];
+                double temp[3];
+                v[0] = C[i].dx; v[1] = C[i].dy; v[2] = C[i].dz;
+                mat33mulvec3(M, v, temp);
+                C[i].dx = temp[0];      C[i].dy = temp[1];      C[i].dz = temp[2];
+                j=i+1;
+                C[j].x = C[i].x + C[i].dx;
+                C[j].y = C[i].y + C[i].dy;
+                C[j].z = C[i].z + C[i].dz;
+        }
+        double v[3];
+        double temp[3];
+        v[0] = C[maxnum].dx;v[1] = C[maxnum].dy;v[2] = C[maxnum].dz;
+        mat33mulvec3(M, v, temp);
+        C[maxnum].dx = temp[0]; C[maxnum].dy = temp[1]; C[maxnum].dz = temp[2];
+        updateBangle(m);
+
+        return 0;
+}
+
+bool CircularChain::trialLigateAfterHalfChainOK(int m, double rv[3],double a,
+        double endToEndDistanceThreshold,
+        double endToEndAngleThreshold) {
+    if (m<0||m>maxnum)
+        {
+                cout<<"Illegal values of m ("<<m<<')';
+                exit(EXIT_FAILURE);
+        }
+    //If both ends are far away from each other.
+    if (m==0){
+        if (this->getEndToEndDistance()>endToEndDistanceThreshold) {
+            cout <<'F';
+            return false;
+        }
+        if (this->getEndToEndAngle()>endToEndAngleThreshold)
+            return false;
+        else
+            return true;
+    }
+
+    double M[3][3];
+        SetRotM_halfchain(M,rv,a);
+
+    double v[3]={
+        C[maxnum].x+C[maxnum].dx-C[m].x,
+        C[maxnum].y+C[maxnum].dy-C[m].y,
+        C[maxnum].z+C[maxnum].dz-C[m].z
+    };
+    double temp[3];
+    mat33mulvec3(M, v,temp);
+    temp[0]+=C[m].x;
+    temp[1]+=C[m].y;
+    temp[2]+=C[m].z;
+    if (    abs(temp[0]-C[0].x)>endToEndDistanceThreshold
+        ||  abs(temp[1]-C[0].y)>endToEndDistanceThreshold
+        ||  abs(temp[2]-C[0].z)>endToEndDistanceThreshold
+        ||  modu(temp[0]-C[0].x,temp[1]-C[0].y,temp[2]-C[0].z)
+            >endToEndDistanceThreshold){
+            return false;
+    }
+    segment C_=C[maxnum];
+    double v2[3]={C_.dx,C_.dy,C_.dz},temp2[3];
+    mat33mulvec3(M,v2,temp2);
+    C_.dx=temp2[0];C_.dy=temp2[1];C_.dz=temp2[2];
+    if (calAngle(C[0],C_)>endToEndAngleThreshold)
+        return false;
+    else
+//        cout<<"good move"<<endl;
+        return true;
+}
+
+
 double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 {
 	if ((m<0||n<0)||(n>maxnum || m>maxnum))
@@ -820,13 +972,16 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 	C2 = C[n == 0 ? maxnum : n - 1];
 	double v[3];
 	double temp[3];
+
 	v[0] = C1.dx;v[1] = C1.dy;v[2] = C1.dz;
 	mat33mulvec3(M, v, temp);
 	C1.dx = temp[0];C1.dy = temp[1];C1.dz = temp[2];
 	newA1 = calAngle(C[m == 0 ? maxnum : m - 1], C1);
+
 	v[0] = C2.dx;v[1] = C2.dy;v[2] = C2.dz;
 	mat33mulvec3(M, v, temp);
 	C2.dx = temp[0];C2.dy = temp[1];C2.dz = temp[2];
+
 	newA2 = calAngle(C2, C[n]);
 	oldA1 = C[m].bangle;
 	//cout<<" ROTATE 1>"<<oldA1<<"\t"<<C[m].bangle;
@@ -836,8 +991,8 @@ double CircularChain::dE_TrialCrankshaft(long m, long n, double a)
 	//double const C = 2.4e-28 / (1.3806503e-23 * 300) / 3.4e-10;
 	//C=3e-19 erg.cm=3e-28 J.m. Change this unit to kT.basepairlength
 	double gm = getg(m), gn = getg(n);
-	dE = gm * newA1 * newA1 + gn * newA2 * newA2
-	   - gm * oldA1 * oldA1 - gn * oldA2 * oldA2;
+	dE = G_b_angle(m,newA1)+G_b_angle(n,newA2)-G_b_angle(m,oldA1)-G_b_angle(n,oldA2);
+	
 
 	/*
 	C_=2*pi*pi*C;
@@ -1284,7 +1439,7 @@ long CircularChain::IEV_with_rigidbody_closeboundary( long in,  long ik, double 
 	long temp;
 	if (in>ik) {temp=in;in=ik;ik=temp;}
 
-	if ((in<0||ik<0)||(in>maxnum || ik>maxnum))
+	if ((in<0||ik<0)||(in>maxnum || ik>maxnum+1))
 	{
 		cout<<"Illegal values of in and ik "
 			"at long CircularChain::IEV( long in,  long ik) ("<<in<<','<<ik<<')';
@@ -1943,12 +2098,14 @@ double allrigid::update_allrigid_and_E(){
 	Er=0; //(-0.0)*exp(-r*r/2/8.0/8.0);
 
 	if (r<7.0){
-		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 5./(180./180*3.14 + 180./180*3.14));
+		E11=-put(AxisBeta+RadiusBeta, 180./180*3.14 + 180./180*3.14, 
+			initial_guess_siteII_umbrella_energy/(180./180*3.14 + 180./180*3.14));
 		//E11= (-5)*exp(-AxisBeta*AxisBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 		//E12= (-5)*exp(-RadiusBeta*RadiusBeta/(2*(20./180.*3.14)*(20./180.*3.14)));
 
 		if (r<4.0 && AxisBeta<90/180.0*3.14159 && RadiusBeta<90/180.0*3.14159){
-			E21=-put(r_siteI_deviation, 6. , 10.0/2.);
+			E21=-put(r_siteI_deviation, 6. , 
+				initial_guess_siteI_umbrella_energy/2.);
 			E22=0;//-put(siteI_direction, 360./180*3.14 , 10.0/(360./180*3.14));
 			//E21=(-8)*exp(-(siteI_direction-2.0)*(siteI_direction-2.0)/(2*(1.0*1.0)) );
 			//E22=(-8)*exp(-r_siteI*r_siteI/(2*(20./180.*3.14)*(20./180.*3.14)));

@@ -127,24 +127,30 @@ public:
 		counter rptsimp_counts;
 		counter tdm_counts;
 		counter tdm_accepts;
+		counter hlf_counts;
+		counter hlf_accepts;
 		counter auto_moves;
+		counter ligation_count;
         statqueue <double> auto_prd_endToEndDistance2;
         statqueue <double> auto_prd_endToEndAngle;
 		statqueue <double> gyration_ratio;
 		statqueue <double> anglelist[maxa];
 
         void resetStat(){
-            crk_accepts.lap();
-			crk_counts.lap();
-			rpt_accepts.lap();
-			rpt_counts.lap();
-			rpt_rejection_count.lap();
-			rpt_rejection_quickrej.lap();
-			rptsimp_accepts.lap();
-			rptsimp_counts.lap();
-			tdm_counts.lap();
-			tdm_accepts.lap();
-            auto_moves.lap();
+            crk_accepts.clear();
+			crk_counts.clear();
+			rpt_accepts.clear();
+			rpt_counts.clear();
+			rpt_rejection_count.clear();
+			rpt_rejection_quickrej.clear();
+			rptsimp_accepts.clear();
+			rptsimp_counts.clear();
+			tdm_counts.clear();
+			tdm_accepts.clear();
+			hlf_counts.clear();
+			hlf_accepts.clear();
+			ligation_count.clear();
+            auto_moves.clear();
             auto_prd_endToEndDistance2.clear();
             auto_prd_endToEndAngle.clear();
 			gyration_ratio.clear();
@@ -166,12 +172,12 @@ protected:
 	double calAngle(segment &C1, segment &C2);
 	void SetRotM_crankshaft(double M[3][3],long m, long n, double a);
 	void SetRotM_halfchain(double M[3][3], double rv[3], double a);
-	virtual long normalizeAllBangle() = 0;		
+	virtual long normalizeAllBangle(bool circular_adjust) = 0;		
     void updateAllBangle_Ini(bool circular);		
 	virtual double updateBangle(long i) = 0;
 
 public:
-	void normalize_X_bangle();
+	void normalize_X_bangle(bool circle_adjust);
 
 public:
 	double VolEx_R;
@@ -183,7 +189,7 @@ public:
             stats.auto_prd_endToEndAngle.push(this->getEndToEndAngle());
         }*/
 		if (stats.auto_moves.getTotCounts() % NORMALIZE_PERIOD == 0){
-            this->normalize_X_bangle();
+            this->normalize_X_bangle(false);
         }
     }
 private:
@@ -222,7 +228,7 @@ class CircularChain: public Chain{
 
 protected:
 	void driftProof();
-	virtual long normalizeAllBangle();
+	virtual long normalizeAllBangle(bool circular_adjust);
 	virtual double updateBangle(long i);
 	double _adjustBangle(long m, long dm, double newBangle, 
 		segment const C2[maxa], segment Ctemp[maxa]);
@@ -246,12 +252,14 @@ public:
 	CircularChain(char const *filename,long totsegnum);
 	virtual double G_b(long n);
 	virtual double getg(long n);
+    virtual double G_b_angle(long n, double a);
 	virtual double calG_bSum();
 	virtual long crankshaft(long m, long n, double a);
 	virtual double dE_reptation_simple(long m, long n, long move);
 	virtual double dE_reptation_3_4(long m1, long dm1, long m2, long dm2, int& rejection_sign);
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	virtual double dE_treadmill(double direction);
+
 	int kpoly(long ial[2],long ierr);
 	int kpoly2(long ial[2],long ierr);
 	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
@@ -279,5 +287,11 @@ private:
 public:
 	double _wrfun(long m, long n);
 
+public: //linearChain function.	
+	bool trialLigateAfterHalfChainOK(int m, double rv[3],double a,
+        double endToEndDistanceThreshold,
+        double endToEndAngleThreshold);
+	double deltaE_TrialHalfChain(int m, double rv[3],double a);
+	int halfChain(int m, double rv[3],double a);
 };
 #endif /* CHAIN_H */
