@@ -1842,7 +1842,7 @@ double allrigid::update_allrigid_and_E(){
 			 R[0].target->C[R[0].protect[0]].y-R[1].target->C[R[1].protect[0]].y,
 			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
 	
-	//X[i-1] x X[i] pointing direction. When synapsis, they should be antiparallel.
+	//dX[i-1] + dX[i] pointing direction. When synapsis, they should be parallel.
 	double dir1[3],dir2[3];
 	double temp11[3] = {R[0].target ->C[ R[0].protect[0]-1 ].dx,
 					    R[0].target ->C[ R[0].protect[0]-1 ].dy,
@@ -1860,7 +1860,7 @@ double allrigid::update_allrigid_and_E(){
 	addvec(temp11,temp12,dir1);
 	addvec(temp21,temp22,dir2);
 
-	this->siteI_direction = PI - betaArray12(dir1,dir2);
+	this->siteI_direction = betaArray12(dir1,dir2);
 
 
 	double vo1[3],vo2[3];
