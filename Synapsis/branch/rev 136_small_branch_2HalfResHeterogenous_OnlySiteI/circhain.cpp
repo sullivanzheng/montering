@@ -1836,11 +1836,12 @@ double allrigid::update_allrigid_and_E(){
 	//Res Site I distance. 
 	//
 	//TODO: this may result in access violation if R[i].protect[0]<3!
-	
-	this->r_siteI=
-		modu(R[0].target->C[R[0].protect[0]].x-R[1].target->C[R[1].protect[0]].x,
+	double tempr[3]={		
+		     R[0].target->C[R[0].protect[0]].x-R[1].target->C[R[1].protect[0]].x,
 			 R[0].target->C[R[0].protect[0]].y-R[1].target->C[R[1].protect[0]].y,
-			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z);
+			 R[0].target->C[R[0].protect[0]].z-R[1].target->C[R[1].protect[0]].z};
+
+	this->r_siteI= moduV(tempr);
 	
 	//dX[i-1] + dX[i] pointing direction. When synapsis, they should be parallel.
 	double dir1[3],dir2[3];
@@ -1867,6 +1868,11 @@ double allrigid::update_allrigid_and_E(){
 	subvec(temp11,temp12,vo1);
 	subvec(temp21,temp22,vo2);
 	this->r_siteI_deviation = PI - betaArray12(vo1,vo2);
+
+	this->r_siteI_deviation += (PI - betaArray12(vo1,tempr)) + betaArray12(vo2,tempr);
+
+	this->r_siteI_deviation /= 3.0;
+
 	/*double tempa,tempb;
 	{
 		double X,Y,Z;
