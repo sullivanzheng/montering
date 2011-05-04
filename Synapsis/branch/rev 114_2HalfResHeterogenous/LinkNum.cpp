@@ -30,11 +30,12 @@ long CircularChain::overpassing(long vertM, long vertN){
 	//project b to null(r)
 	scalarMulVec(dot_product(b,r),r,b2); //b2=(b*r)*r
 	subvec(b,b2,b2);//b2=b-b2;
-	
-	//judge if b2->a2 is right handed rotation. (axis long +r);
-	Xprod(a2,b2,a2);// a2 = a2 x b2;
 
-	double temp=dot_product(a2,r);
+	//judge if b2->a2 is right handed rotation. (axis long +r);
+	double o2[3];
+	Xprod(a2,b2,o2);// a2 = a2 x b2;
+
+	double temp=dot_product(o2,r);
 
 	if (temp > 0.00001) return 1; //long +r is overpassing otherwise underpassing.
 	else return 0;
