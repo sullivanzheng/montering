@@ -4,44 +4,7 @@
 #include "chain.h"
 using namespace std;
 
-long CircularChain::overpassing(long vertM, long vertN){
-//Exam if two vectors form overpassing (return 1) or underpassing (0)
-//vector a=C[vertM], vector b=C[vertM];
-	double a[3],b[3],r[3];
-	a[0]=C[vertN].x-C[vertM-1].x;
-	a[1]=C[vertN].y-C[vertM-1].y;
-	a[2]=C[vertN].z-C[vertM-1].z;
-
-	b[0]=C[vertM].x-C[vertN-1].x;
-	b[1]=C[vertM].y-C[vertN-1].y;
-	b[2]=C[vertM].z-C[vertN-1].z;
-
-	r[0]=C[vertM-1].x-C[vertN-1].x;
-	r[1]=C[vertM-1].y-C[vertN-1].y;
-	r[2]=C[vertM-1].z-C[vertN-1].z;
-
-	norm(r);
-	double a2[3],b2[3];
-	
-	//project a to null(r)
-	scalarMulVec(dot_product(a,r),r,a2); //a2=(a*r)*r
-	subvec(a,a2,a2);//a2=a-a2;
-
-	//project b to null(r)
-	scalarMulVec(dot_product(b,r),r,b2); //b2=(b*r)*r
-	subvec(b,b2,b2);//b2=b-b2;
-	
-	//judge if b2->a2 is right handed rotation. (axis long +r);
-	double o2[3];
-	Xprod(a2,b2,o2);// a2 = a2 x b2;
-
-	double temp=dot_product(o2,r);
-
-	if (temp > 0.00001) return 1; //long +r is overpassing otherwise underpassing.
-	else return 0;
-}
-
-long CircularChain::productLk(long vertM, long vertN)
+long CircularChain::productLk_fast(long vertM, long vertN)
 {	
 	if ((vertM<0||vertN<0)||(vertN>maxnum || vertM>maxnum))
 	{
@@ -55,7 +18,7 @@ long CircularChain::productLk(long vertM, long vertN)
 	}
 
 	long ret_val, i__1, i__2, i__3;
-    double d__1;
+    double d__1,d__2;
 	static const long jrm=910,icrm=910;
 	static const double eps=1.0e-5;
 
@@ -172,6 +135,10 @@ L108:
 		goto L112;
 	    }
 	    if (n2 == l1) {
+		goto L111;
+	    }
+	    if ((d__1 = x[n1 - 1] - x[n2 - 1], fabs(d__1)) > this->max_seglength * 2 || 
+			(d__2 = y[n1 - 1] - y[n2 - 1], fabs(d__2)) > this->max_seglength * 2) {
 		goto L111;
 	    }
 L112:
@@ -585,66 +552,3 @@ L295:
     goto L297;
 }
 
-double CircularChain::_det(long n, double da[MAXMatrixDet*MAXMatrixDet])
-// Calculate the determinant of a matrix.
-{
-    /* System generated locals */
-    long i1, i2, i3;
-    double ret_val;
-    double d;
-
-    double c;
-    long i, j, k, l;
-    long jj;
-    double dr;
-    long jmin, kmax;
-
-    c = 1.f;
-    kmax = n - 1;
-    i1 = kmax;
-    for (k = 1; k <= i1; ++k) {
-	if ((d = da[k + k * MAXMatrixDet - (MAXMatrixDet+1)], fabs(d)) < 1e-4f) {
-	    jj = k + 1;
-	    c = -c;
-L50:
-	    if (jj > n) {
-		c = 0.f;
-		goto L90;
-	    }
-	    if ((d = da[jj + k * MAXMatrixDet - (MAXMatrixDet+1)], fabs(d)) > 1e-4f) {
-		i2 = n;
-		for (l = 1; l <= i2; ++l) {
-		    dr = da[k + l * MAXMatrixDet - (MAXMatrixDet+1)];
-		    da[k + l * MAXMatrixDet - (MAXMatrixDet+1)] = da[jj + l * MAXMatrixDet - (MAXMatrixDet+1)];
-/* L80: */
-		    da[jj + l * MAXMatrixDet - (MAXMatrixDet+1)] = dr;
-		}
-	    } else {
-		++jj;
-		goto L50;
-	    }
-	}
-	jmin = k + 1;
-	i2 = n;
-	for (j = jmin; j <= i2; ++j) {
-	    if ((d = da[k + j * MAXMatrixDet - (MAXMatrixDet+1)], fabs(d)) > 1e-4f) {
-		dr = da[k + j * MAXMatrixDet - (MAXMatrixDet+1)] / da[k + k * MAXMatrixDet - (MAXMatrixDet+1)];
-		i3 = n;
-		for (i = k; i <= i3; ++i) {
-		    da[i + j * MAXMatrixDet - (MAXMatrixDet+1)] -= dr * da[i + k * MAXMatrixDet - (MAXMatrixDet+1)];
-/* L22: */
-		}
-	    }
-/* L21: */
-	}
-/* L20: */
-    }
-    i1 = n;
-    for (i = 1; i <= i1; ++i) {
-/* L30: */
-	c *= da[i + i * MAXMatrixDet - (MAXMatrixDet+1)];
-    }
-L90:
-    ret_val = c;
-    return ret_val;
-} 
