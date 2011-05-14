@@ -237,6 +237,8 @@ public:
 	double dLk;
 
 	long productLk(long vertM, long vertN);
+	long productLk_fast(long vertM, long vertN);
+	long productLk2(long vertM, long vertN, long s, long t);
 	long overpassing(long vertM, long vertN);
 	
 	CircularChain();

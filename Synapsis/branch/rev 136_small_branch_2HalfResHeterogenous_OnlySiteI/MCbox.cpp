@@ -804,13 +804,19 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 
 			(*fp_log)<<"["<<moves<<"] NOW:"<<movement_symbol[movement];
 
-			long Lk_recomb,overpass;
+			long Lk_recomb,Lk_recomb_fast,Lk_recomb_2,Lk_recomb_212,overpass;
 			if (RG.R.size()!=0){
 				(*fp_log)<<" Q "<<RG.Q;
 				overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				(*fp_log)<<" + "<< overpass;
 				Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-				(*fp_log)<<" Lk_re "<< Lk_recomb;
+				Lk_recomb_fast = dnaChain->productLk_fast(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+				Lk_recomb_2 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-1);
+				Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-2,-1);
+				(*fp_log)<<" Lk_re "<< Lk_recomb_2  <<' '<< Lk_recomb_212 << " cmp "<< Lk_recomb <<' '<<  Lk_recomb_fast
+					<< "(Check Equal: "
+							<< (Lk_recomb_2==Lk_recomb_fast?'-':'X') <<' '
+							<< (Lk_recomb_2==Lk_recomb?'-':'X') <<") "
 			}
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();*/
