@@ -18,6 +18,7 @@
 #include "bias.h"
 
 
+
 inline long wrap(long i, long roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
 		std::cout<<"[In global function 'wrap']"
@@ -240,6 +241,8 @@ public:
 	double dLk;
 
 	long productLk(long vertM, long vertN);
+	long productLk_fast(long vertM, long vertN);
+	long productLk2(long vertM, long vertN, long s, long t);
 	long overpassing(long vertM, long vertN);
 	
 	CircularChain();
