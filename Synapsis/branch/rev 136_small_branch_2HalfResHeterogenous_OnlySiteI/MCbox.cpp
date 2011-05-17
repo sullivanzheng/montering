@@ -246,7 +246,7 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 			
 			if (E_condition==1){
-				if (RG.IEV_spheres(m,n)==1){
+				if (RG.IEV_spheres(0,0)==1){  //not if (RG.IEV_spheres(m,n)==1) spheres could be included in the moving segments.
 					rigid_IEV_condition=1;
 				}
 				else{
@@ -812,11 +812,22 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 				Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				Lk_recomb_fast = dnaChain->productLk_fast(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				Lk_recomb_2 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-1);
-				Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-2,-1);
+				Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+				if (Lk_recomb_212 > 1000){
+					if (RG.Q<-5){
+						char buf[200];
+						sprintf(buf,"complicate%09d",moves);
+						dnaChain->snapshot(buf);
+					}
+ 					/*Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);*/
+				}
 				(*fp_log)<<" Lk_re "<< Lk_recomb_2  <<' '<< Lk_recomb_212 << " cmp "<< Lk_recomb <<' '<<  Lk_recomb_fast
 					<< "(Check Equal: "
 							<< (Lk_recomb_2==Lk_recomb_fast?'-':'X') <<' '
-							<< (Lk_recomb_2==Lk_recomb?'-':'X') <<") "
+							<< (Lk_recomb_2==Lk_recomb?'-':'X') <<") ";
 			}
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();*/
