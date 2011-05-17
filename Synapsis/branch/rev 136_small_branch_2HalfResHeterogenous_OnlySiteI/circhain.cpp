@@ -1761,8 +1761,8 @@ int allrigid::IEV_spheres(long m, long n){
 
 		CircularChain *t0=this->R[it->rg0].target;
 		CircularChain *t1=this->R[it->rg1].target;
-		long pt0=this->R[0].protect[it->x0];
-		long pt1=this->R[1].protect[it->x1];
+		long pt0=this->R[it->rg0].protect[it->x0];
+		long pt1=this->R[it->rg1].protect[it->x1];
 		double cx=(t0->C[pt0].x + t1->C[pt1].x)/2.;
 		double cy=(t0->C[pt0].y + t1->C[pt1].y)/2.;
 		double cz=(t0->C[pt0].z + t1->C[pt1].z)/2.;
@@ -1795,7 +1795,6 @@ int allrigid::IEV_spheres(long m, long n){
 }
 
 double allrigid::update_allrigid_and_E(){
-
 
 	this->E = 0; //TODO: disabled.
 	this->unbiasedE = 0;
