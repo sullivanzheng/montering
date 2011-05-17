@@ -465,11 +465,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LinkNum_fast.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MCbox.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\newmain.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\top2.cpp"
 				>
 			</File>
 			<File
