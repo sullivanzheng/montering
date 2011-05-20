@@ -1032,7 +1032,6 @@ void CircularChain::snapshot(char *filename)
 			totsegnum + 1, mark?"Cl":"C", C[i].x, C[i].y, C[i].z, 1, (i == 0 ? maxnum + 1 : i), (i + 1 == maxnum + 1 ? 1 : i + 2));
 		fh << buf << endl;
 
-
     fh << endl << "Detailed Info" << endl;
 	for ( i = 0; i <= maxnum-1; i++)
 	{
@@ -1803,7 +1802,12 @@ int allrigid::IEV_spheres(long m, long n){
 		//->->->->->|->*>*>*>*>*>*>*>*>*>|->->->->
 		//   |1 2 3 |-------rigid--------|1	2 3 |
 		//->: free vector; *>: vector with protected (fixed) starting point.
-		for (p=m; wrap(p+1,totsegnum)!=n ; p=wrap(p+1,totsegnum) ){
+
+		int moved;
+		moved=0; // this flag is used for occasion IEV_spheres(0,0) since IEV_spheres(0,0) is meant to
+		//search the entire circular chain for collision with the spheres.
+		for (p=m; p!=n || moved==0 ; p=wrap(p+1,totsegnum) ){
+			moved=1;
 			if (t0->C[p].l < rept_min_seglength) continue; 
 
 			if (modu(t0->C[p].x - cx,t0->C[p].y - cy,t0->C[p].z - cz) < it->d/2.)
