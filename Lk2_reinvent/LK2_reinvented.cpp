@@ -8,6 +8,7 @@
 using namespace std;
 const int maxa=900;
 const int maxintsec=200;
+ofstream fpdbg;
 
 struct cross{
 	int seg_over;
@@ -24,6 +25,7 @@ struct Generator{
 	int pre;
 	int next;
 	bool alive;
+	cross cr;
 };
 
 int Doolittle_LU_Decomposition_with_Pivoting(double *A, int pivot[], int n)
@@ -134,13 +136,14 @@ int Doolittle_LU_Decomposition_with_Pivoting(double *A, int pivot[], int n)
 
 
 void printGenerators(Generator G[], int N){
-	cout <<"------------------------"<<endl;
-	for (int i=0; i<N; i++){
-		if (!G[i].alive) continue;
-		cout << "G[" <<i<<"] " << (G[i].alive?'.':'X') 
-			<<" cutby "	<< G[i].cutby << " <" << G[i].pre << ',' << G[i].next << "> " <<endl;
-	}
-	cout <<endl;
+	//fpdbg <<"------------------------"<<endl;
+	//for (int i=0; i<N; i++){
+	//	if (!G[i].alive) continue;
+	//	fpdbg << "G[" <<i<<"] " << (G[i].alive?'.':'X') 
+	//		<<" cutby "	<< G[i].cutby << " <" << G[i].pre << ',' << G[i].next << "> " <<endl;
+	//}
+	//fpdbg <<endl;
+
 	for (int i=0; i<N; i++)
 		if (G[i].alive==true) assert(G[G[i].cutby].alive==true);
 
@@ -155,14 +158,14 @@ void printGenerators(Generator G[], int N){
 	//int count=0;
 	//for (int i=1; i<j-1; i++){
 	//	if (GG[i].next!=GG[i+1].id || GG[i].pre!=GG[i-1].id){
-	//		cout << "----GG[" <<i<<"] id "<<GG[i].id <<" cutby "	<< GG[i].cutby << " <" << GG[i].pre << ',' << GG[i].next << "> " <<endl;
+	//		fpdbg << "----GG[" <<i<<"] id "<<GG[i].id <<" cutby "	<< GG[i].cutby << " <" << GG[i].pre << ',' << GG[i].next << "> " <<endl;
 	//		count++;
 	//	}
 	//}
 
 	//if (count>2){
-	//	cout <<"PROBLEM!!!"<<endl;
-	//	cout <<endl;
+	//	fpdbg <<"PROBLEM!!!"<<endl;
+	//	fpdbg <<endl;
 	//}
 
 	int newid=0;
@@ -176,12 +179,14 @@ void printGenerators(Generator G[], int N){
 	newid--;
 
 	int g[maxintsec];
-	cout <<"---Generators in reduced form---"<<endl;
+	fpdbg <<"---Generators in reduced form---"<<endl;
 	for (int i=0; i<N; i++){
 		if (!G[i].alive) continue;
 		g[GG[i].id]=GG[GG[i].cutby].id;
-		cout<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1<<endl;
+		fpdbg<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1
+			<<" cross: "<<GG[i].cr.sign<<" "<<GG[i].cr.seg_under<<"  "<<GG[i].cr.s_under<<endl;
 	}
+	fpdbg<<"###"<<endl<<endl;
 }
 int printGenerators_checkDisentangsSegment(Generator G[], int N, int ID){
 	int newid=0;
@@ -217,12 +222,12 @@ double abs_det_lu(double *A, int n){
 	double det=1;
 	for (int i=0;i<n;i++) {
 		double c=*(A+n*i+i);
-		//cout <<c<<endl;
+		//fpdbg <<c<<endl;
 		det=det*c;
 	}
-	//cout <<"Determinant="<<det;
+	//fpdbg <<"Determinant="<<det;
 	
-	//cout <<det-long(det)<<endl;
+	//fpdbg <<det-long(det)<<endl;
 	//while (fabs(det/2.0-long(det/2.0))<1e-13) det=det/2.0;
 	return det;
 }
@@ -305,7 +310,7 @@ int AP(int L1,int L2,double s, double t, double alpha,
 		x[i]=x1[i];
 		y[i]=cos(alpha)*y1[i]-sin(alpha)*z1[i];
 		z[i]=sin(alpha)*y1[i]+cos(alpha)*z1[i];
-		//cout <<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+		//fpdbg <<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
 	}
 
 	cross cr[maxintsec],cr_temp;
@@ -320,11 +325,11 @@ int AP(int L1,int L2,double s, double t, double alpha,
 			if (j==L1) continue;
 			if ((i==0 && j==L1-1) || (i==L20 && j==L2end-1)) continue;
 			cr_temp=intsec(i,j,x,y,z);
-			if (cr_temp.seg_over==-999){
+			if (cr_temp.seg_over ==-999){
 				;
 			}
 			else{
-				cr[N]=cr_temp;
+				cr[N] = cr_temp;
 				++N;
 			}
 		}
@@ -336,7 +341,7 @@ int AP(int L1,int L2,double s, double t, double alpha,
 	sort(cr,cr+N,cmpfun);
 
 	//for (int i=0; i<N; i++){
-	//	cout <<"X["<<i<<"]"<<cr[i].seg_under<<" cut by "
+	//	fpdbg <<"X["<<i<<"]"<<cr[i].seg_under<<" cut by "
 	//		<<cr[i].seg_over<<" Position "<<cr[i].endpos<<endl;
 	//}
 
@@ -371,7 +376,7 @@ int AP(int L1,int L2,double s, double t, double alpha,
 	}
 	
 	//for (int i=0; i<N; i++){
-	//	cout <<"X[gen# "<<i<<"  cut by "<<g[i]<<"]   X-type:  "<<cr[i].sign/*<<cr[i].seg_under<<" cut by "
+	//	fpdbg <<"X[gen# "<<i<<"  cut by "<<g[i]<<"]   X-type:  "<<cr[i].sign/*<<cr[i].seg_under<<" cut by "
 	//		<<cr[i].seg_over<<" Position "<<cr[i].endpos*/<<endl;
 	//}
 	//
@@ -388,6 +393,7 @@ int AP(int L1,int L2,double s, double t, double alpha,
 		G[i].pre=i-1;
 		G[i].next=i+1;
 		G[i].alive=true;
+		G[i].cr=cr[i];
 	}
 	G[0].pre=M;G[M].next=0;
 	G[M+1].pre=N-1;G[N-1].next=M+1;	
@@ -396,7 +402,7 @@ int AP(int L1,int L2,double s, double t, double alpha,
 	int totdisentang=0;
 	int L1num=M+1,L2num=N-1-(M+1)+1;
 	bool exitflag=false;
-	const int TER=100000;
+	const int TER=0;
 	while (!exitflag){
 
 		exitflag=true;
@@ -409,22 +415,19 @@ int AP(int L1,int L2,double s, double t, double alpha,
 				if (!G[i].alive) continue;
 				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
 					totdisentang++;
-					cout <<"["<<totdisentang<<"]Type I at "<<i<<endl;
-					if (totdisentang > TER) {cout<<totdisentang<<endl;goto t2;}
-	cout<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+					fpdbg <<"["<<totdisentang<<"]Type I at "<<i<<endl;
+					if (totdisentang > TER) {fpdbg<<totdisentang<<endl;goto t2;}
+	fpdbg<<"IN FORTRAN EXPRESSION: "<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 					if (G[i].id<=M) L1num--; else L2num--;
 					if (L1num==0 || L2num==0) return 0;
-					G[G[i].next].alive=false;
-
-					G[i].cutby=G[G[i].next].cutby;
+					G[i].alive=false;
 					for (int j=0;j<N;j++){
 						if (!G[j].alive) continue;
-						if (G[j].cutby==G[i].next) G[j].cutby=G[i].id;
+						if (G[j].cutby==G[i].id) G[j].cutby=G[G[i].next].id;
 					}
-					G[G[G[i].next].next].pre=G[i].id;					
-					G[i].next=G[G[i].next].next;
+					G[G[i].pre].next=G[G[i].next].id;					
+					G[G[i].next].pre=G[G[i].pre].id;
 					i--;
-
 					exitflag=false;exitflagI=false;
 	printGenerators(G,N);
 					
@@ -442,44 +445,46 @@ int AP(int L1,int L2,double s, double t, double alpha,
 						goto skip;
 				}
 				totdisentang++;
-				cout <<"["<<totdisentang<<"]Type II at "<<i<<endl;
-				if (totdisentang > TER) {cout<<totdisentang<<endl;goto t2;}
-	cout<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+				fpdbg <<"["<<totdisentang<<"]Type II at "<<i<<endl;
+				if (totdisentang > TER) {fpdbg<<totdisentang<<endl;goto t2;}
+				fpdbg<<"IN FORTRAN EXPRESSION: "<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 
 				if (G[i].id<=M) L1num-=2; else L2num-=2;
 				if (L1num==0 || L2num==0) return 0;
 
+				G[i].alive=false;
 				G[G[i].next].alive=false;
-				G[G[G[i].next].next].alive=false;
-
-				G[i].cutby=G[G[G[i].next].next].cutby;
+				
+				int next2=G[G[i].next].next;
 				for (int j=0;j<N;j++){
 					if (!G[j].alive) continue;
-					if (G[j].cutby==G[i].next || G[j].cutby==G[G[i].next].next) G[j].cutby=G[i].id;
+					if (G[j].cutby==G[i].next || G[j].cutby==G[i].id) {
+						G[j].cutby=next2;
+					}
 				}
 
-				G[G[G[G[i].next].next].next].pre=G[i].id;
-				G[i].next=G[G[G[i].next].next].next;
-				i--;
+				G[next2].pre=G[i].pre;
+				G[G[i].pre].next=next2;
 printGenerators(G,N);
-
+				i--;
 				exitflag=false;
 				//TODO: restore this. exitflagII=false;
 			}
 skip:		;
 		}
 	}
-t2:	cout <<"<<<<Final Generators>>>>"<<endl;
+t2:	fpdbg <<"<<<<Final Generators>>>>"<<endl;
 	printGenerators(G,N);
 
 	int newid=0;
 	for (int i=0; i<N; i++){
 		if (G[i].alive){
 			G[i].id=newid;
+			cr[newid]=cr[i];
 			newid++;
 		}
 	}
-	newid--;	
+	newid--;
 
 	assert (newid+1==L1num+L2num);
 
@@ -506,7 +511,7 @@ DA:	double da[maxintsec][maxintsec];
 				da[k][k1]=1;
 			}
 			else if(i<=M) {   		//b. Internal intersection within L1.
-				if(cr[i].sign < 0) {      //Type I or (-) crossing
+				if(cr[k].sign < 0) {      //Type I or (-) crossing
 				  da[k][k]=1;
 				  da[k][k1]=-s;
 				  da[k][i]=s-1;
@@ -517,7 +522,7 @@ DA:	double da[maxintsec][maxintsec];
 				}
 			}
 			else{ assert (i>M);		//c. L1 generator cut by L2
-				if(cr[i].sign < 0){        //Type I or (-) crossing
+				if(cr[k].sign < 0){        //Type I or (-) crossing
 				  da[k][k]=1;
 				  da[k][k1]=-t;
 				  da[k][i]=s-1;
@@ -529,10 +534,11 @@ DA:	double da[maxintsec][maxintsec];
 			}
 		}
 		else if(k==M && M==0){//---------------------------------------------------
+			assert(i>M);
 			da[k][k]=1-t;
 			da[k][i]=s-1;
 		}
-		else if(k>M && N-1>M){//---------------------------------------------------
+		else if(k>M && N-1 > M+1){//---------------------------------------------------
 			int k1=k+1;
 			if(k==N-1) k1=M+1;
 			if (i==k || i==k1){       //a. Trivial intersections TODO: k+1 or k1
@@ -540,7 +546,7 @@ DA:	double da[maxintsec][maxintsec];
 				da[k][k1]=1;
 			}
 			else if(i>M) {			  //b. Internal intersection within L2.
-				if(cr[i].sign < 0) {
+				if(cr[k].sign < 0) {
 					da[k][k]=1;
 					da[k][k1]=-t;
 					da[k][i]=t-1;
@@ -549,8 +555,9 @@ DA:	double da[maxintsec][maxintsec];
 					da[k][k1]=1;
 					da[k][i]=t-1;
 				}
-			}else{				       //c. L2 generator cut by L1.
-				if(cr[i].sign < 0){
+			}else{				//c. L2 generator cut by L1.
+				assert (i<=M);
+				if(cr[k].sign < 0){
 					da[k][k]=1;
 					da[k][k1]=-s;
 					da[k][i]=t-1;
@@ -562,6 +569,7 @@ DA:	double da[maxintsec][maxintsec];
 			}
 		}
 		else if(k==N-1 && N-1==M+1) {//----------------------------------------------
+			assert (i<=M);
 			da[k][k]=1-s;
 			da[k][i]=t-1;
 		}
@@ -578,22 +586,25 @@ DA:	double da[maxintsec][maxintsec];
 		}
 	}
 	double temp = abs_det_lu(&lin[0],N-1)/(1-t); //only feed N-1 x N-1 remainder
-	return floor(temp+0.5);
+	long re=floor(temp+0.5);
+	while (re%2 ==0) re=re/2;
+	return re;
 }
 
 int main(){
 	double x[maxa],y[maxa],z[maxa];
+	fpdbg.open("dbg.log");
 	ifstream fp("Cor_for.txt",ifstream::in);
 	int i=0;
 	while (fp.good()){
 		fp>>x[i]>>y[i]>>z[i];
-		cout <<"Line "<<i<<" read. "<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+		fpdbg <<"Line "<<i<<" read. "<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
 		++i;
 	}
 	fp.close();
 	double temp=AP(111,111,-1.0,-2.0,0.0,x,y,z);
-
-	cout <<"RESULT  "<<temp<<endl;
+	fpdbg <<"RESULT  "<<temp<<endl;
+	fpdbg.close();
 	return 0;
 }
 
