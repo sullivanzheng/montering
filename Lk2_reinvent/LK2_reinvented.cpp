@@ -133,123 +133,62 @@ int Doolittle_LU_Decomposition_with_Pivoting(double *A, int pivot[], int n)
    return 0;
 }
 
+int DET_Doolittle_LU_Decomp_Pivot(double da[maxintsec][maxintsec], int n){
+	const double eps=1e-12;
+	int pivot[maxintsec];
+	double max;
 
+	for(int k=0;k<n;k++){
+		//find pivot row.      
+		max=fabs(da[k][k]);
+		pivot[k]=k;
+		for(int i=k+1;i<n;i++){
+			if(fabs(da[i][k]) > max){
+			   max=fabs(da[i][k]);
+			   pivot[k]=i;
+			}
+		}
+	
+          
+		//pivoting: switch row k with pivot row.
+		if (pivot[k]!=k){
+			for (int i=0; i<n; i++){
+				max=da[k][i];
+				da[k][i]=da[pivot[k]][i];
+				da[pivot[k]][i]=max;
+			}
+		}
 
-void printGenerators(Generator G[], int N){
-	//fpdbg <<"------------------------"<<endl;
-	//for (int i=0; i<N; i++){
-	//	if (!G[i].alive) continue;
-	//	fpdbg << "G[" <<i<<"] " << (G[i].alive?'.':'X') 
-	//		<<" cutby "	<< G[i].cutby << " <" << G[i].pre << ',' << G[i].next << "> " <<endl;
-	//}
-	//fpdbg <<endl;
-
-	for (int i=0; i<N; i++)
-		if (G[i].alive==true) assert(G[G[i].cutby].alive==true);
-
-	Generator GG[maxintsec];
-	int j=0;
-	for (int i=0; i<N; i++){
-		if (!G[i].alive) continue;
-		GG[j]=G[i];
-		j++;
-	}
-
-	//int count=0;
-	//for (int i=1; i<j-1; i++){
-	//	if (GG[i].next!=GG[i+1].id || GG[i].pre!=GG[i-1].id){
-	//		fpdbg << "----GG[" <<i<<"] id "<<GG[i].id <<" cutby "	<< GG[i].cutby << " <" << GG[i].pre << ',' << GG[i].next << "> " <<endl;
-	//		count++;
-	//	}
-	//}
-
-	//if (count>2){
-	//	fpdbg <<"PROBLEM!!!"<<endl;
-	//	fpdbg <<endl;
-	//}
-
-	int newid=0;
-	for (int i=0; i<N; i++){
-		if (G[i].alive){
-			GG[i]=G[i];
-			GG[i].id=newid;
-			newid++;
+		//if singularity occurs, return error.
+		if (fabs(da[k][k])<eps){
+			return -999999;
+		}
+          
+		//lower triangular matrix elements of column k.
+		for (int i=k+1;i<n;i++){
+			da[i][k]=da[i][k]/da[k][k];
+		}
+         
+		//upper triangular matrix elements          
+		for(int i=k+1;i<n;i++){
+			for (int j=k+1;j<n;j++){
+				da[i][j]=da[i][j]-da[i][k]*da[k][j];
+			}
 		}
 	}
-	newid--;
 
-	int g[maxintsec];
-	fpdbg <<"---Generators in reduced form---"<<endl;
-	for (int i=0; i<N; i++){
-		if (!G[i].alive) continue;
-		g[GG[i].id]=GG[GG[i].cutby].id;
-		fpdbg<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1
-			<<" cross: "<<GG[i].cr.sign<<" "<<GG[i].cr.seg_under<<"  "<<GG[i].cr.s_under<<endl;
+	double c=1.0;
+	for (int i=0; i<n; i++){
+		c*=da[i][i];
 	}
-	fpdbg<<"###"<<endl<<endl;
+	return c;
 }
-int printGenerators_checkDisentangsSegment(Generator G[], int N, int ID){
-	int newid=0;
-	for (int i=0; i<N; i++){
-		if (!G[i].alive) continue;
-		newid++;
-		if (G[i].id==ID) return newid;
-	}
-	return -1;
-}
-
-void saveMatrixToFile(double da[maxintsec][maxintsec], int N, char* filename){
-	//da is the matrix to print. M is a NxN matrix indexed from (0,0) to (N-1, N-1).
-	ofstream fp(filename);
-	fp << "a=["<<endl;
-	for (int i=0;i<N;i++){
-		for (int j=0;j<N;j++)
-			fp <<da[i][j]<<' ';
-		fp << endl;
-	}
-	fp <<"];"<<endl;
-	fp <<"a=a(1:end-1,1:end-1);"<<endl;
-	fp <<"det(sym(a))"<<endl;
-	fp <<"s=det(sym(a))/sym(3);"<<endl;
-	fp <<"while mod(s,2)==0;s=s/2;end;"<<endl;
-	fp <<"s"<<endl;
-	fp.close();
-}
-
-double abs_det_lu(double *A, int n){
-	int pivot[maxintsec];
-	Doolittle_LU_Decomposition_with_Pivoting(A,pivot,n);
-	double det=1;
-	for (int i=0;i<n;i++) {
-		double c=*(A+n*i+i);
-		//fpdbg <<c<<endl;
-		det=det*c;
-	}
-	//fpdbg <<"Determinant="<<det;
-	
-	//fpdbg <<det-long(det)<<endl;
-	//while (fabs(det/2.0-long(det/2.0))<1e-13) det=det/2.0;
-	return det;
-}
-
-int readGenerator(char* filename, int g[], int &M){
-	int N=0;
-	ifstream fp(filename);
-	while (fp.good()){
-		fp>>g[N];
-		if (g[N]==-1) { M=N-1; continue;}
-		N++;
-	}
-	return N;
-}
-
-
 
 bool cmpfun(cross c1, cross c2){
 	return (c1.endpos<c2.endpos);
 }
 
-cross intsec(int i, int j, double x[maxa], double y[maxa], double z[maxa]){
+cross intsec(int i, int j, double x[], double y[], double z[]){
 ///algorithm ref:http://softsurfer.com/Archive/algorithm_0104/algorithm_0104B.htm
 ///if yes, return +1 if + crossing, -1 if - crossing; if no crossing, return 0.
 
@@ -258,7 +197,7 @@ cross intsec(int i, int j, double x[maxa], double y[maxa], double z[maxa]){
 
 	double d,u1=x[i+1]-x[i],u2=y[i+1]-y[i],
 		     v1=x[j+1]-x[j],v2=y[j+1]-y[j],
-			 w1=x[i]-x[j],  w2=y[i]-y[j];
+			 w1=x[i]  -x[j],w2=y[i]  -y[j];
 
     d=v1*u2-v2*u1; //vXu.
     if (fabs(d)<eps) return X;
@@ -287,35 +226,45 @@ cross intsec(int i, int j, double x[maxa], double y[maxa], double z[maxa]){
     return X;
 }
 
+//int AP(long vertM, long vertN,double s, double t){
 int AP(int L1,int L2,double s, double t, double alpha, 
-	   double x1[maxa], double y1[maxa], double z1[maxa]){
+           double x[maxa], double y[maxa], double z[maxa]){
 /* L1 is the number of segments in the first contour.
    L2 is the number of segments in the second contour.
    s,t are parameters of AlexanderPolynomial(s,t) */
 	
 
-/*	inventarization of intersections
-	s1 s2(i) - s-value of i-th intersection
-	ic1(i) - number of undergoing segment for i-th intersection
-	ic2(i) - number of overgoing segment for i-th intersection
-	id(i) - overpassing or underpassing
-	ix(i) - generator number */
-
-/*  Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1] */
+	//Store the intersections in different fashions.
+	//Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1]
 	const double pi=3.141592653589793;
-	double x[maxa],y[maxa],z[maxa];
 
-	alpha=alpha/180.0*pi;
-	for (int i=0; i<=L1+L2+1; i++){
-		x[i]=x1[i];
-		y[i]=cos(alpha)*y1[i]-sin(alpha)*z1[i];
-		z[i]=sin(alpha)*y1[i]+cos(alpha)*z1[i];
-		//fpdbg <<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
-	}
+	//
+	//long L1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
+	//long L2=vertN-vertM;           //Number of seg in the 2nd circle
+	//double x[maxa],y[maxa],z[maxa];
 
 	cross cr[maxintsec],cr_temp;
 	double id[maxintsec],ix[maxintsec];
 	int L20=L1+1,L2end=L1+L2+1;
+
+	//long i,j;
+	//for (i=0,j=0;i<=vertM-1;i++,j++){
+	//	x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	//}
+
+	//for (i=vertN,j=vertM;i<=maxnum;i++,j++){
+	//	x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	//}
+	//
+	//x[l1]=C[0].x;y[l1]=C[0].y;z[l1]=C[0].z;
+
+	//for (i=vertM,j=l1+1;i<=vertN-1;i++,j++){
+	//	x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	//}
+	//x[l1+l2+1]=C[vertM].x;
+	//y[l1+l2+1]=C[vertM].y;
+	//z[l1+l2+1]=C[vertM].z;
+
 
 	//Enumerate all intersections
 	int N=0;
@@ -339,11 +288,6 @@ int AP(int L1,int L2,double s, double t, double alpha,
 
 	//Sort intersections
 	sort(cr,cr+N,cmpfun);
-
-	//for (int i=0; i<N; i++){
-	//	fpdbg <<"X["<<i<<"]"<<cr[i].seg_under<<" cut by "
-	//		<<cr[i].seg_over<<" Position "<<cr[i].endpos<<endl;
-	//}
 
 	//Enumerate generators
 	int g[maxintsec]; //if generator i is cut by j then g[i]=j
@@ -374,19 +318,10 @@ int AP(int L1,int L2,double s, double t, double alpha,
 			assert(g[i]!=0 && g[i]!=M+1);
 		}
 	}
-	
-	//for (int i=0; i<N; i++){
-	//	fpdbg <<"X[gen# "<<i<<"  cut by "<<g[i]<<"]   X-type:  "<<cr[i].sign/*<<cr[i].seg_under<<" cut by "
-	//		<<cr[i].seg_over<<" Position "<<cr[i].endpos*/<<endl;
-	//}
-	//
-
 
 	//Disentanglement
 	Generator G[maxintsec];
 
-	//N=readGenerator("gen.txt",g,M);
-	//goto DA;
 	for (int i=0; i<N; i++){
 		G[i].id=i;
 		G[i].cutby=g[i];
@@ -398,13 +333,12 @@ int AP(int L1,int L2,double s, double t, double alpha,
 	G[0].pre=M;G[M].next=0;
 	G[M+1].pre=N-1;G[N-1].next=M+1;	
 
-	printGenerators(G,N);
 	int totdisentang=0;
 	int L1num=M+1,L2num=N-1-(M+1)+1;
 	bool exitflag=false;
-	const int TER=0;
+	
+	//goto DA;
 	while (!exitflag){
-
 		exitflag=true;
 
 //		Type Ia: g[i]==i	 Type Ib: g[i]=i+1 i and i+1 on the same contour.
@@ -415,9 +349,6 @@ int AP(int L1,int L2,double s, double t, double alpha,
 				if (!G[i].alive) continue;
 				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
 					totdisentang++;
-					fpdbg <<"["<<totdisentang<<"]Type I at "<<i<<endl;
-					if (totdisentang > TER) {fpdbg<<totdisentang<<endl;goto t2;}
-	fpdbg<<"IN FORTRAN EXPRESSION: "<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 					if (G[i].id<=M) L1num--; else L2num--;
 					if (L1num==0 || L2num==0) return 0;
 					G[i].alive=false;
@@ -429,8 +360,6 @@ int AP(int L1,int L2,double s, double t, double alpha,
 					G[G[i].next].pre=G[G[i].pre].id;
 					i--;
 					exitflag=false;exitflagI=false;
-	printGenerators(G,N);
-					
 				}
 			}
 		}
@@ -445,9 +374,6 @@ int AP(int L1,int L2,double s, double t, double alpha,
 						goto skip;
 				}
 				totdisentang++;
-				fpdbg <<"["<<totdisentang<<"]Type II at "<<i<<endl;
-				if (totdisentang > TER) {fpdbg<<totdisentang<<endl;goto t2;}
-				fpdbg<<"IN FORTRAN EXPRESSION: "<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 
 				if (G[i].id<=M) L1num-=2; else L2num-=2;
 				if (L1num==0 || L2num==0) return 0;
@@ -465,18 +391,14 @@ int AP(int L1,int L2,double s, double t, double alpha,
 
 				G[next2].pre=G[i].pre;
 				G[G[i].pre].next=next2;
-printGenerators(G,N);
 				i--;
 				exitflag=false;
-				//TODO: restore this. exitflagII=false;
 			}
 skip:		;
 		}
 	}
-t2:	fpdbg <<"<<<<Final Generators>>>>"<<endl;
-	printGenerators(G,N);
 
-	int newid=0;
+DA:	int newid=0;
 	for (int i=0; i<N; i++){
 		if (G[i].alive){
 			G[i].id=newid;
@@ -496,7 +418,7 @@ t2:	fpdbg <<"<<<<Final Generators>>>>"<<endl;
 	N=L1num+L2num;
 	
 	//Fill up the matrix
-DA:	double da[maxintsec][maxintsec];
+	double da[maxintsec][maxintsec];
 	for (int k=0; k<N; k++)
 		for (int i=0; i<N; i++)
 			da[k][i]=0.;
@@ -575,17 +497,7 @@ DA:	double da[maxintsec][maxintsec];
 		}
 	}
 
-
-	saveMatrixToFile(da,N,"matrix.txt");
-	double lin[maxintsec*maxintsec];
-	int p=0;
-	for (int i=0;i<N-1;i++){
-		for (int j=0;j<N-1;j++){
-			lin[p]=da[i][j];
-			p++;
-		}
-	}
-	double temp = abs_det_lu(&lin[0],N-1)/(1-t); //only feed N-1 x N-1 remainder
+	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
 	long re=floor(temp+0.5);
 	while (re%2 ==0) re=re/2;
 	return re;
