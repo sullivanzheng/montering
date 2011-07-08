@@ -132,6 +132,9 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	double temp_overpass;
 	temp_overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 	*fp_log<<"Initial overpass:" <<temp_overpass <<endl;
+	
+	double temp_Lk_recomb_212;
+	*fp_log<<"Initial Alexander Poly(-1,-2)="<< (temp_Lk_recomb_212 = dnaChain->AP(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2) ) <<endl;
 
 	if (RBAUS_LOAD_LAST) {
 		U.load("ArtificialPotential.txt");
@@ -810,30 +813,21 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 
 			(*fp_log)<<"["<<moves<<"] NOW:"<<movement_symbol[movement];
 
-			long Lk_recomb,Lk_recomb_fast,Lk_recomb_2,Lk_recomb_212,overpass;
+			long Lk_recomb_AP,Lk_recomb_AP2,Lk_recomb,Lk_recomb_2,overpass;
 			if (RG.R.size()!=0){
 				(*fp_log)<<" Q "<<RG.Q;
 				overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				(*fp_log)<<" + "<< overpass;
+				Lk_recomb_AP = dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
+				Lk_recomb_AP2 = dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
+
 				Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-				Lk_recomb_fast = dnaChain->productLk_fast(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-				Lk_recomb_2 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-1);
-				Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
-				if (Lk_recomb_212 > 1000){
-					if (RG.Q<-5){
-						char buf[200];
-						sprintf(buf,"complicate%09d",moves);
-						dnaChain->snapshot(buf);
-					}
- 					/*Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
-					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
-					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
-					Lk_recomb_212 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);*/
-				}
-				(*fp_log)<<" Lk_re "<< Lk_recomb_2  <<' '<< Lk_recomb_212 << " cmp "<< Lk_recomb <<' '<<  Lk_recomb_fast
+				Lk_recomb_2 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+
+			    (*fp_log)<<" Lk_re "<< Lk_recomb_AP  <<' '<< Lk_recomb_AP2 << " cmp "<< Lk_recomb <<' '<<  Lk_recomb_2
 					<< "(Check Equal: "
-							<< (Lk_recomb_2==Lk_recomb_fast?'-':'X') <<' '
-							<< (Lk_recomb_2==Lk_recomb?'-':'X') <<") ";
+							<< (Lk_recomb==Lk_recomb_AP?'-':'X') <<' '
+							<< (Lk_recomb_2==Lk_recomb_AP2?'-':'X') <<") ";
 			}
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();*/
@@ -850,7 +844,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			(*fp_log)	<<" KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			if ( RG.R.size()!=0 && EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 && overpass==+1 && RG.Q < -5.0 ){
+			if ( RG.R.size()!=0 && EXOTIC_LK_SNAPSHOT==1 && Lk_recomb_AP != 1 && overpass==+1 && RG.Q < -5.0 ){
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
