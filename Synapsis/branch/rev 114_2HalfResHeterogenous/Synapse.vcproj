@@ -46,7 +46,7 @@
 				SmallerTypeCheck="true"
 				EnableFunctionLevelLinking="false"
 				GenerateXMLDocumentationFiles="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -466,6 +466,10 @@
 			</File>
 			<File
 				RelativePath=".\LinkNum_fast.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LK2_reinvented.cpp"
 				>
 			</File>
 			<File

@@ -3,6 +3,7 @@
 
 #define MAXMatrixDet 200
 
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -17,7 +18,7 @@
 #include "SmallTypes.h"
 #include "bias.h"
 
-
+int printmtrx(long n, double *a);
 
 inline long wrap(long i, long roundnum){
 	if (i<-roundnum || i>2*roundnum-1){
@@ -255,14 +256,19 @@ public:
 	virtual double dE_reptation_3_4(long m1, long dm1, long m2, long dm2, int& rejection_sign);
 	virtual double dE_TrialCrankshaft(long m, long n, double a);
 	virtual double dE_treadmill(double direction);
+
 	int kpoly(long ial[2],long ierr);
 	int kpoly2(long ial[2],long ierr);
+	int AP(long vertM, long vertN,double s, double t);
+
 	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
 	virtual void snapshot(char *filename);
+
 	long IEV_closeboundary(long in, long ik);
 	long IEV_Alex_closeboundary(long in, long ik, double info[3]);
 	long IEV_with_rigidbody_closeboundary( long in,  long ik, double info[3]);
 	long IEV_with_rigidbody_closeboundary_fullChain(double info[3]);
+
 	double E_t_updateWrithe_E_t(); //Based on _fastWr_topl_update();
 	long checkConsistency(double eps=1e-10);
     long checkBangleConsistency();
