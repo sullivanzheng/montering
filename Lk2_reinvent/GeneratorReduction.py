@@ -1,24 +1,27 @@
 import os
 def generatorplot(g,mfile,plotname):
     g=g[:-1]
-    fp=file("rotated.txt")
+    fp=file("xyz.txt")#file("rotated.txt")
     L1=111
     L2=111
     X=[ [float(i) for i in l.split()]+[1] for l in fp.readlines() ]
     fp.close()
 
-    g=[(int(i.split()[3]),float(i.split()[4]),i.split()[0][2:]) for i in g.split('\n')]
+    g=[(int(i.split()[4]),float(i.split()[5]),i.split()[0][2:]) for i in g.split('\n')]
     X_=X #keep an original copy of X for annotation.
 
     LL1=L1
     LL2=L2
-    ra=0.8
+    ra=0.95
     for i in range(len(g)-1,-1,-1):
+        print g[i]
         if g[i][0]>L1-1:
             x0=X[g[i][0]  ]
             x1=X[g[i][0]+1]
             xx1=[x0[j]+ (x1[j]-x0[j])*   g[i][1] *ra for j in range(3)]
             xx2=[x1[j]- (x1[j]-x0[j])*(1-g[i][1])*ra for j in range(3)]
+            print xx1
+            print xx2
             X=X[:g[i][0]+1]+[xx1+[0],xx2+[2]]+X[g[i][0]+1:]
             LL2+=2
         else:
@@ -26,6 +29,8 @@ def generatorplot(g,mfile,plotname):
             x1=X[g[i][0]+1]
             xx1=[x0[j]+ (x1[j]-x0[j])*   g[i][1] *ra for j in range(3)]
             xx2=[x1[j]- (x1[j]-x0[j])*(1-g[i][1])*ra for j in range(3)]
+            print xx1
+            print xx2
             X=X[:g[i][0]+1]+[xx1+[0],xx2+[2]]+X[g[i][0]+1:]
             LL1+=2
             
@@ -60,7 +65,7 @@ if __name__=='__main__':
     if os.path.exists(mfile):
         os.remove(mfile)
         
-    log='dbg.log'
+    log='generators.txt'
     fp=file(log)
     recording=0
     s=''
@@ -70,7 +75,7 @@ if __name__=='__main__':
         if i.find('###')==0:
             recording=0
             t+=1
-            plotfname='plot%02d_.bmp'%t
+            plotfname='plot_in_directory_synapsis%02d_.bmp'%t
             generatorplot(s,mfile,plotfname)
             s=''
         print recording and "*" or " ",i[:-1]
