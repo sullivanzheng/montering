@@ -766,7 +766,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			U.pickle("ArtificialPotential.txt");
 		}
 
-		if (moves%STAT_INTERVAL==0){
+		if (moves%STAT_INTERVAL==1){
 			(*fp_log).precision(5);
 			char buf[400];
 			sprintf(buf,"crk_acpt:%3d/%3d[%5.2f%%] NOW:m,n,beta(%3d,%3d),%5.1f "
@@ -828,6 +828,18 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 					<< "(Check Equal: "
 							<< (Lk_recomb==Lk_recomb_AP?'-':'X') <<' '
 							<< (Lk_recomb_2==Lk_recomb_AP2?'-':'X') <<") ";
+
+				if (Lk_recomb!=Lk_recomb_AP && Lk_recomb_AP<10000){
+					char tempbuf[200];
+					sprintf(tempbuf,"MORELk1_inequal_%08d.txt",moves);
+					dnaChain->snapshot(tempbuf);
+					//for(;;){
+					//	dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+					//	dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+					//	dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
+					//	dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
+					//}
+				}
 			}
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
 //			(*fp_log)<<" Branch="<<dnaChain->getBranchNumber();*/
@@ -848,6 +860,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
+
 			}
 
 //			Log Rigidbody status

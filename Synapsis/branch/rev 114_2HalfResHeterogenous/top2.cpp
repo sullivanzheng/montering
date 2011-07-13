@@ -539,74 +539,75 @@ L124:
     i__1 = n;
     for (k = 1; k <= i__1; ++k) {
 	i__2 = n;
-	for (i = 1; i <= i__2; ++i) {
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
-/* L261: */
-	}
+		for (i = 1; i <= i__2; ++i) {
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
+	/* L261: */
+		}
     }
+
     i__2 = n;
     for (k = 1; k <= i__2; ++k) {
-	i = ix[k - 1];
-	if (k <= m && m > 1) {
-	    k1 = k + 1;
-	    if (k == m) {
-		k1 = 1;
-	    }
-	    if (i <= m) {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+		i = ix[k - 1];
+		if (k <= m && m > 1) {
+			k1 = k + 1;
+			if (k == m) {
+			k1 = 1;
+			}
+			if (i <= m) {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			}
+			} else {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			}
+			}
+		} else if (k == m && m == 1) {
+			da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - t);
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+		} else if (k > m && n > m + 1) {
+			k1 = k + 1;
+			if (k == n) {
+			k1 = m + 1;
+			}
+			if (i > m) {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			}
+			} else {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			}
+			}
+		} else if (k == n && n == m + 1) {
+			da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - s);
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
 		}
-	    } else {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		}
-	    }
-	} else if (k == m && m == 1) {
-	    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - t);
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-	} else if (k > m && n > m + 1) {
-	    k1 = k + 1;
-	    if (k == n) {
-		k1 = m + 1;
-	    }
-	    if (i > m) {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		}
-	    } else {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		}
-	    }
-	} else if (k == n && n == m + 1) {
-	    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - s);
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
 	}
-    }
     --n;  //TODO? Should this n be substracted by 1?????!!!?!??!?!?
     dkn = this->_det(n,da) / (t - 1.f);
 L550:

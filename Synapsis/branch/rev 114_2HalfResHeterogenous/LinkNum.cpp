@@ -222,341 +222,261 @@ L111:
 L110:
 	;
     }
-    --m;
+	--m;
     --n;
+
+// renumeration of intersections in the proper order    
     ns = n - 1;
     i__1 = ns;
     for (n1 = 1; n1 <= i__1; ++n1) {
-	i1 = ic1[n1 - 1];
-	nv1 = n1;
-	n11 = n1 + 1;
-	i__2 = n;
-	for (n2 = n11; n2 <= i__2; ++n2) {
-	    if ((i__3 = ic1[n2 - 1] - i1) < 0) {
-		goto L405;
-	    } else if (i__3 == 0) {
-		goto L406;
-	    } else {
-		goto L404;
-	    }
-L405:
-	    i1 = ic1[n2 - 1];
-	    nv1 = n2;
-	    goto L404;
-L406:
-	    rl1 = (d__1 = x[i1 - 1] - cx[nv1 - 1], abs(d__1));
-	    rl2 = (d__1 = x[i1 - 1] - cx[n2 - 1], abs(d__1));
-	    if (rl1 < rl2) {
-		goto L404;
-	    }
-	    nv1 = n2;
-L404:
-	    ;
-	}
-	if (n1 >= nv1) {
-	    goto L403;
-	}
-	ir = ic1[n1 - 1];
-	ic1[n1 - 1] = ic1[nv1 - 1];
-	ic1[nv1 - 1] = ir;
-	ir = ic2[n1 - 1];
-	ic2[n1 - 1] = ic2[nv1 - 1];
-	ic2[nv1 - 1] = ir;
-	xr = cx[n1 - 1];
-	cx[n1 - 1] = cx[nv1 - 1];
-	cx[nv1 - 1] = xr;
-L403:
-	;
+		i1 = ic1[n1 - 1];
+		nv1 = n1;
+		n11 = n1 + 1;
+		i__2 = n;
+		for (n2 = n11; n2 <= i__2; ++n2) {
+			if ((i__3 = ic1[n2 - 1] - i1) < 0) {
+				goto L405;
+			} else if (i__3 == 0) {
+				goto L406;
+			} else {
+				goto L404;
+			}
+	L405:
+			i1 = ic1[n2 - 1];
+			nv1 = n2;
+			goto L404;
+	L406:
+			rl1 = (d__1 = x[i1 - 1] - cx[nv1 - 1], abs(d__1));
+			rl2 = (d__1 = x[i1 - 1] - cx[n2 - 1], abs(d__1));
+			if (rl1 < rl2) {
+				goto L404;
+			}
+			nv1 = n2;
+	L404:
+			;
+		}
+		if (n1 >= nv1) {
+			goto L403;
+		}
+		ir = ic1[n1 - 1];
+		ic1[n1 - 1] = ic1[nv1 - 1];
+		ic1[nv1 - 1] = ir;
+		ir = ic2[n1 - 1];
+		ic2[n1 - 1] = ic2[nv1 - 1];
+		ic2[nv1 - 1] = ir;
+		xr = cx[n1 - 1];
+		cx[n1 - 1] = cx[nv1 - 1];
+		cx[nv1 - 1] = xr;
+	L403:
+		;
     }
+
+
+//Determination of generators
     i__1 = n;
     for (n1 = 1; n1 <= i__1; ++n1) {
-	nv = ic2[n1 - 1];
-	n2 = 0;
-L72:
-	++n2;
-	if (nv < l1 + 1 && n2 >= m + 1) {
-	    goto L711;
-	}
-	if (n2 >= n + 1) {
-	    goto L712;
-	}
-/* L70: */
-	if ((i__2 = ic1[n2 - 1] - nv) < 0) {
-	    goto L72;
-	} else if (i__2 == 0) {
-	    goto L73;
-	} else {
-	    goto L71;
-	}
-L73:
-	r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
-/* L74: */
-	r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
-	if (r1 < r2) {
-	    goto L71;
-	}
-	goto L72;
-L711:
-	ix[n1 - 1] = 1;
-	goto L19;
-L712:
-	ix[n1 - 1] = m + 1;
-	goto L19;
-L71:
-	ix[n1 - 1] = n2;
-L19:
-	;
+		nv = ic2[n1 - 1];
+		n2 = 0;
+	L72:
+		++n2;
+		if (nv < l1 + 1 && n2 >= m + 1) {
+			goto L711;
+		}
+		if (n2 >= n + 1) {
+			goto L712;
+		}
+	/* L70: */
+		if ((i__2 = ic1[n2 - 1] - nv) < 0) {
+			goto L72;
+		} else if (i__2 == 0) {
+			goto L73;
+		} else {
+			goto L71;
+		}
+	L73:
+		r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
+	/* L74: */
+		r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
+		if (r1 < r2) {
+			goto L71;
+		}
+		goto L72;
+	L711:
+		ix[n1 - 1] = 1;
+		goto L19;
+	L712:
+		ix[n1 - 1] = m + 1;
+		goto L19;
+	L71:
+		ix[n1 - 1] = n2;
+	L19:
+		;
     }
-    if (m <= 0) {
-	goto L500;
-    }
-    if (n - m <= 0) {
-	goto L500;
-    }
+
+//Disentanglement
+	//TODO: shortcircuit
+	//goto L124; /*DA*/
+
+   //Type I disentanglement
+    if (m <= 0) goto L500;
+    if (n - m <= 0) goto L500;
 L230:
     mj = 0;
     i = 0;
 L231:
     ++i;
-L251:
-    if (i == m) {
-	goto L240;
-    }
-    if (i == n) {
-	goto L250;
-    }
-/* L254: */
-    if (ix[i - 1] != i && ix[i - 1] != i + 1) {
-	goto L231;
-    }
+L251: 
+    if (i == m) goto L240;
+    if (i == n) goto L250;
+    if (ix[i - 1] != i && ix[i - 1] != i + 1) goto L231;
     ++mj;
     --n;
-    if (i < m) {
-	--m;
-    }
-    if (m <= 0) {
-	goto L500;
-    }
-    if (n - m <= 0) {
-	goto L500;
-    }
-    i__1 = n;
-    for (k = i; k <= i__1; ++k) {
-	ix[k - 1] = ix[k];
-/* L233: */
-    }
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > i) {
-	    --ix[k - 1];
-	}
-/* L234: */
-    }
+    if (i < m) 	--m;
+    if (m <= 0) goto L500;
+    if (n - m <= 0) goto L500;
+//	cout <<"I"<<i<<endl;
+    for (k = i; k <= n; ++k) ix[k - 1] = ix[k];
+    for (k = 1; k <= n; ++k) 
+		if (ix[k - 1] > i)	--ix[k - 1];
     goto L251;
 L240:
-    if (ix[m - 1] != m && ix[m - 1] != 1) {
-	goto L231;
-    }
+    if (ix[m - 1] != m && ix[m - 1] != 1) goto L231;
+//	cout <<"I"<<m<<endl;
     ++mj;
     --n;
-    if (m <= 1) {
-	goto L500;
-    }
-    i__1 = n;
-    for (k = i; k <= i__1; ++k) {
-	ix[k - 1] = ix[k];
-/* L252: */
-    }
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] == m) {
-	    ix[k - 1] = 1;
-	}
-/* L242: */
-    }
+    if (m <= 1) goto L500;
+    for (k = i; k <= n; ++k) 
+		ix[k - 1] = ix[k];
+
+    for (k = 1; k <= n; ++k) 
+		if (ix[k - 1] == m)	ix[k - 1] = 1;
     --m;
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > i) {
-	    --ix[k - 1];
-	}
-/* L253: */
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] > i) --ix[k - 1];
     }
     goto L251;
+
 L250:
-    if (ix[n - 1] != n && ix[n - 1] != m + 1) {
-	goto L232;
-    }
+    if (ix[n - 1] != n && ix[n - 1] != m + 1) goto L232;
+//	cout<<"I"<<n<<endl;
     ++mj;
-    if (n - m <= 1) {
-	goto L500;
-    }
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] >= n) {
-	    ix[k - 1] = m + 1;
-	}
-/* L255: */
+    if (n - m <= 1)	goto L500;
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] >= n)	ix[k - 1] = m + 1;
     }
     --n;
 L232:
-    if (mj > 0) {
-	goto L230;
-    }
-    if (m <= 1 || n - m <= 1) {
-	goto L505;
-    }
+    if (mj > 0)	goto L230;
+    if (m <= 1 || n - m <= 1) goto L505;
+   // Type II disentanglement
     i = 0;
 L235:
     ++i;
 L265:
-    if (i == m) {
-	++i;
-    }
-    if (i >= n - 1) {
-	goto L266;
-    }
-    if (ix[i - 1] != ix[i]) {
-	goto L235;
-    }
+    if (i == m)	++i;
+    if (i >= n - 1)	goto L266;
+
+    if (ix[i - 1] != ix[i])	goto L235;
     i1 = i + 1;
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] == i1) {
-	    goto L235;
-	}
-/* L237: */
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] == i1) goto L235;
     }
     mp = m - 1;
-    if (i > m) {
-	goto L271;
-    }
-    if (m <= 2) {
-	goto L500;
-    }
+    if (i > m) goto L271;
+    if (m <= 2) goto L500;
     m += -2;
     goto L372;
 L271:
-    if (n - m <= 2) {
-	goto L500;
-    }
+    if (n - m <= 2)	goto L500;
 L372:
     n += -2;
     ++mj;
     i__1 = n;
     for (k = i; k <= i__1; ++k) {
-	ix[k - 1] = ix[k + 1];
-/* L238: */
+		ix[k - 1] = ix[k + 1];
     }
-    if (i != mp) {
-	goto L339;
-    }
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] == i) {
-	    ix[k - 1] = 1;
-	}
-/* L340: */
+    if (i != mp) goto L339;
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] == i)	ix[k - 1] = 1;
     }
 L339:
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > i) {
-	    ix[k - 1] += -2;
-	}
-/* L239: */
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] > i) ix[k - 1] += -2;
     }
-    if (m <= 1 || n - m <= 1) {
-	goto L230;
-    }
+    if (m <= 1 || n - m <= 1) goto L230;
     goto L265;
 L266:
-    if (ix[n - 2] != ix[n - 1]) {
-	goto L236;
+    if (ix[n - 2] != ix[n - 1])	goto L236;
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] == n)	goto L236;
     }
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] == n) {
-	    goto L236;
-	}
-/* L272: */
-    }
-    if (n - m <= 2) {
-	goto L500;
-    }
+    if (n - m <= 2) goto L500;
+//	cout <<"II"<<n-1<<endl;
     ++mj;
     n += -2;
-    i__1 = n;
-    for (k = 1; k <= i__1; ++k) {
-	if (ix[k - 1] > n) {
-	    ix[k - 1] = m + 1;
-	}
-/* L273: */
+    for (k = 1; k <= n; ++k) {
+		if (ix[k - 1] > n) ix[k - 1] = m + 1;
     }
-    if (m <= 1 || n - m <= 1) {
-	goto L230;
-    }
+    if (m <= 1 || n - m <= 1) goto L230;
 L236:
-    if (mj > 0) {
-	goto L230;
+    if (mj > 0)	goto L230;
+    for (ks = 1; ks <= m; ++ks) {
+		if (ix[ks - 1] > m)	goto L490;
     }
-    i__1 = m;
-    for (ks = 1; ks <= i__1; ++ks) {
-	if (ix[ks - 1] > m) {
-	    goto L490;
-	}
-/* L503: */
-    }
-L500:
+L500:  //early termination of the calculation: unlink
     dkn = 0.f;
     goto L550;
-L505:
+L505: //early termination of the calculation: simple link
     dkn = 1.f;
     goto L550;
 L490:
     m1 = m + 1;
     i__1 = n;
     for (ks = m1; ks <= i__1; ++ks) {
-	if (ix[ks - 1] < m1) {
-	    goto L504;
-	}
-/* L491: */
+		if (ix[ks - 1] < m1) {
+			goto L504;
+		}
     }
     goto L500;
 L504:
     --n;
     if (n <= MAXMatrixDet) {
-	goto L124;
+		goto L124;
     }
     if (ipv < 2) {
-	goto L291;
+		goto L291;
     }
     ret_val = 100000;
     return ret_val;
+
+// Filling the matrix
 L124:
     i__1 = n;
     for (k = 1; k <= i__1; ++k) {
-	i__2 = n;
-	for (i = 1; i <= i__2; ++i) {
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
-/* L261: */
-	}
+		i__2 = n;
+		for (i = 1; i <= i__2; ++i) {
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
+		}
     }
+
+	//Fill up each element
     i__2 = n;
     for (k = 1; k <= i__2; ++k) {
-	i = ix[k - 1];
-	da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.f;
-	da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = -2.f;
-	if (k != m) {
-	    goto L98;
-	}
-	da[k - 1] = 1.f;
-	goto L262;
-L98:
-	da[k + (k + 1) * MAXMatrixDet - (MAXMatrixDet+1)] = 1.f;
-L262:
-	;
+		i = ix[k - 1];
+		da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.f;
+		da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = -2.f;
+		if (k != m) {
+			goto L98;
+		}
+		da[k - 1] = 1.f;
+		goto L262;
+	L98:
+		da[k + (k + 1) * MAXMatrixDet - (MAXMatrixDet+1)] = 1.f;
+	L262:
+		;
     }
+
+//Calculate the determinant
     dkn = _det(n, da) / 2.f;
 L550:
     ret_val = long(fabs(dkn) + 0.1);
@@ -564,7 +484,7 @@ L550:
 L291:
     ++ipv;
     if (ipv >= 2) {
-	goto L295;
+		goto L295;
     }
     i__2 = jr4;
     for (kb = 1; kb <= i__2; ++kb) {

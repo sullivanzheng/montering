@@ -26,8 +26,19 @@ struct Generator{
 	bool alive;
 	cross cr;
 };
+void printGenerators(Generator G[], int N, int totdisentang);
+void printXYZ(double x[], double y[], double z[], int N);
+int printGenerators_checkDisentangsSegment(Generator G[], int N, int ID){
+        int newid=0;
+        for (int i=0; i<N; i++){
+                if (!G[i].alive) continue;
+                newid++;
+                if (G[i].id==ID) return newid;
+        }
+        return -1;
+}
 
-int DET_Doolittle_LU_Decomp_Pivot(double da[MAXMatrixDet][MAXMatrixDet], int n){
+double DET_Doolittle_LU_Decomp_Pivot(double da[MAXMatrixDet][MAXMatrixDet], int n){
 	const double eps=1e-12;
 	int pivot[MAXMatrixDet];
 	double max;
@@ -129,6 +140,7 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 	//Store the intersections in different fashions.
 	//Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1]
 	const double pi=3.141592653589793;
+	const int TER=15; //TODO: remove
 
 	long L1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
 	long L2=vertN-vertM;           //Number of seg in the 2nd circle
@@ -228,7 +240,7 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 	int L1num=M+1,L2num=N-1-(M+1)+1;
 	bool exitflag=false;
 	
-//	goto DA;
+//	goto DA; //TODO: remove
 	while (!exitflag){
 		exitflag=true;
 
@@ -239,7 +251,10 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 			for (int i=0; i<N; i++){
 				if (!G[i].alive) continue;
 				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
-					totdisentang++;
+					//totdisentang++;
+					//if (totdisentang>TER) goto DA;
+					//cout<<"[c++] I"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+
 					if (G[i].id<=M) L1num--; else L2num--;
 					if (L1num==0 || L2num==0) return 0;
 					G[i].alive=false;
@@ -251,6 +266,8 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 					G[G[i].next].pre=G[G[i].pre].id;
 					i--;
 					exitflag=false;exitflagI=false;
+
+					//printGenerators(G,N,totdisentang);
 				}
 			}
 		}
@@ -264,7 +281,9 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 					if (G[r].cutby==G[i].next) 
 						goto skip;
 				}
-				totdisentang++;
+				/*totdisentang++;
+				if (totdisentang>TER) goto DA;
+				cout<<"[c++] II"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;*/
 
 				if (G[i].id<=M) L1num-=2; else L2num-=2;
 				if (L1num==0 || L2num==0) return 0;
@@ -284,6 +303,8 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 				G[G[i].pre].next=next2;
 				i--;
 				exitflag=false;
+				
+				//printGenerators(G,N,totdisentang);
 			}
 skip:		;
 		}
@@ -305,6 +326,10 @@ DA:	int newid=0;
 		if (!G[i].alive) continue;
 		g[G[i].id]=G[G[i].cutby].id;
 	}
+
+
+	//printGenerators(G,N,totdisentang);
+
 	M=L1num-1;
 	N=L1num+L2num;
 	
@@ -387,6 +412,7 @@ DA:	int newid=0;
 			da[k][i]=t-1;
 		}
 	}
+	
 
 	double da2[MAXMatrixDet][MAXMatrixDet];
 	for (int ss=0;ss<N;ss++)
@@ -396,13 +422,14 @@ DA:	int newid=0;
 	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
 	long re=floor(temp+0.5);
 	if (fabs(t)-1.0> 1e-5)
-		while (re%2 ==0) re=re/2;
+		while (re % 2 ==0) re /= 2;
 	return abs(re);
 }
 
 int printmtrx(long n, double *a){
 	using namespace std;
-	ofstream fp("matrix.m");
+	ofstream fp;
+	fp.open("matrix.m");
 	fp <<"a=["<<endl;
 	for (int j=0; j<n;j++){
 		for (int i=0;i<n;i++){
@@ -411,7 +438,74 @@ int printmtrx(long n, double *a){
 		fp<<endl;
 	}
 	fp<<"];"<<endl;
-	fp<<"det(a)"<<endl;
+	fp<<"det(a(1:end-1,1:end-1))"<<endl;
+	fp<<"det(a(2:end,2:end))"<<endl;
 	fp.close();
 	return 0;
+}
+
+void printXYZ(double x[], double y[], double z[], int N){
+	ofstream fp("xyz.txt");
+	for (int i=0;i<N;i++){
+		fp<<x[i]<<' '<<y[i]<<' '<<z[i]<<endl;
+	}
+	fp.close();
+}
+
+void printGenerators(Generator G[], int N, int totdisentang){
+		ofstream fpdbg;
+		fpdbg.open("generators.txt",ios::app);
+        //fpdbg <<"------------------------"<<endl;
+        //for (int i=0; i<N; i++){
+        //      if (!G[i].alive) continue;
+        //      fpdbg << "G[" <<i<<"] " << (G[i].alive?'.':'X') 
+        //              <<" cutby "     << G[i].cutby << " <" << G[i].pre << ',' << G[i].next << "> " <<endl;
+        //}
+        //fpdbg <<endl;
+
+        for (int i=0; i<N; i++)
+                if (G[i].alive==true) assert(G[G[i].cutby].alive==true);
+
+        Generator GG[MAXMatrixDet];
+        int j=0;
+        for (int i=0; i<N; i++){
+                if (!G[i].alive) continue;
+                GG[j]=G[i];
+                j++;
+        }
+
+        //int count=0;
+        //for (int i=1; i<j-1; i++){
+        //      if (GG[i].next!=GG[i+1].id || GG[i].pre!=GG[i-1].id){
+        //              fpdbg << "----GG[" <<i<<"] id "<<GG[i].id <<" cutby "   << GG[i].cutby << " <" << GG[i].pre << ',' << GG[i].next << "> " <<endl;
+        //              count++;
+        //      }
+        //}
+
+        //if (count>2){
+        //      fpdbg <<"PROBLEM!!!"<<endl;
+        //      fpdbg <<endl;
+        //}
+
+        int newid=0;
+        for (int i=0; i<N; i++){
+                if (G[i].alive){
+                        GG[i]=G[i];
+                        GG[i].id=newid;
+                        newid++;
+                }
+        }
+        newid--;
+
+        int g[MAXMatrixDet];
+		fpdbg <<"[#"<<totdisentang<<"]"<<endl;
+        fpdbg <<"---Generators in reduced form---"<<endl;
+        for (int i=0; i<N; i++){
+                if (!G[i].alive) continue;
+                g[GG[i].id]=GG[GG[i].cutby].id;
+                fpdbg<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1
+                        <<" cross: "<<GG[i].cr.sign<<" "<<GG[i].cr.seg_under<<"  "<<GG[i].cr.s_under<<endl;
+        }
+        fpdbg<<"###"<<endl<<endl;
+		fpdbg.close();
 }
