@@ -91,6 +91,15 @@ of arrays x, y, z; the elements from L1+2 till L1+L2+2 contain the second contou
 
 /*      COMMON /x/ X(jrm),Y(jrm),Z(jrm) */
 /*      COMMON /F/ DA(200,200) */
+
+
+/*
+c inventorization of intersections
+c n4 - number of intersections
+c cx(i) - x-value of i-th intersection
+c ic1(i) - number of undergoing segment for i-th intersection
+c ic2(i) - number of overgoing segment for i-th intersection */
+
     l11 = l1 + 1;
     l21 = l2 + 1;
     ipv = 0;
@@ -99,22 +108,23 @@ L297:
     m = 1;
     i__1 = l1 + l2 + 1;
     for (n1 = 1; n1 <= i__1; ++n1) {
-	if (n1 == l11) {
-	    goto L108;
-	}
-	s1 = x[n1] - x[n1 - 1];
-	s2 = y[n1] - y[n1 - 1];
-	h1[n1 - 1] = -s2;
-	h2[n1 - 1] = s1;
-	h3[n1 - 1] = -x[n1 - 1] * s2 + y[n1 - 1] * s1;
-L108:
-	;
+		if (n1 == l11) {
+			goto L108;
+		}
+		s1 = x[n1] - x[n1 - 1];
+		s2 = y[n1] - y[n1 - 1];
+		h1[n1 - 1] = -s2;
+		h2[n1 - 1] = s1;
+		h3[n1 - 1] = -x[n1 - 1] * s2 + y[n1 - 1] * s1;
+	L108:
+		;
     }
     i__1 = l1 + l2 - 1;
     for (n1 = 1; n1 <= i__1; ++n1) {
-	if (n1 == l11) {
-	    goto L110;
+		if (n1 == l11) {
+			goto L110;
 	}
+
 	j1 = n1 + 2;
 	j2 = l1 + l2 + 1;
 	if (n1 == l1 + 2) {
@@ -124,6 +134,7 @@ L108:
 	h21 = h2[n1 - 1];
 	h31 = h3[n1 - 1];
 	i__2 = j2;
+
 	for (n2 = j1; n2 <= i__2; ++n2) {
 	    if (n2 == l11) {
 		goto L111;
@@ -134,10 +145,10 @@ L108:
 	    if (n2 == l1) {
 		goto L111;
 	    }
-	    if ((d__1 = x[n1 - 1] - x[n2 - 1], fabs(d__1)) > this->max_seglength * 2 || 
+/*	    if ((d__1 = x[n1 - 1] - x[n2 - 1], fabs(d__1)) > this->max_seglength * 2 || 
 			(d__2 = y[n1 - 1] - y[n2 - 1], fabs(d__2)) > this->max_seglength * 2) {
 		goto L111;
-	    }
+	    }*/
 L112:
 	    d = h11 * h2[n2 - 1] - h21 * h1[n2 - 1];
 	    if (fabs(d) < eps) {
@@ -188,6 +199,9 @@ L110:
     }
     --m;
     --n;
+	//----Finished enumeration of intersections----//
+
+	//------c renumeration of intersections in the proper order ------------------------//
     i__1 = n - 1;
     for (n1 = 1; n1 <= i__1; ++n1) {
 	i1 = ic1[n1 - 1];
@@ -232,59 +246,67 @@ L403:
 	;
     }
     i__1 = n;
-    for (i = 1; i <= i__1; ++i) {
-	i1 = ic1[i - 1];
-	i2 = ic2[i - 1];
-	dx1 = x[i1] - x[i1 - 1];
-	dx2 = x[i2] - x[i2 - 1];
-	dy1 = y[i1] - y[i1 - 1];
-	dy2 = y[i2] - y[i2 - 1];
-	if (dx1 * dy2 - dx2 * dy1 > 0.f) {
-	    id[i - 1] = 1;
-	} else {
-	    id[i - 1] = -1;
-	}
-/* L59: */
+	//---------------------
+
+//	c Determination of the crossing type
+	for (i = 1; i <= i__1; ++i) {
+		i1 = ic1[i - 1];
+		i2 = ic2[i - 1];
+		dx1 = x[i1] - x[i1 - 1];
+		dx2 = x[i2] - x[i2 - 1];
+		dy1 = y[i1] - y[i1 - 1];
+		dy2 = y[i2] - y[i2 - 1];
+		if (dx1 * dy2 - dx2 * dy1 > 0.f) {
+			id[i - 1] = 1;
+		} else {
+			id[i - 1] = -1;
+		}
+	/* L59: */
     }
+//-------------------------------------
+
+	//Determination of generators
     i__1 = n;
     for (n1 = 1; n1 <= i__1; ++n1) {
-	nv = ic2[n1 - 1];
-	n2 = 0;
-L72:
-	++n2;
-	if (nv < l1 + 1 && n2 >= m + 1) {
-	    goto L711;
+		nv = ic2[n1 - 1];
+		n2 = 0;
+	L72:
+		++n2;
+		if (nv < l1 + 1 && n2 >= m + 1) {
+			goto L711;
+		}
+		if (n2 >= n + 1) {
+			goto L712;
+		}
+	/* L70: */
+		if ((i__2 = ic1[n2 - 1] - nv) < 0) {
+			goto L72;
+		} else if (i__2 == 0) {
+			goto L73;
+		} else {
+			goto L71;
+		}
+	L73:
+		r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
+	/* L74: */
+		r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
+		if (r1 < r2) {
+			goto L71;
+		}
+		goto L72;
+	L711:
+		ix[n1 - 1] = 1;
+		goto L19;
+	L712:
+		ix[n1 - 1] = m + 1;
+		goto L19;
+	L71:
+		ix[n1 - 1] = n2;
+	L19:
+		;
 	}
-	if (n2 >= n + 1) {
-	    goto L712;
-	}
-/* L70: */
-	if ((i__2 = ic1[n2 - 1] - nv) < 0) {
-	    goto L72;
-	} else if (i__2 == 0) {
-	    goto L73;
-	} else {
-	    goto L71;
-	}
-L73:
-	r1 = (d__1 = x[nv - 1] - cx[n1 - 1], abs(d__1));
-/* L74: */
-	r2 = (d__1 = x[nv - 1] - cx[n2 - 1], abs(d__1));
-	if (r1 < r2) {
-	    goto L71;
-	}
-	goto L72;
-L711:
-	ix[n1 - 1] = 1;
-	goto L19;
-L712:
-	ix[n1 - 1] = m + 1;
-	goto L19;
-L71:
-	ix[n1 - 1] = n2;
-L19:
-	;
-    }
+
+	//------Disentanglement??----------
     if (m <= 0) {
 	goto L500;
     }
@@ -517,75 +539,75 @@ L124:
     i__1 = n;
     for (k = 1; k <= i__1; ++k) {
 	i__2 = n;
-	for (i = 1; i <= i__2; ++i) {
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
-/* L261: */
-	}
+		for (i = 1; i <= i__2; ++i) {
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = 0.f;
+	/* L261: */
+		}
     }
     i__2 = n;
     for (k = 1; k <= i__2; ++k) {
-	i = ix[k - 1];
-	if (k <= m && m > 1) {
-	    k1 = k + 1;
-	    if (k == m) {
-		k1 = 1;
-	    }
-	    if (i <= m) {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+		i = ix[k - 1];
+		if (k <= m && m > 1) {
+			k1 = k + 1;
+			if (k == m) {
+			k1 = 1;
+			}
+			if (i <= m) {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			}
+			} else {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+			}
+			}
+		} else if (k == m && m == 1) {
+			da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - t);
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
+		} else if (k > m && n > m + 1) {
+			k1 = k + 1;
+			if (k == n) {
+			k1 = m + 1;
+			}
+			if (i > m) {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			}
+			} else {
+			if (id[k - 1] > 0) {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			} else {
+				da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
+				da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
+				da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
+			}
+			}
+		} else if (k == n && n == m + 1) {
+			da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - s);
+			da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
 		}
-	    } else {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-		}
-	    }
-	} else if (k == m && m == 1) {
-	    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - t);
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (s - 1);
-	} else if (k > m && n > m + 1) {
-	    k1 = k + 1;
-	    if (k == n) {
-		k1 = m + 1;
-	    }
-	    if (i > m) {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-t);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		}
-	    } else {
-		if (id[i - 1] > 0) {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		} else {
-		    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (-s);
-		    da[k + k1 * MAXMatrixDet - (MAXMatrixDet+1)] = 1.;
-		    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
-		}
-	    }
-	} else if (k == n && n == m + 1) {
-	    da[k + k * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (1 - s);
-	    da[k + i * MAXMatrixDet - (MAXMatrixDet+1)] = (double) (t - 1);
 	}
-    }
-    --n;
+    --n;  //TODO? Should this n be substracted by 1?????!!!?!??!?!?
     dkn = this->_det(n,da) / (t - 1.f);
 L550:
 	lk = abs(dkn) + .1f;
