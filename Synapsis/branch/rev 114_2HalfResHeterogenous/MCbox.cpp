@@ -856,7 +856,7 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 			(*fp_log)	<<" KPoly("<<ial[0]<<','<<ial[1]<<')'<<"]";
 
 //			Log AlexPoly(s,t)~Linking Number of recombination products.
-			if ( RG.R.size()!=0 && EXOTIC_LK_SNAPSHOT==1 && Lk_recomb_AP != 1 && overpass==+1 && RG.Q < -5.0 ){
+			if ( RG.R.size()!=0 && EXOTIC_LK_SNAPSHOT==1 && Lk_recomb != 1 && overpass==+1 && RG.Q < -5.0 ){
 				char LkSnapBuf[100];
 				sprintf(LkSnapBuf,"%s_%09d_Lk(%d).txt",this->filePrefix,moves,Lk_recomb);
 				this->dnaChain->snapshot(LkSnapBuf);
