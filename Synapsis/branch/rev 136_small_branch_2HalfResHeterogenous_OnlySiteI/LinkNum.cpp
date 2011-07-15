@@ -505,22 +505,6 @@ L295:
     goto L297;
 }
 
-int printmtrx(long n, double *a){
-	using namespace std;
-	ofstream fp("matrix.m");
-	fp <<"a=["<<endl;
-	for (int i=0; i<n;i++){
-		for (int j=0;j<n;j++){
-			fp<<a[i+MAXMatrixDet*j]<<' ';
-		}
-		fp<<endl;
-	}
-	fp<<"];"<<endl;
-	fp<<"det(a)"<<endl;
-	fp.close();
-	return 0;
-}
-
 double CircularChain::_det(long n, double da[MAXMatrixDet*MAXMatrixDet])
 // Calculate the determinant of a matrix.
 {
