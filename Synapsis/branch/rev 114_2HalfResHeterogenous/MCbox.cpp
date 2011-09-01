@@ -141,6 +141,14 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 		RG.update_allrigid_and_E();
 	}
 
+	//for(;;){
+	//	int a,a2,b,b2;
+	//	a=dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
+	//	a2=dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
+	//	b=dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
+	//	b2=dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
+	//}
+
 	double E=dnaChain->calG_bSum()+RG.E+dnaChain->E_t;
 
 	int debugsignal=0;
@@ -813,32 +821,38 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 
 			(*fp_log)<<"["<<moves<<"] NOW:"<<movement_symbol[movement];
 
-			long Lk_recomb_AP,Lk_recomb_AP2,Lk_recomb,Lk_recomb_2,overpass;
+			long Lk_recomb_AP,Lk_recomb_AP_2,
+				Lk_recomb_AP_I,Lk_recomb_AP_I_2,
+				Lk_recomb_AP_nodis,Lk_recomb_AP_nodis_2,
+				Lk_recomb,Lk_recomb_2,overpass;
+
 			if (RG.R.size()!=0){
 				(*fp_log)<<" Q "<<RG.Q;
 				overpass = dnaChain->overpassing(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				(*fp_log)<<" + "<< overpass;
-				Lk_recomb_AP = dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
-				Lk_recomb_AP2 = dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
-
 				Lk_recomb = dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
 				Lk_recomb_2 = dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
 
-			    (*fp_log)<<" Lk_re "<< Lk_recomb_AP  <<' '<< Lk_recomb_AP2 << " cmp "<< Lk_recomb <<' '<<  Lk_recomb_2
-					<< "(Check Equal: "
-							<< (Lk_recomb==Lk_recomb_AP?'-':'X') <<' '
-							<< (Lk_recomb_2==Lk_recomb_AP2?'-':'X') <<") ";
+				Lk_recomb_AP =   dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
+				Lk_recomb_AP_2 = dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
+				
+				Lk_recomb_AP_I =   dnaChain->AP_typeIdis_only(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1);
+				Lk_recomb_AP_I_2 = dnaChain->AP_typeIdis_only(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
+				
+				Lk_recomb_AP_nodis =   dnaChain->AP_no_disengtangle(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1);
+				Lk_recomb_AP_nodis_2 = dnaChain->AP_no_disengtangle(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
 
-				if (Lk_recomb!=Lk_recomb_AP && Lk_recomb_AP<10000 && RG.Q<-2.0){
+
+				(*fp_log)<<"ProductLk<< Alex: "<< Lk_recomb <<' '<<  Lk_recomb_2
+					<<" MineI_II "<< Lk_recomb_AP  <<' '<< Lk_recomb_AP_2 
+					<<" MineIOnly "<< Lk_recomb_AP_I<<' '<< Lk_recomb_AP_I_2
+					<<" MineNoDis "<< Lk_recomb_AP_nodis <<' '<< Lk_recomb_AP_nodis_2
+					<< ">> ";
+
+				if (1){
 					char tempbuf[200];
-					sprintf(tempbuf,"Lk1_inequal_%08d.txt",moves);
+					sprintf(tempbuf,"Lk_example_%d_%d.txt",Lk_recomb_AP_I,Lk_recomb_AP_I_2);
 					dnaChain->snapshot(tempbuf);
-					//for(;;){
-					//	dnaChain->productLk(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1);
-					//	dnaChain->productLk2(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2);
-					//	dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-1); 
-					//	dnaChain->AP(RG.R[0].protect[0]+1, RG.R[1].protect[0]+1,-1,-2); 
-					//}
 				}
 			}
 //			(*fp_log)<<" move_trial["<<m<<","<<n<<"]";
