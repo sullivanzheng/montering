@@ -5,6 +5,9 @@
 using namespace std;
 
 long CircularChain::productLk_fast(long vertM, long vertN)
+//Fast because it will discard overcrossing judgement 
+//Since we have no idea of the length of cross over segments, this subroutine should be used with greatest caution.
+//In test this subroutine is only marginally faster (<5%) than unaccelerated one.
 {	
 	if ((vertM<0||vertN<0)||(vertN>maxnum || vertM>maxnum))
 	{
