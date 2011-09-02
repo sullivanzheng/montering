@@ -28,6 +28,9 @@ struct Generator{
 };
 void printGenerators(Generator G[], int N, int totdisentang);
 void printXYZ(double x[], double y[], double z[], int N);
+int fillupMatrix_AP(double da[MAXMatrixDet][MAXMatrixDet], int g[], cross cr[], 
+					int M, int N, double s, double t);
+
 int printGenerators_checkDisentangsSegment(Generator G[], int N, int ID){
         int newid=0;
         for (int i=0; i<N; i++){
@@ -130,8 +133,7 @@ cross intsec(int i, int j, double x[], double y[], double z[]){
 	}
     return X;
 }
-
-int CircularChain::AP(long vertM, long vertN,double s, double t){
+long CircularChain::AP_no_disengtangle(long vertM, long vertN,double s, double t){
 /* L1 is the number of segments in the first contour.
    L2 is the number of segments in the second contour.
    s,t are parameters of AlexanderPolynomial(s,t) */
@@ -140,7 +142,6 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 	//Store the intersections in different fashions.
 	//Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1]
 	const double pi=3.141592653589793;
-	const int TER=15; //TODO: remove
 
 	long L1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
 	long L2=vertN-vertM;           //Number of seg in the 2nd circle
@@ -181,6 +182,418 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 				;
 			}
 			else{
+				if (N>MAXMatrixDet) return -99999990;
+				cr[N] = cr_temp;
+				++N;
+			}
+		}
+	}
+
+	if (N==0) return 0; //Special occasion: no intersection at all.
+
+	//Sort intersections
+	sort(cr,cr+N,cmpfun);
+
+	//Enumerate generators
+	int g[MAXMatrixDet]; //if generator i is cut by j then g[i]=j
+
+	int M=0;//contour one has generator from 0~M.
+	if (cr[0].endpos > L1 || cr[N-1].endpos < L1) return 0; //Special occasion: self-intersections only.
+	else{
+		while (!(cr[M].endpos<L1 && cr[M+1].endpos>L1) ) {
+			M++;
+			if (M==N-1) break; //Overflow prevention.
+		}
+	}
+	assert (M < N-1 && M >= 0);
+
+	for (int i=0; i<N; i++){
+		double overpos=cr[i].s_over + cr[i].seg_over;
+		assert (!(overpos>L1 && overpos<L1+1));
+		if (overpos < cr[0].endpos) g[i]=0;
+		else if (overpos > cr[N-1].endpos) g[i]=M+1;
+		else if (cr[M].endpos < overpos && overpos<L1) g[i]=0;
+		else if (L1 < overpos && overpos < cr[M+1].endpos) g[i]=M+1;
+		else{
+			assert ( (cr[0].endpos<overpos && overpos<cr[M].endpos)
+				   ||(cr[M+1].endpos<overpos && overpos<cr[N-1].endpos));
+			int mm=1;
+			while (!(cr[mm-1].endpos<overpos && overpos<cr[mm].endpos)) mm++;
+			g[i]=mm;
+			assert(g[i]!=0 && g[i]!=M+1);
+		}
+	}
+
+	//Disentanglement
+	Generator G[MAXMatrixDet];
+
+	for (int i=0; i<N; i++){
+		G[i].id=i;
+		G[i].cutby=g[i];
+		G[i].pre=i-1;
+		G[i].next=i+1;
+		G[i].alive=true;
+		G[i].cr=cr[i];
+	}
+	G[0].pre=M;G[M].next=0;
+	G[M+1].pre=N-1;G[N-1].next=M+1;	
+
+	int totdisentang=0;
+	int L1num=M+1,L2num=N-1-(M+1)+1;
+	bool exitflag=false;
+	
+	goto DA; //TODO: remove
+	//cout<<"---------"<<endl;
+	while (!exitflag){
+		exitflag=true;
+
+//		Type Ia: g[i]==i	 Type Ib: g[i]=i+1 i and i+1 on the same contour.
+		bool exitflagI=false;
+		while (!exitflagI){
+			exitflagI=true;
+			for (int i=0; i<N; i++){
+				if (!G[i].alive) continue;
+				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
+					//for (int t=0; t<N; t++){
+					//	if (!G[t].alive) continue;
+					//	if (t==i) continue;
+					//	if (G[t].cutby==G[i].cutby) goto skipI;
+					//} //<TODO> 
+//totdisentang++;
+//if (totdisentang>TER) goto DA;
+//cout<<"[c++] I"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+
+					if (G[i].id<=M) L1num--; else L2num--;
+					if (L1num==0 || L2num==0) return 0;
+					G[i].alive=false;
+					for (int j=0;j<N;j++){
+						if (!G[j].alive) continue;
+						if (G[j].cutby==G[i].id) G[j].cutby=G[G[i].next].id;
+					}
+					G[G[i].pre].next=G[G[i].next].id;					
+					G[G[i].next].pre=G[G[i].pre].id;
+					i--;
+					exitflag=false;exitflagI=false;
+
+//printGenerators(G,N,totdisentang);
+				}
+skipI:		;
+			}
+		}
+		;
+
+		//goto dis_end; //<TODO> short circuit type II disentanglement.
+		//Type II g[i]==j and g[i+1]==j
+		for (int i=0; i<N; i++){
+			if (!G[i].alive) continue;
+			if (G[i].cutby==G[G[i].next].cutby){
+				for (int r=0; r<N; r++){
+					if (!G[r].alive) continue;
+					if (G[r].cutby==G[i].next) continue; //Rule 1, in Alex's program
+					if (r==i || r==G[i].next) continue;
+					if (G[r].cutby==G[i].cutby) //Rule 2, additional
+						goto skip;
+				}
+//totdisentang++;
+//if (totdisentang>TER) goto DA;
+//cout<<"[c++] II"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+
+				if (G[i].id<=M) L1num-=2; else L2num-=2;
+				if (L1num==0 || L2num==0) return 0;
+
+				G[i].alive=false;
+				G[G[i].next].alive=false;
+				
+				int next2=G[G[i].next].next;
+				for (int j=0;j<N;j++){
+					if (!G[j].alive) continue;
+					if (G[j].cutby==G[i].next || G[j].cutby==G[i].id) {
+						G[j].cutby=next2;
+					}
+				}
+
+				G[next2].pre=G[i].pre;
+				G[G[i].pre].next=next2;
+				i--;
+				exitflag=false;
+				
+//printGenerators(G,N,totdisentang);
+			}
+skip:		;
+		}
+dis_end:	;
+	}
+
+DA:	int newid=0;
+	for (int i=0; i<N; i++){
+		if (G[i].alive){
+			G[i].id=newid;
+			cr[newid]=cr[i];
+			newid++;
+		}
+	}
+	newid--;
+	assert (newid+1==L1num+L2num);
+	for (int i=0; i<N; i++){
+		if (!G[i].alive) continue;
+		g[G[i].id]=G[G[i].cutby].id;
+	}
+	
+	//Fill up the matrix
+	M=L1num-1;
+	N=L1num+L2num;
+	double da[MAXMatrixDet][MAXMatrixDet];
+	fillupMatrix_AP(da,g,cr,M,N,s,t);
+
+	double da2[MAXMatrixDet][MAXMatrixDet];
+	for (int ss=0;ss<N;ss++)
+		for (int tt=0; tt<N; tt++)
+			da2[ss][tt]=da[ss][tt];
+
+	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
+	long re=floor(temp+0.5);
+	if (fabs(t)-1.0> 1e-5)
+		while (re % 2 ==0) re /= 2;
+	return abs(re);
+}
+
+
+
+long CircularChain::AP_typeIdis_only(long vertM, long vertN,double s, double t){
+/* L1 is the number of segments in the first contour.
+   L2 is the number of segments in the second contour.
+   s,t are parameters of AlexanderPolynomial(s,t) */
+	
+
+	//Store the intersections in different fashions.
+	//Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1]
+	const double pi=3.141592653589793;
+	int TER=270; //TODO: remove
+
+	long L1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
+	long L2=vertN-vertM;           //Number of seg in the 2nd circle
+	double x[maxa],y[maxa],z[maxa];
+
+	cross cr[MAXMatrixDet],cr_temp;
+	double id[MAXMatrixDet],ix[MAXMatrixDet];
+	int L20=L1+1,L2end=L1+L2+1;
+
+	long i,j;
+	for (i=0,j=0;i<=vertM-1;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+
+	for (i=vertN,j=vertM;i<=maxnum;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+	
+	x[L1]=C[0].x;y[L1]=C[0].y;z[L1]=C[0].z;
+
+	for (i=vertM,j=L1+1;i<=vertN-1;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+	x[L1+L2+1]=C[vertM].x;
+	y[L1+L2+1]=C[vertM].y;
+	z[L1+L2+1]=C[vertM].z;
+
+
+	//Enumerate all intersections
+	int N=0;
+	for (int i=0;i<=L2end-3;i++){
+		if (i==L1) continue;
+		for (int j=i+2;j<=L2end-1;j++){
+			if (j==L1) continue;
+			if ((i==0 && j==L1-1) || (i==L20 && j==L2end-1)) continue;
+			cr_temp=intsec(i,j,x,y,z);
+			if (cr_temp.seg_over ==-999){
+				;
+			}
+			else{
+				if (N>MAXMatrixDet) return -99999990;
+				cr[N] = cr_temp;
+				++N;
+			}
+		}
+	}
+
+	if (N==0) return 0; //Special occasion: no intersection at all.
+
+	//Sort intersections
+	sort(cr,cr+N,cmpfun);
+
+	//Enumerate generators
+	int g[MAXMatrixDet]; //if generator i is cut by j then g[i]=j
+
+	int M=0;//contour one has generator from 0~M.
+	if (cr[0].endpos > L1 || cr[N-1].endpos < L1) return 0; //Special occasion: self-intersections only.
+	else{
+		while (!(cr[M].endpos<L1 && cr[M+1].endpos>L1) ) {
+			M++;
+			if (M==N-1) break; //Overflow prevention.
+		}
+	}
+	assert (M < N-1 && M >= 0);
+
+	for (int i=0; i<N; i++){
+		double overpos=cr[i].s_over + cr[i].seg_over;
+		assert (!(overpos>L1 && overpos<L1+1));
+		if (overpos < cr[0].endpos) g[i]=0;
+		else if (overpos > cr[N-1].endpos) g[i]=M+1;
+		else if (cr[M].endpos < overpos && overpos<L1) g[i]=0;
+		else if (L1 < overpos && overpos < cr[M+1].endpos) g[i]=M+1;
+		else{
+			assert ( (cr[0].endpos<overpos && overpos<cr[M].endpos)
+				   ||(cr[M+1].endpos<overpos && overpos<cr[N-1].endpos));
+			int mm=1;
+			while (!(cr[mm-1].endpos<overpos && overpos<cr[mm].endpos)) mm++;
+			g[i]=mm;
+			assert(g[i]!=0 && g[i]!=M+1);
+		}
+	}
+
+	//Disentanglement
+	Generator G[MAXMatrixDet];
+
+	for (int i=0; i<N; i++){
+		G[i].id=i;
+		G[i].cutby=g[i];
+		G[i].pre=i-1;
+		G[i].next=i+1;
+		G[i].alive=true;
+		G[i].cr=cr[i];
+	}
+	G[0].pre=M;G[M].next=0;
+	G[M+1].pre=N-1;G[N-1].next=M+1;	
+
+	int totdisentang=0;
+	int L1num=M+1,L2num=N-1-(M+1)+1;
+	bool exitflag=false;
+	
+	//goto DA; //TODO: remove
+	//cout<<"---------"<<endl;
+	while (!exitflag){
+		exitflag=true;
+
+//		Type Ia: g[i]==i	 Type Ib: g[i]=i+1 i and i+1 on the same contour.
+		bool exitflagI=false;
+		while (!exitflagI){
+			exitflagI=true;
+			for (int i=0; i<N; i++){
+				if (!G[i].alive) continue;
+				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
+					//for (int t=0; t<N; t++){
+					//	if (!G[t].alive) continue;
+					//	if (t==i) continue;
+					//	if (G[t].cutby==G[i].cutby) goto skipI;
+					//} //<TODO> 
+//totdisentang++;
+//if (totdisentang>TER) goto DA;
+//cout<<"[c++] I"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+
+					if (G[i].id<=M) L1num--; else L2num--;
+					if (L1num==0 || L2num==0) return 0;
+					G[i].alive=false;
+					for (int j=0;j<N;j++){
+						if (!G[j].alive) continue;
+						if (G[j].cutby==G[i].id) G[j].cutby=G[G[i].next].id;
+					}
+					G[G[i].pre].next=G[G[i].next].id;					
+					G[G[i].next].pre=G[G[i].pre].id;
+					i--;
+					exitflag=false;exitflagI=false;
+
+//printGenerators(G,N,totdisentang);
+				}
+skipI:		;
+			}
+		}
+	}
+
+DA:	int newid=0;
+	for (int i=0; i<N; i++){
+		if (G[i].alive){
+			G[i].id=newid;
+			cr[newid]=cr[i];
+			newid++;
+		}
+	}
+	newid--;
+	assert (newid+1==L1num+L2num);
+	for (int i=0; i<N; i++){
+		if (!G[i].alive) continue;
+		g[G[i].id]=G[G[i].cutby].id;
+	}
+	
+	//Fill up the matrix
+	M=L1num-1;
+	N=L1num+L2num;
+	double da[MAXMatrixDet][MAXMatrixDet];
+	fillupMatrix_AP(da,g,cr,M,N,s,t);
+
+	double da2[MAXMatrixDet][MAXMatrixDet];
+	for (int ss=0;ss<N;ss++)
+		for (int tt=0; tt<N; tt++)
+			da2[ss][tt]=da[ss][tt];
+
+	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
+	long re=floor(temp+0.5);
+	if (fabs(t)-1.0> 1e-5)
+		while (re % 2 ==0) re /= 2;
+	return abs(re);
+}
+
+
+long CircularChain::AP(long vertM, long vertN,double s, double t){
+/* L1 is the number of segments in the first contour.
+   L2 is the number of segments in the second contour.
+   s,t are parameters of AlexanderPolynomial(s,t) */
+	
+
+	//Store the intersections in different fashions.
+	//Mind that x[0]=x[L1] x[L1+1]=x[L1+L2+1]
+	const double pi=3.141592653589793;
+	int TER=270; //TODO: remove
+
+	long L1=vertM+(maxnum-vertN+1);//Number of seg in the 1st circle
+	long L2=vertN-vertM;           //Number of seg in the 2nd circle
+	double x[maxa],y[maxa],z[maxa];
+
+	cross cr[MAXMatrixDet],cr_temp;
+	double id[MAXMatrixDet],ix[MAXMatrixDet];
+	int L20=L1+1,L2end=L1+L2+1;
+
+	long i,j;
+	for (i=0,j=0;i<=vertM-1;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+
+	for (i=vertN,j=vertM;i<=maxnum;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+	
+	x[L1]=C[0].x;y[L1]=C[0].y;z[L1]=C[0].z;
+
+	for (i=vertM,j=L1+1;i<=vertN-1;i++,j++){
+		x[j]=C[i].x;y[j]=C[i].y;z[j]=C[i].z;
+	}
+	x[L1+L2+1]=C[vertM].x;
+	y[L1+L2+1]=C[vertM].y;
+	z[L1+L2+1]=C[vertM].z;
+
+
+	//Enumerate all intersections
+	int N=0;
+	for (int i=0;i<=L2end-3;i++){
+		if (i==L1) continue;
+		for (int j=i+2;j<=L2end-1;j++){
+			if (j==L1) continue;
+			if ((i==0 && j==L1-1) || (i==L20 && j==L2end-1)) continue;
+			cr_temp=intsec(i,j,x,y,z);
+			if (cr_temp.seg_over ==-999){
+				;
+			}
+			else{
+				if (N>MAXMatrixDet) return -99999990;
 				cr[N] = cr_temp;
 				++N;
 			}
@@ -241,6 +654,7 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 	bool exitflag=false;
 	
 //	goto DA; //TODO: remove
+	//cout<<"---------"<<endl;
 	while (!exitflag){
 		exitflag=true;
 
@@ -251,9 +665,14 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 			for (int i=0; i<N; i++){
 				if (!G[i].alive) continue;
 				if (G[i].cutby==G[i].id || G[i].cutby==G[i].next){
-					//totdisentang++;
-					//if (totdisentang>TER) goto DA;
-					//cout<<"[c++] I"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
+					//for (int t=0; t<N; t++){
+					//	if (!G[t].alive) continue;
+					//	if (t==i) continue;
+					//	if (G[t].cutby==G[i].cutby) goto skipI;
+					//} //<TODO> 
+//totdisentang++;
+//if (totdisentang>TER) goto DA;
+//cout<<"[c++] I"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 
 					if (G[i].id<=M) L1num--; else L2num--;
 					if (L1num==0 || L2num==0) return 0;
@@ -267,23 +686,26 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 					i--;
 					exitflag=false;exitflagI=false;
 
-					//printGenerators(G,N,totdisentang);
+//printGenerators(G,N,totdisentang);
 				}
+skipI:		;
 			}
 		}
 		;
 		//Type II g[i]==j and g[i+1]==j
 		for (int i=0; i<N; i++){
 			if (!G[i].alive) continue;
-			if (G[i].cutby==G[G[i].next].cutby){
+			if (G[i].cutby==G[G[i].next].cutby && G[i].next != G[i].id ){ //Rule 0: g[i]=g[i+1] and g[i] is not the only generator left in this contour.
 				for (int r=0; r<N; r++){
 					if (!G[r].alive) continue;
-					if (G[r].cutby==G[i].next) 
+					if (G[r].cutby==G[i].next) continue; //Rule 1, in Alex's program
+					if (r==i || r==G[i].next) continue;
+					if (G[r].cutby==G[i].cutby) //Rule 2, additional
 						goto skip;
 				}
-				/*totdisentang++;
-				if (totdisentang>TER) goto DA;
-				cout<<"[c++] II"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;*/
+//totdisentang++;
+//if (totdisentang>TER) goto DA;
+//cout<<"[c++] II"<<printGenerators_checkDisentangsSegment(G,N,i)<<endl;
 
 				if (G[i].id<=M) L1num-=2; else L2num-=2;
 				if (L1num==0 || L2num==0) return 0;
@@ -304,7 +726,7 @@ int CircularChain::AP(long vertM, long vertN,double s, double t){
 				i--;
 				exitflag=false;
 				
-				//printGenerators(G,N,totdisentang);
+//printGenerators(G,N,totdisentang);
 			}
 skip:		;
 		}
@@ -319,22 +741,38 @@ DA:	int newid=0;
 		}
 	}
 	newid--;
-
+	if (newid+1!=L1num+L2num){
+		assert (newid+1==L1num+L2num);
+	}
 	assert (newid+1==L1num+L2num);
-
 	for (int i=0; i<N; i++){
 		if (!G[i].alive) continue;
 		g[G[i].id]=G[G[i].cutby].id;
 	}
-
-
-	//printGenerators(G,N,totdisentang);
-
-	M=L1num-1;
-	N=L1num+L2num;
 	
 	//Fill up the matrix
+	M=L1num-1;
+	N=L1num+L2num;
 	double da[MAXMatrixDet][MAXMatrixDet];
+	fillupMatrix_AP(da,g,cr,M,N,s,t);
+
+	double da2[MAXMatrixDet][MAXMatrixDet];
+	for (int ss=0;ss<N;ss++)
+		for (int tt=0; tt<N; tt++)
+			da2[ss][tt]=da[ss][tt];
+
+	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
+	long re=floor(temp+0.5);
+	if (fabs(t)-1.0> 1e-5)
+		while (re % 2 ==0) re /= 2;
+	return abs(re);
+}
+
+
+int fillupMatrix_AP(double da[MAXMatrixDet][MAXMatrixDet], int g[], cross cr[], int M, int N, double s, double t){
+	//Fill up the matrix
+
+	//set to 0.
 	for (int k=0; k<N; k++)
 		for (int i=0; i<N; i++)
 			da[k][i]=0.;
@@ -412,19 +850,9 @@ DA:	int newid=0;
 			da[k][i]=t-1;
 		}
 	}
-	
-
-	double da2[MAXMatrixDet][MAXMatrixDet];
-	for (int ss=0;ss<N;ss++)
-		for (int tt=0; tt<N; tt++)
-			da2[ss][tt]=da[ss][tt];
-
-	double temp = DET_Doolittle_LU_Decomp_Pivot(da,N-1)/(1-t); //only feed N-1 x N-1 remainder
-	long re=floor(temp+0.5);
-	if (fabs(t)-1.0> 1e-5)
-		while (re % 2 ==0) re /= 2;
-	return abs(re);
+	return 0;
 }
+
 
 int printmtrx(long n, double *a){
 	using namespace std;
@@ -503,7 +931,7 @@ void printGenerators(Generator G[], int N, int totdisentang){
         for (int i=0; i<N; i++){
                 if (!G[i].alive) continue;
                 g[GG[i].id]=GG[GG[i].cutby].id;
-                fpdbg<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1
+				fpdbg<<"ix["<<GG[i].id+1<<"] "<<g[GG[i].id]+1<<" pre:"<<GG[GG[i].pre].id+1<<" next:"<<GG[GG[i].next].id+1
                         <<" cross: "<<GG[i].cr.sign<<" "<<GG[i].cr.seg_under<<"  "<<GG[i].cr.s_under<<endl;
         }
         fpdbg<<"###"<<endl<<endl;

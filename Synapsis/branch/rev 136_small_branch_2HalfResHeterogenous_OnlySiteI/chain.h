@@ -3,6 +3,7 @@
 
 #define MAXMatrixDet 200
 
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -255,7 +256,10 @@ public:
 
 	int kpoly(long ial[2],long ierr);
 	int kpoly2(long ial[2],long ierr);
-	int AP(long vertM, long vertN,double s, double t);
+
+	long AP_no_disengtangle(long vertM, long vertN,double s, double t);
+	long AP_typeIdis_only(long vertM, long vertN,double s, double t);
+	long AP(long vertM, long vertN,double s, double t);
 
 	virtual int snapshotseg(char *filename, segment const * Ct, int start, int end);
 	virtual void snapshot(char *filename);
