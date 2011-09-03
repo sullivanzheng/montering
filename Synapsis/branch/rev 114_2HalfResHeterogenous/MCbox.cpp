@@ -849,9 +849,11 @@ goon:	if (E_condition==1 && rigid_IEV_condition==1
 					<<" MineNoDis "<< Lk_recomb_AP_nodis <<' '<< Lk_recomb_AP_nodis_2
 					<< ">> ";
 
-				if (1){
+				if (RG.Q<-3){
 					char tempbuf[200];
-					sprintf(tempbuf,"Lk_example_%d_%d.txt",Lk_recomb_AP_I,Lk_recomb_AP_I_2);
+					sprintf(tempbuf,"Lk_example_%d_%d,%d_%d,%d_%d,%d_%d,Q_%02.0f.txt",
+						Lk_recomb,Lk_recomb_2,Lk_recomb_AP,Lk_recomb_AP_2,
+						Lk_recomb_AP_I,Lk_recomb_AP_I_2,Lk_recomb_AP_nodis,Lk_recomb_AP_nodis_2,RG.Q);
 					dnaChain->snapshot(tempbuf);
 				}
 			}
