@@ -810,7 +810,7 @@ int fillupMatrix_AP(double da[MAXMatrixDet][MAXMatrixDet], int g[], cross cr[], 
 			}
 		}
 		else if(k==M && M==0){//---------------------------------------------------
-			assert(i>M);
+			//assert(i>M); <NOTE> This should be removed when disentanglement is not performed
 			da[k][k]=1-t;
 			da[k][i]=s-1;
 		}
@@ -845,7 +845,7 @@ int fillupMatrix_AP(double da[MAXMatrixDet][MAXMatrixDet], int g[], cross cr[], 
 			}
 		}
 		else if(k==N-1 && N-1==M+1) {//----------------------------------------------
-			assert (i<=M);
+			//assert (i<=M); <NOTE> This should be removed when disentanglement is not performed
 			da[k][k]=1-s;
 			da[k][i]=t-1;
 		}
