@@ -1,5 +1,8 @@
 /* subroutine from Alex V. */
 /* calculate I(-1) and I(-2) Alexander Polynomial--put at ial(1) ial(2) */
+/* Should be equivalent to CircularChain::kpoly, but this one is the original translation from f2c.exe, 
+without any modification to clean the variable names and remove the machine translation artifacts like tons of 
+underscores, etc. */
 #include "chain.h"
 int CircularChain::kpoly2(long ial[2],long ierr)
 {
@@ -454,7 +457,8 @@ L788:
 	goto L801;
     } else if (ikn > 8) {
 	ial[0] = ikn;
-	return 0;
+	t = -2.f;
+	goto L801;
     }
 L31:
     ial[0] = 1;
