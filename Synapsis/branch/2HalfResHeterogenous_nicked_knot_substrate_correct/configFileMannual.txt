@@ -1,0 +1,27 @@
+[The definition of rigid body]
+The RG instance in the 
+
+     void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
+
+is a "allrigid" class type including multiple rigid bodies, whose number of members depends on the rigid.txt config file.
+
+A rigid body (cls_rigid class) consists of chain vectors from N to N+m (indexed from 0) and its protect list (vector<int> protect) records only N+1, N+2 ... N+m, which are the vertices INCLUDED in the rigid body section. The bend angle at these vertices should not be changed at all so that the rigidity of the rigid body is implemented.
+
+In the rigid.txt, the rigid bodies are marked by N+1, N+2...N+m which are vertices completely included in the rigid body (i.e, not at the boundary).
+
+However, for faster and more convenient access to the rigid body, there is also a container class level copy of the protect list, which is vector<int>allrigid::protect. It is an int vector containing all protected vertices of the chain. If there are 2 rigid bodies (cls_rigid) and each cls_rigid::protect is a 3-vector, then vector<int>allrigid::protect is a 6-vector.
+
+There is even a global copy of the protected list of rigid body, called:
+
+int protect_list[maxa];
+
+This is used for fast access of the all functions anywhere in the program.
+Mind that it is not a vector but a maxa-length array, which has elements of 1 or 0.
+protect[n]==1 means the number n vertex is fully included (not at the boundary) of the rigid body.
+
+[Initialization of the rigid body description]
+Allrigid->readfile->contruct cls_rigid->cls_rigid::protect->copy to global protect_list->returned to Allrigid contructor-> repeat still all cls_rigids are constructed->construct an allrigid::protect->finish.
+
+The rigidbody initialization starts in 
+    void MCbox_circular::performMetropolisCircularCrankOnly(long monte_step)
+When 	allrigid RG("rigid.txt", this->dnaChain); is initialized. Inside the contructor of allrigid, cls_rigid is instantiated and cls_rigid::protect is initialized. Mind that at the same time the global int protect_list[maxa]; is also initialized.
