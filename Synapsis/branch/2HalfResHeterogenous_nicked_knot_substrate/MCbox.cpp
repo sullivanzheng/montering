@@ -126,6 +126,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	long tal[2]={0,0},ter=0;
 	this->dnaChain->kpoly(tal,ter);
 	*fp_log<<"Initial KPoly:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
+	this->dnaChain->kpoly_nodiseng(tal,ter);
+	*fp_log<<"Initial kpoly_nodiseng:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 	this->dnaChain->kpoly2(tal,ter);
 	*fp_log<<"Initial KPoly2:"<<tal[0]<<','<<tal[1]<<' '<<ter<<endl;
 
@@ -136,7 +138,8 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 	*fp_log<<"Initial overpass:" <<temp_overpass <<endl;
 	
 	double temp_Lk_recomb_212;
-	*fp_log<<"Initial Alexander Poly(-1,-2)="<< (temp_Lk_recomb_212 = dnaChain->AP(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2) ) <<endl;
+	*fp_log<<"Initial Alexander Poly(s=-1,t=-1)="<< (temp_Lk_recomb_212 = dnaChain->AP(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-1) ) <<endl;
+	*fp_log<<"Initial Alexander Poly(s=-1,t=-2)="<< (temp_Lk_recomb_212 = dnaChain->AP(RG.R[0].protect[0]+1,RG.R[1].protect[0]+1,-1,-2) ) <<endl;
 
 	if (RBAUS_LOAD_LAST) {
 		U.load("ArtificialPotential.txt");
@@ -293,8 +296,28 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (IEV_condition==1){
-				if (this->dnaChain->topl<1.5){ 
+				long knot_ap[2]={0},topo_err=0;
+				this->dnaChain->kpoly2(knot_ap,topo_err);
+
+
+				if (knot_ap[0]==tal[0]){ 
 					topo_condition=1;
+
+
+					if (knot_ap[1]!=tal[1]){
+					*fp_log<<"Substrate Knot Topology in question! "<< 
+						" Move "<<moves<<
+						" AP(t=-1)="<<knot_ap[0]<<
+						" AP(t=-2)="<<knot_ap[1]<<endl;
+					}
+					if (topo_err!=0){
+						*fp_log<<"Substrate Knot Topology Calculation Error! "<<
+							" Move "<<moves<<
+							" AP(t=-1)="<<knot_ap[0]<<
+							" AP(t=-2)="<<knot_ap[1]<<
+							" ErrorCode="<<topo_err<<endl;
+					}
+
 				}
 				else{
 					topo_condition=-1;
@@ -469,8 +492,28 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (IEV_condition==1){
-				if (this->dnaChain->topl<1.5){ 
+				long knot_ap[2]={0},topo_err=0;
+				this->dnaChain->kpoly2(knot_ap,topo_err);
+
+
+				if (knot_ap[0]==tal[0]){ 
 					topo_condition=1;
+
+
+					if (knot_ap[1]!=tal[1]){
+					*fp_log<<"Substrate Knot Topology in question! "<< 
+						" Move "<<moves<<
+						" AP(t=-1)="<<knot_ap[0]<<
+						" AP(t=-2)="<<knot_ap[1]<<endl;
+					}
+					if (topo_err!=0){
+						*fp_log<<"Substrate Knot Topology Calculation Error! "<<
+							" Move "<<moves<<
+							" AP(t=-1)="<<knot_ap[0]<<
+							" AP(t=-2)="<<knot_ap[1]<<
+							" ErrorCode="<<topo_err<<endl;
+					}
+
 				}
 				else{
 					topo_condition=-1;
@@ -582,14 +625,34 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
                     }
             }
 
-            if (IEV_condition==1){
-                    if (this->dnaChain->topl<1.5){ 
-                            topo_condition=1;
-                    }
-                    else{
-                            topo_condition=-1;
-                    }
-            }
+			if (IEV_condition==1){
+				long knot_ap[2]={0},topo_err=0;
+				this->dnaChain->kpoly2(knot_ap,topo_err);
+
+
+				if (knot_ap[0]==tal[0]){ 
+					topo_condition=1;
+
+
+					if (knot_ap[1]!=tal[1]){
+					*fp_log<<"Substrate Knot Topology in question! "<< 
+						" Move "<<moves<<
+						" AP(t=-1)="<<knot_ap[0]<<
+						" AP(t=-2)="<<knot_ap[1]<<endl;
+					}
+					if (topo_err!=0){
+						*fp_log<<"Substrate Knot Topology Calculation Error! "<<
+							" Move "<<moves<<
+							" AP(t=-1)="<<knot_ap[0]<<
+							" AP(t=-2)="<<knot_ap[1]<<
+							" ErrorCode="<<topo_err<<endl;
+					}
+
+				}
+				else{
+					topo_condition=-1;
+				}
+			}
 
             if (E_condition==1 && rigid_IEV_condition==1 
                     && IEV_condition==1  && topo_condition==1){
@@ -677,8 +740,28 @@ void MCbox_circular::performMetropolisCircularCrankRept(long monte_step)
 			}
 
 			if (IEV_condition==1){
-				if (this->dnaChain->topl<1.5){ 
+				long knot_ap[2]={0},topo_err=0;
+				this->dnaChain->kpoly2(knot_ap,topo_err);
+
+
+				if (knot_ap[0]==tal[0]){ 
 					topo_condition=1;
+
+
+					if (knot_ap[1]!=tal[1]){
+					*fp_log<<"Substrate Knot Topology in question! "<< 
+						" Move "<<moves<<
+						" AP(t=-1)="<<knot_ap[0]<<
+						" AP(t=-2)="<<knot_ap[1]<<endl;
+					}
+					if (topo_err!=0){
+						*fp_log<<"Substrate Knot Topology Calculation Error! "<<
+							" Move "<<moves<<
+							" AP(t=-1)="<<knot_ap[0]<<
+							" AP(t=-2)="<<knot_ap[1]<<
+							" ErrorCode="<<topo_err<<endl;
+					}
+
 				}
 				else{
 					topo_condition=-1;

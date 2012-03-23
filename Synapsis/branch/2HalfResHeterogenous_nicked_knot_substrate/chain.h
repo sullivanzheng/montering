@@ -258,6 +258,7 @@ public:
 	virtual double dE_treadmill(double direction);
 
 	int kpoly(long ial[2],long ierr);
+	int kpoly_nodiseng(long ial[2],long ierr);
 	int kpoly2(long ial[2],long ierr);
 
 	long AP_no_disengtangle(long vertM, long vertN,double s, double t);
