@@ -356,7 +356,7 @@ int CircularChain::_deformReptSegments_updateInternalBangles(long m, long dm,
 		}
 		return ERROR;
 	}else{
-		cout<<"CircularChain::_deformReptSegments_updateInternalBangles Problem";
+		cout<<"CircularChain::_deformReptSegments_update: InternalBangles Problem";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -424,7 +424,7 @@ int CircularChain::_deformReptSegments_updateInternalBangles_Normalize(long m, l
 		}
 		return ERROR;
 	}else{
-		cout<<"CircularChain::_deformReptSegments_updateInternalBangles Problem";
+		cout<<"CircularChain::_deformReptSegments_update:InternalBangles Problem";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -1559,11 +1559,16 @@ long CircularChain::IEV_with_rigidbody_closeboundary_fullChain(double info[3]){
 }
 
 double CircularChain::E_t_updateWrithe_E_t(){
-	this->writhe = this->_fastWr_topl_update();
+	this->writhe=0;
+	this->E_t=0;
+
+	return 0;
+
+	/* this->writhe = this->_fastWr_topl_update();
 	static double const C_contingent = C_t;
 	this->E_t= 2 * PI * PI * C_contingent / (this->contour_length * bpperunit) *
 				(dLk - this->writhe)*(dLk - this->writhe);
-	return this->E_t;
+	return this->E_t; */
 }
 
 double CircularChain::_fastWr_topl_update(){
